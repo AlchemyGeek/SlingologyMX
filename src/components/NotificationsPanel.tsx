@@ -13,6 +13,7 @@ interface NotificationsPanelProps {
 
 const NotificationsPanel = ({ userId }: NotificationsPanelProps) => {
   const [showForm, setShowForm] = useState(false);
+  const [editingNotification, setEditingNotification] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +40,18 @@ const NotificationsPanel = ({ userId }: NotificationsPanelProps) => {
 
   const handleNotificationCreated = () => {
     setShowForm(false);
+    setEditingNotification(null);
     fetchNotifications();
+  };
+
+  const handleEdit = (notification: any) => {
+    setEditingNotification(notification);
+    setShowForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingNotification(null);
   };
 
   return (
@@ -61,10 +73,16 @@ const NotificationsPanel = ({ userId }: NotificationsPanelProps) => {
           <NotificationForm
             userId={userId}
             onSuccess={handleNotificationCreated}
-            onCancel={() => setShowForm(false)}
+            onCancel={handleCancelForm}
+            editingNotification={editingNotification}
           />
         )}
-        <NotificationList notifications={notifications} loading={loading} onUpdate={fetchNotifications} />
+        <NotificationList 
+          notifications={notifications} 
+          loading={loading} 
+          onUpdate={fetchNotifications}
+          onEdit={handleEdit}
+        />
       </CardContent>
     </Card>
   );

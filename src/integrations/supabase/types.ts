@@ -23,6 +23,7 @@ export type Database = {
           id: string
           initial_date: string
           is_completed: boolean | null
+          notes: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           type: Database["public"]["Enums"]["notification_type"]
           updated_at: string | null
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           initial_date: string
           is_completed?: boolean | null
+          notes?: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           type: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           id?: string
           initial_date?: string
           is_completed?: boolean | null
+          notes?: string | null
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
