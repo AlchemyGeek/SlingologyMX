@@ -9,6 +9,7 @@ import { Plane, LogOut } from "lucide-react";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
+import CalendarPanel from "@/components/CalendarPanel";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -74,9 +75,10 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="manage" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="manage">Manage Notifications</TabsTrigger>
             <TabsTrigger value="active">Active Notifications</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
@@ -86,6 +88,10 @@ const Dashboard = () => {
 
           <TabsContent value="active">
             <ActiveNotificationsPanel userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <CalendarPanel userId={user.id} />
           </TabsContent>
 
           <TabsContent value="history">
