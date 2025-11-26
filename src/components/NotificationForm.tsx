@@ -28,17 +28,17 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.description.length > 200) {
       toast.error("Notification must be 200 characters or less");
       return;
     }
-    
+
     if (formData.notes.length > 1000) {
       toast.error("Notes must be 1000 characters or less");
       return;
     }
-    
+
     setLoading(true);
 
     try {
@@ -54,10 +54,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
 
       let error;
       if (editingNotification) {
-        const result = await supabase
-          .from("notifications")
-          .update(data)
-          .eq("id", editingNotification.id);
+        const result = await supabase.from("notifications").update(data).eq("id", editingNotification.id);
         error = result.error;
       } else {
         const result = await supabase.from("notifications").insert([data]);
@@ -84,7 +81,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             required
-            placeholder="Describe the maintenance task..."
+            placeholder="Describe the notification name..."
             maxLength={200}
           />
           <p className="text-xs text-muted-foreground">{formData.description.length}/200 characters</p>
@@ -106,10 +103,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value })}
-            >
+            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -172,7 +166,13 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
-            {loading ? (editingNotification ? "Updating..." : "Creating...") : (editingNotification ? "Update Notification" : "Create Notification")}
+            {loading
+              ? editingNotification
+                ? "Updating..."
+                : "Creating..."
+              : editingNotification
+                ? "Update Notification"
+                : "Create Notification"}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
