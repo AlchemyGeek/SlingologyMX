@@ -14,6 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
+      maintenance_logs: {
+        Row: {
+          airframe_total_time: number | null
+          attachment_urls: string[] | null
+          category: Database["public"]["Enums"]["maintenance_category"]
+          compliance_reference: string | null
+          compliance_type: Database["public"]["Enums"]["compliance_type"] | null
+          created_at: string | null
+          date_performed: string
+          engine_total_time: number | null
+          entry_title: string
+          has_compliance_item: boolean | null
+          hobbs_at_event: number | null
+          id: string
+          internal_notes: string | null
+          interval_hours: number | null
+          interval_months: number | null
+          interval_type: Database["public"]["Enums"]["interval_type"] | null
+          invoice_number: string | null
+          is_recurring_task: boolean | null
+          labor_cost: number | null
+          next_due_date: string | null
+          next_due_hours: number | null
+          organization: string | null
+          other_cost: number | null
+          parts_cost: number | null
+          performed_by_name: string
+          performed_by_type: Database["public"]["Enums"]["performed_by_type"]
+          prop_total_time: number | null
+          recurring_compliance: boolean | null
+          subcategory: Database["public"]["Enums"]["maintenance_subcategory"]
+          tach_at_event: number | null
+          tags: string[] | null
+          total_cost: number | null
+          updated_at: string | null
+          user_id: string
+          vendor_name: string | null
+        }
+        Insert: {
+          airframe_total_time?: number | null
+          attachment_urls?: string[] | null
+          category: Database["public"]["Enums"]["maintenance_category"]
+          compliance_reference?: string | null
+          compliance_type?:
+            | Database["public"]["Enums"]["compliance_type"]
+            | null
+          created_at?: string | null
+          date_performed: string
+          engine_total_time?: number | null
+          entry_title: string
+          has_compliance_item?: boolean | null
+          hobbs_at_event?: number | null
+          id?: string
+          internal_notes?: string | null
+          interval_hours?: number | null
+          interval_months?: number | null
+          interval_type?: Database["public"]["Enums"]["interval_type"] | null
+          invoice_number?: string | null
+          is_recurring_task?: boolean | null
+          labor_cost?: number | null
+          next_due_date?: string | null
+          next_due_hours?: number | null
+          organization?: string | null
+          other_cost?: number | null
+          parts_cost?: number | null
+          performed_by_name: string
+          performed_by_type: Database["public"]["Enums"]["performed_by_type"]
+          prop_total_time?: number | null
+          recurring_compliance?: boolean | null
+          subcategory: Database["public"]["Enums"]["maintenance_subcategory"]
+          tach_at_event?: number | null
+          tags?: string[] | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+          vendor_name?: string | null
+        }
+        Update: {
+          airframe_total_time?: number | null
+          attachment_urls?: string[] | null
+          category?: Database["public"]["Enums"]["maintenance_category"]
+          compliance_reference?: string | null
+          compliance_type?:
+            | Database["public"]["Enums"]["compliance_type"]
+            | null
+          created_at?: string | null
+          date_performed?: string
+          engine_total_time?: number | null
+          entry_title?: string
+          has_compliance_item?: boolean | null
+          hobbs_at_event?: number | null
+          id?: string
+          internal_notes?: string | null
+          interval_hours?: number | null
+          interval_months?: number | null
+          interval_type?: Database["public"]["Enums"]["interval_type"] | null
+          invoice_number?: string | null
+          is_recurring_task?: boolean | null
+          labor_cost?: number | null
+          next_due_date?: string | null
+          next_due_hours?: number | null
+          organization?: string | null
+          other_cost?: number | null
+          parts_cost?: number | null
+          performed_by_name?: string
+          performed_by_type?: Database["public"]["Enums"]["performed_by_type"]
+          prop_total_time?: number | null
+          recurring_compliance?: boolean | null
+          subcategory?: Database["public"]["Enums"]["maintenance_subcategory"]
+          tach_at_event?: number | null
+          tags?: string[] | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           completed_at: string | null
@@ -93,8 +219,37 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      compliance_type: "None" | "AD" | "SB" | "SL" | "KAS" | "ASB" | "Other"
       component_type: "Airframe" | "Propeller" | "Avionics" | "Other"
+      interval_type: "Hours" | "Calendar" | "Mixed" | "None"
+      maintenance_category:
+        | "Airframe"
+        | "Engine"
+        | "Propeller"
+        | "Avionics"
+        | "Electrical"
+        | "Interior"
+        | "Exterior"
+        | "Accessories"
+        | "Other"
+      maintenance_subcategory:
+        | "Inspection"
+        | "Repair"
+        | "Replacement"
+        | "Modification"
+        | "Software Update"
+        | "Compliance"
+        | "Troubleshooting"
+        | "Scheduled Maintenance"
+        | "Other"
       notification_type: "Maintenance" | "Subscription"
+      performed_by_type:
+        | "Owner"
+        | "A&P"
+        | "LSRM"
+        | "Repairman"
+        | "Shop"
+        | "Other"
       recurrence_type:
         | "Weekly"
         | "Bi-Monthly"
@@ -229,8 +384,33 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      compliance_type: ["None", "AD", "SB", "SL", "KAS", "ASB", "Other"],
       component_type: ["Airframe", "Propeller", "Avionics", "Other"],
+      interval_type: ["Hours", "Calendar", "Mixed", "None"],
+      maintenance_category: [
+        "Airframe",
+        "Engine",
+        "Propeller",
+        "Avionics",
+        "Electrical",
+        "Interior",
+        "Exterior",
+        "Accessories",
+        "Other",
+      ],
+      maintenance_subcategory: [
+        "Inspection",
+        "Repair",
+        "Replacement",
+        "Modification",
+        "Software Update",
+        "Compliance",
+        "Troubleshooting",
+        "Scheduled Maintenance",
+        "Other",
+      ],
       notification_type: ["Maintenance", "Subscription"],
+      performed_by_type: ["Owner", "A&P", "LSRM", "Repairman", "Shop", "Other"],
       recurrence_type: [
         "Weekly",
         "Bi-Monthly",
