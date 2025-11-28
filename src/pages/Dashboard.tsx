@@ -11,25 +11,28 @@ import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (!session) {
-          navigate("/auth");
-        }
+    const {
+      data: {
+        subscription
       }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -37,35 +40,27 @@ const Dashboard = () => {
         navigate("/auth");
       }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/");
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+      </div>;
   }
-
   if (!user) {
     return null;
   }
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Plane className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Aircraft Maintenance Tracker</h1>
+            <h1 className="text-2xl font-bold">SlingologyMX</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -105,8 +100,6 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
