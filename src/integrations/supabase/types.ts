@@ -17,7 +17,7 @@ export type Database = {
       maintenance_logs: {
         Row: {
           airframe_total_time: number | null
-          attachment_urls: string[] | null
+          attachment_urls: Json | null
           category: Database["public"]["Enums"]["maintenance_category"]
           compliance_reference: string | null
           compliance_type: Database["public"]["Enums"]["compliance_type"] | null
@@ -54,7 +54,7 @@ export type Database = {
         }
         Insert: {
           airframe_total_time?: number | null
-          attachment_urls?: string[] | null
+          attachment_urls?: Json | null
           category: Database["public"]["Enums"]["maintenance_category"]
           compliance_reference?: string | null
           compliance_type?:
@@ -93,7 +93,7 @@ export type Database = {
         }
         Update: {
           airframe_total_time?: number | null
-          attachment_urls?: string[] | null
+          attachment_urls?: Json | null
           category?: Database["public"]["Enums"]["maintenance_category"]
           compliance_reference?: string | null
           compliance_type?:

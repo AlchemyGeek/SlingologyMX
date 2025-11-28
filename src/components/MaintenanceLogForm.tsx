@@ -62,12 +62,13 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
     total_cost: "",
     vendor_name: "",
     invoice_number: "",
-    attachment_urls: [] as string[],
+    attachment_urls: [] as Array<{ url: string; description?: string }>,
     internal_notes: "",
   });
 
   const [tagInput, setTagInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
+  const [urlDescInput, setUrlDescInput] = useState("");
 
   useEffect(() => {
     if (editingLog) {
@@ -120,8 +121,13 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
 
   const handleAddUrl = () => {
     if (urlInput.trim() && urlInput.length <= 255) {
-      setFormData({ ...formData, attachment_urls: [...formData.attachment_urls, urlInput.trim()] });
+      const newAttachment = {
+        url: urlInput.trim(),
+        ...(urlDescInput.trim() && { description: urlDescInput.trim() })
+      };
+      setFormData({ ...formData, attachment_urls: [...formData.attachment_urls, newAttachment] });
       setUrlInput("");
+      setUrlDescInput("");
     }
   };
 
@@ -619,25 +625,50 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
         <h3 className="text-lg font-medium">Attachments</h3>
         <div className="space-y-2">
           <Label>Attachment URLs</Label>
-          <div className="flex gap-2">
-            <Input
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
-              maxLength={255}
-              placeholder="Add URL..."
-            />
-            <Button type="button" onClick={handleAddUrl} size="sm">
-              Add
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="url_input" className="text-sm">URL</Label>
+              <Input
+                id="url_input"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
+                maxLength={255}
+                placeholder="https://example.com/invoice.pdf"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="url_desc_input" className="text-sm">Description (optional)</Label>
+              <Input
+                id="url_desc_input"
+                value={urlDescInput}
+                onChange={(e) => setUrlDescInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
+                maxLength={100}
+                placeholder="Invoice, receipt, photo, etc."
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            {formData.attachment_urls.map((url, index) => (
-              <div key={index} className="flex items-center gap-2 bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm truncate hover:underline">
-                  {url}
-                </a>
-                <X className="h-3 w-3 cursor-pointer flex-shrink-0" onClick={() => handleRemoveUrl(index)} />
+          <Button type="button" onClick={handleAddUrl} size="sm" className="mt-2">
+            Add Attachment
+          </Button>
+          <div className="space-y-1 mt-2">
+            {formData.attachment_urls.map((attachment, index) => (
+              <div key={index} className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded">
+                <div className="flex-1 min-w-0">
+                  <a 
+                    href={attachment.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-sm font-medium hover:underline block truncate"
+                  >
+                    {attachment.url}
+                  </a>
+                  {attachment.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{attachment.description}</p>
+                  )}
+                </div>
+                <X className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive" onClick={() => handleRemoveUrl(index)} />
               </div>
             ))}
           </div>
