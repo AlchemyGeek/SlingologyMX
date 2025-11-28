@@ -38,7 +38,7 @@ interface MaintenanceLog {
   total_cost: number | null;
   vendor_name: string | null;
   invoice_number: string | null;
-  attachment_urls: string[];
+  attachment_urls: Array<{ url: string; description?: string }>;
   internal_notes: string | null;
 }
 
@@ -62,7 +62,7 @@ const MaintenanceLogsPanel = ({ userId }: MaintenanceLogsPanelProps) => {
         .order("date_performed", { ascending: false });
 
       if (error) throw error;
-      setLogs(data || []);
+      setLogs((data as unknown as MaintenanceLog[]) || []);
     } catch (error) {
       console.error("Error fetching maintenance logs:", error);
       toast.error("Failed to load maintenance logs");
