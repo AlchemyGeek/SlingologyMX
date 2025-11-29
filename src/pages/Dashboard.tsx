@@ -5,7 +5,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plane, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import slingologyIcon from "@/assets/slingology-icon.png";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
@@ -59,7 +60,7 @@ const Dashboard = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Plane className="h-6 w-6 text-primary" />
+            <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">SlingologyMX</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>

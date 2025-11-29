@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plane } from "lucide-react";
+import slingologyIcon from "@/assets/slingology-icon.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <Plane className="h-12 w-12 text-primary" />
+            <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl">Aircraft Maintenance Tracker</CardTitle>
           <CardDescription>
