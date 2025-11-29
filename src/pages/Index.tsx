@@ -7,8 +7,7 @@ const Index = () => {
   const navigate = useNavigate();
   return <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
       <div className="text-center space-y-6 p-8">
-        <img src={slingologyIcon} alt="SlingologyMX" className="h-32 w-32 mx-auto" />
-        <h1 className="text-5xl font-bold">SlingologyMX</h1>
+        <img src={slingologyIcon} alt="SlingologyMX" className="h-48 w-48 mx-auto" />
         <p className="text-xl text-muted-foreground max-w-md mx-auto">Free to use. Built with pilots. Your data stays yours. No lock-ins. Paper logs remain the master.</p>
         <div className="flex gap-4 justify-center">
           <Button size="lg" onClick={() => navigate("/auth")}>
