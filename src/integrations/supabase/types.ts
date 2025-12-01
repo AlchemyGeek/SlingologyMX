@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      feature_requests: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string
+          vote_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+          vote_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          vote_count?: number | null
+        }
+        Relationships: []
+      }
+      feature_votes: {
+        Row: {
+          created_at: string | null
+          feature_id: string
+          id: string
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          created_at?: string | null
+          feature_id: string
+          id?: string
+          user_id: string
+          vote_type: number
+        }
+        Update: {
+          created_at?: string | null
+          feature_id?: string
+          id?: string
+          user_id?: string
+          vote_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_votes_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "feature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_logs: {
         Row: {
           airframe_total_time: number | null

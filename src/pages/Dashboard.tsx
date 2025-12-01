@@ -5,7 +5,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, Lightbulb } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
@@ -63,10 +63,20 @@ const Dashboard = () => {
             <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">SlingologyMX</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/feature-requests")}
+            >
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Feature Requests
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
