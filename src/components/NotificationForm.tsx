@@ -23,7 +23,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
     type: editingNotification?.type || "Maintenance",
     component: editingNotification?.component || "Airframe",
     initial_date: editingNotification?.initial_date || "",
-    recurrence: editingNotification?.recurrence || "Monthly",
+    recurrence: editingNotification?.recurrence || "None",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,6 +153,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification }: 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="None">None</SelectItem>
                 <SelectItem value="Weekly">Weekly</SelectItem>
                 <SelectItem value="Bi-Monthly">Bi-Monthly</SelectItem>
                 <SelectItem value="Monthly">Monthly</SelectItem>

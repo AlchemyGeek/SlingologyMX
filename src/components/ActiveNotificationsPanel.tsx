@@ -79,7 +79,7 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
       if (updateError) throw updateError;
 
       // If it's a recurring notification, create the next instance
-      if (notification.recurrence) {
+      if (notification.recurrence && notification.recurrence !== "None") {
         const nextDate = calculateNextDate(notification.initial_date, notification.recurrence);
         
         const { error: createError } = await supabase
