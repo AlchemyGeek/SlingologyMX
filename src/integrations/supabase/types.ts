@@ -16,27 +16,33 @@ export type Database = {
     Tables: {
       feature_requests: {
         Row: {
+          admin_comment: string | null
           created_at: string | null
           description: string
           id: string
+          status: Database["public"]["Enums"]["feature_status"]
           title: string
           updated_at: string | null
           user_id: string
           vote_count: number | null
         }
         Insert: {
+          admin_comment?: string | null
           created_at?: string | null
           description: string
           id?: string
+          status?: Database["public"]["Enums"]["feature_status"]
           title: string
           updated_at?: string | null
           user_id: string
           vote_count?: number | null
         }
         Update: {
+          admin_comment?: string | null
           created_at?: string | null
           description?: string
           id?: string
+          status?: Database["public"]["Enums"]["feature_status"]
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -311,6 +317,7 @@ export type Database = {
       app_role: "admin" | "user"
       compliance_type: "None" | "AD" | "SB" | "SL" | "KAS" | "ASB" | "Other"
       component_type: "Airframe" | "Propeller" | "Avionics" | "Other"
+      feature_status: "open" | "completed" | "duplicate" | "closed"
       interval_type: "Hours" | "Calendar" | "Mixed" | "None"
       maintenance_category:
         | "Airframe"
@@ -478,6 +485,7 @@ export const Constants = {
       app_role: ["admin", "user"],
       compliance_type: ["None", "AD", "SB", "SL", "KAS", "ASB", "Other"],
       component_type: ["Airframe", "Propeller", "Avionics", "Other"],
+      feature_status: ["open", "completed", "duplicate", "closed"],
       interval_type: ["Hours", "Calendar", "Mixed", "None"],
       maintenance_category: [
         "Airframe",
