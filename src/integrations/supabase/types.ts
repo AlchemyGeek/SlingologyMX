@@ -257,6 +257,7 @@ export type Database = {
         | "Quarterly"
         | "Semi-Annual"
         | "Yearly"
+        | "None"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -418,6 +419,7 @@ export const Constants = {
         "Quarterly",
         "Semi-Annual",
         "Yearly",
+        "None",
       ],
     },
   },
