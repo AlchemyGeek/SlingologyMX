@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { addDays, addMonths } from "date-fns";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
@@ -37,15 +38,69 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
     fetchActiveNotifications();
   }, [userId]);
 
+  const calculateNextDate = (currentDate: string, recurrence: string): string => {
+    const date = new Date(currentDate);
+    
+    switch (recurrence) {
+      case "Weekly":
+        return addDays(date, 7).toISOString().split('T')[0];
+      case "Bi-Monthly":
+        return addMonths(date, 2).toISOString().split('T')[0];
+      case "Monthly":
+        return addMonths(date, 1).toISOString().split('T')[0];
+      case "Quarterly":
+        return addMonths(date, 3).toISOString().split('T')[0];
+      case "Semi-Annual":
+        return addMonths(date, 6).toISOString().split('T')[0];
+      case "Yearly":
+        return addMonths(date, 12).toISOString().split('T')[0];
+      default:
+        return currentDate;
+    }
+  };
+
   const handleMarkCompleted = async (id: string) => {
     try {
-      const { error } = await supabase
+      // First, get the notification details
+      const { data: notification, error: fetchError } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Mark current notification as completed
+      const { error: updateError } = await supabase
         .from("notifications")
         .update({ is_completed: true, completed_at: new Date().toISOString() })
         .eq("id", id);
 
-      if (error) throw error;
-      toast.success("Notification marked as completed");
+      if (updateError) throw updateError;
+
+      // If it's a recurring notification, create the next instance
+      if (notification.recurrence) {
+        const nextDate = calculateNextDate(notification.initial_date, notification.recurrence);
+        
+        const { error: createError } = await supabase
+          .from("notifications")
+          .insert({
+            user_id: notification.user_id,
+            description: notification.description,
+            type: notification.type,
+            component: notification.component,
+            initial_date: nextDate,
+            recurrence: notification.recurrence,
+            notes: notification.notes,
+            is_completed: false
+          });
+
+        if (createError) throw createError;
+        toast.success("Notification completed and next instance created");
+      } else {
+        toast.success("Notification marked as completed");
+      }
+
       fetchActiveNotifications();
     } catch (error: any) {
       toast.error("Failed to update notification");
