@@ -96,14 +96,19 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
           });
 
         if (createError) throw createError;
+        
+        // Refresh the list to show the new notification
+        await fetchActiveNotifications();
         toast.success("Notification completed and next instance created");
       } else {
+        // Refresh the list
+        await fetchActiveNotifications();
         toast.success("Notification marked as completed");
       }
-
-      fetchActiveNotifications();
     } catch (error: any) {
       toast.error("Failed to update notification");
+      // Refresh anyway to ensure UI is in sync
+      await fetchActiveNotifications();
     }
   };
 
