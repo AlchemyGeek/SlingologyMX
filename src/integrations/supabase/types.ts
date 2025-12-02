@@ -263,19 +263,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string | null
           email: string | null
           id: string
+          name: string | null
+          plane_model_make: string | null
+          plane_registration: string | null
+          state_prefecture: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           id: string
+          name?: string | null
+          plane_model_make?: string | null
+          plane_registration?: string | null
+          state_prefecture?: string | null
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          name?: string | null
+          plane_model_make?: string | null
+          plane_registration?: string | null
+          state_prefecture?: string | null
         }
         Relationships: []
       }

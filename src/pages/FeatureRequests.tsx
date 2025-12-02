@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, User as UserIcon, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import FeatureRequestForm from "@/components/FeatureRequestForm";
@@ -83,10 +83,20 @@ const FeatureRequests = () => {
               <h1 className="text-2xl font-bold">Feature Requests</h1>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/profile")}
+            >
+              <UserIcon className="h-4 w-4 mr-2" />
+              Profile
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
