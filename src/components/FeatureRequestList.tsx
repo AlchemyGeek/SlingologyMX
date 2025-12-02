@@ -48,23 +48,41 @@ const FeatureRequestList = ({
 
   const fetchFeatures = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: featuresData, error: featuresError } = await supabase
         .from("feature_requests")
-        .select(`
-          *,
-          profiles!feature_requests_user_id_fkey (
-            name
-          )
-        `)
+        .select("*")
         .order("vote_count", { ascending: false });
 
-      if (error) throw error;
+      if (featuresError) throw featuresError;
       
-      // Map the data to include submitter name
-      const featuresWithNames = data?.map((feature: any) => ({
+      if (!featuresData || featuresData.length === 0) {
+        setFeatures([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profile names for all users
+      const userIds = [...new Set(featuresData.map((f) => f.user_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+
+      // Create a map of user_id to name
+      const profileMap = new Map<string, string>();
+      profilesData?.forEach((profile) => {
+        profileMap.set(profile.id, profile.name || "Anonymous");
+      });
+
+      // Map features with submitter names
+      const featuresWithNames = featuresData.map((feature) => ({
         ...feature,
-        submitter_name: feature.profiles?.name || "Anonymous",
-      })) || [];
+        submitter_name: profileMap.get(feature.user_id) || "Anonymous",
+      }));
       
       setFeatures(featuresWithNames);
     } catch (error) {
