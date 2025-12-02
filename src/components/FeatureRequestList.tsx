@@ -52,7 +52,7 @@ const FeatureRequestList = ({
         .from("feature_requests")
         .select(`
           *,
-          profiles:user_id (
+          profiles!feature_requests_user_id_fkey (
             name
           )
         `)
