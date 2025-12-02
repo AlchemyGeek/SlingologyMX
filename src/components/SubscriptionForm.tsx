@@ -72,6 +72,8 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
         recurrence: formData.recurrence as "None" | "Weekly" | "Bi-Monthly" | "Monthly" | "Semi-Annual" | "Yearly",
       };
 
+      const isRecurring = formData.recurrence !== "None";
+
       if (editingSubscription) {
         // Update subscription
         const { error: subError } = await supabase
@@ -81,22 +83,54 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
 
         if (subError) throw subError;
 
-        // Update linked notification
-        const notificationData = {
-          description: formData.subscription_name,
-          notes: formData.notes || null,
-          type: "Subscription" as const,
-          component: "Other" as const,
-          initial_date: formData.initial_date,
-          recurrence: formData.recurrence,
-        };
-
-        const { error: notifError } = await supabase
+        // Check if there's an existing linked notification
+        const { data: existingNotif } = await supabase
           .from("notifications")
-          .update(notificationData)
-          .eq("subscription_id", editingSubscription.id);
+          .select("id")
+          .eq("subscription_id", editingSubscription.id)
+          .maybeSingle();
 
-        if (notifError) throw notifError;
+        if (isRecurring) {
+          if (existingNotif) {
+            // Update existing notification
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .update({
+                description: formData.subscription_name,
+                notes: formData.notes || null,
+                type: "Subscription" as const,
+                component: "Other" as const,
+                initial_date: formData.initial_date,
+                recurrence: formData.recurrence,
+              })
+              .eq("subscription_id", editingSubscription.id);
+
+            if (notifError) throw notifError;
+          } else {
+            // Create new notification (subscription changed from non-recurring to recurring)
+            const { error: notifError } = await supabase.from("notifications").insert([{
+              user_id: userId,
+              description: formData.subscription_name,
+              notes: formData.notes || null,
+              type: "Subscription" as const,
+              component: "Other" as const,
+              initial_date: formData.initial_date,
+              recurrence: formData.recurrence,
+              subscription_id: editingSubscription.id,
+            }]);
+
+            if (notifError) throw notifError;
+            toast.info("A renewal reminder notification has been created for this subscription.");
+          }
+        } else if (existingNotif) {
+          // Delete notification if subscription changed to non-recurring
+          const { error: notifError } = await supabase
+            .from("notifications")
+            .delete()
+            .eq("subscription_id", editingSubscription.id);
+
+          if (notifError) throw notifError;
+        }
 
         toast.success("Subscription updated successfully!");
       } else {
@@ -109,23 +143,27 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
 
         if (subError) throw subError;
 
-        // Create linked notification
-        const notificationData = {
-          user_id: userId,
-          description: formData.subscription_name,
-          notes: formData.notes || null,
-          type: "Subscription" as const,
-          component: "Other" as const,
-          initial_date: formData.initial_date,
-          recurrence: formData.recurrence,
-          subscription_id: newSubscription.id,
-        };
+        // Only create notification for recurring subscriptions
+        if (isRecurring) {
+          const notificationData = {
+            user_id: userId,
+            description: formData.subscription_name,
+            notes: formData.notes || null,
+            type: "Subscription" as const,
+            component: "Other" as const,
+            initial_date: formData.initial_date,
+            recurrence: formData.recurrence,
+            subscription_id: newSubscription.id,
+          };
 
-        const { error: notifError } = await supabase.from("notifications").insert([notificationData]);
+          const { error: notifError } = await supabase.from("notifications").insert([notificationData]);
 
-        if (notifError) throw notifError;
+          if (notifError) throw notifError;
 
-        toast.success("Subscription created successfully!");
+          toast.success("Subscription created! A renewal reminder notification has been added.");
+        } else {
+          toast.success("Subscription created successfully!");
+        }
       }
 
       onSuccess();
