@@ -219,6 +219,7 @@ export type Database = {
           is_completed: boolean | null
           notes: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
+          subscription_id: string | null
           type: Database["public"]["Enums"]["notification_type"]
           updated_at: string | null
           user_id: string
@@ -233,6 +234,7 @@ export type Database = {
           is_completed?: boolean | null
           notes?: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
+          subscription_id?: string | null
           type: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
           user_id: string
@@ -247,11 +249,19 @@ export type Database = {
           is_completed?: boolean | null
           notes?: string | null
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
+          subscription_id?: string | null
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
@@ -294,6 +304,45 @@ export type Database = {
           plane_model_make?: string | null
           plane_registration?: string | null
           state_prefecture?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cost: number
+          created_at: string | null
+          id: string
+          initial_date: string
+          notes: string | null
+          recurrence: Database["public"]["Enums"]["recurrence_type"]
+          subscription_name: string
+          type: Database["public"]["Enums"]["subscription_type"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string | null
+          id?: string
+          initial_date: string
+          notes?: string | null
+          recurrence: Database["public"]["Enums"]["recurrence_type"]
+          subscription_name: string
+          type: Database["public"]["Enums"]["subscription_type"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string | null
+          id?: string
+          initial_date?: string
+          notes?: string | null
+          recurrence?: Database["public"]["Enums"]["recurrence_type"]
+          subscription_name?: string
+          type?: Database["public"]["Enums"]["subscription_type"]
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -373,6 +422,18 @@ export type Database = {
         | "Semi-Annual"
         | "Yearly"
         | "None"
+      subscription_type:
+        | "EFB & Flight Planning"
+        | "Avionics Subscriptions"
+        | "Aircraft Maintenance, Tracking, & Record Services"
+        | "Proficiency & Safety Tools"
+        | "Aviation Community Memberships"
+        | "Weather Tools"
+        | "Magazine Subscription"
+        | "Aircraft Operations & Financial Tools"
+        | "Hardware-Related Annual Fees"
+        | "Insurance Related Add-Ons"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -537,6 +598,19 @@ export const Constants = {
         "Semi-Annual",
         "Yearly",
         "None",
+      ],
+      subscription_type: [
+        "EFB & Flight Planning",
+        "Avionics Subscriptions",
+        "Aircraft Maintenance, Tracking, & Record Services",
+        "Proficiency & Safety Tools",
+        "Aviation Community Memberships",
+        "Weather Tools",
+        "Magazine Subscription",
+        "Aircraft Operations & Financial Tools",
+        "Hardware-Related Annual Fees",
+        "Insurance Related Add-Ons",
+        "Other",
       ],
     },
   },
