@@ -83,11 +83,7 @@ const Profile = () => {
   const loadProfile = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
     if (error) {
       console.error("Error loading profile:", error);
@@ -158,31 +154,21 @@ const Profile = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
             <div className="flex items-center gap-2">
-              <img
-                src={slingologyIcon}
-                alt="SlingologyMX"
-                className="h-8 w-8"
-              />
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
               <h1 className="text-2xl font-bold">Profile</h1>
-              <span className="text-sm text-muted-foreground">
-                ({isAdmin ? "Admin" : "Regular Member"})
-              </span>
+              <span className="text-sm text-muted-foreground">({isAdmin ? "Admin" : "Regular Member"})</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open("https://slingology.blog/category/MX/", "_blank")}
+              onClick={() => window.open("https://slingology.blog/category/mx/?utm_source=slingology-mx", "_blank")}
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Blog
@@ -199,9 +185,7 @@ const Profile = () => {
         <Card>
           <CardHeader>
             <CardTitle>User Profile</CardTitle>
-            <CardDescription>
-              Manage your personal information and aircraft details
-            </CardDescription>
+            <CardDescription>Manage your personal information and aircraft details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -209,9 +193,7 @@ const Profile = () => {
               <Input
                 id="name"
                 value={profileData.name}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, name: e.target.value })
-                }
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 maxLength={50}
                 placeholder="Enter your name"
               />
@@ -219,15 +201,8 @@ const Profile = () => {
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={profileData.email}
-                disabled
-                className="bg-muted cursor-not-allowed"
-              />
-              <p className="text-xs text-muted-foreground">
-                Email cannot be changed at this time
-              </p>
+              <Input id="email" value={profileData.email} disabled className="bg-muted cursor-not-allowed" />
+              <p className="text-xs text-muted-foreground">Email cannot be changed at this time</p>
             </div>
 
             <div className="space-y-4">
@@ -237,9 +212,7 @@ const Profile = () => {
                 <Input
                   id="country"
                   value={profileData.country}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, country: e.target.value })
-                  }
+                  onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
                   maxLength={100}
                   placeholder="Enter country"
                 />
@@ -266,9 +239,7 @@ const Profile = () => {
                 <Input
                   id="city"
                   value={profileData.city}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, city: e.target.value })
-                  }
+                  onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
                   maxLength={100}
                   placeholder="Enter city"
                 />
@@ -318,16 +289,13 @@ const Profile = () => {
             <div className="pt-6 border-t space-y-2">
               <h3 className="font-semibold text-sm">Disclaimer</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                This is a personal project, built and maintained with care. We'll
-                keep improving the features and do our best to safeguard your
-                data. That said, there are no guarantees about uptime,
-                availability, or uninterrupted operation. Your paper logbooks and
-                your own digitized scans should always remain your primary source
-                of truth. Please make sure you keep your own backups—use the
-                Export option in your profile to save your data at any time. If
-                the service ever needs to be discontinued, we'll make every effort
-                to give you enough notice to download your information. By using
-                this site, you acknowledge that you do so at your own risk.
+                This is a personal project, built and maintained with care. We'll keep improving the features and do our
+                best to safeguard your data. That said, there are no guarantees about uptime, availability, or
+                uninterrupted operation. Your paper logbooks and your own digitized scans should always remain your
+                primary source of truth. Please make sure you keep your own backups—use the Export option in your
+                profile to save your data at any time. If the service ever needs to be discontinued, we'll make every
+                effort to give you enough notice to download your information. By using this site, you acknowledge that
+                you do so at your own risk.
               </p>
             </div>
           </CardContent>

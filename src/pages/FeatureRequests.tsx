@@ -66,20 +66,12 @@ const FeatureRequests = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
             <div className="flex items-center gap-2">
-              <img
-                src={slingologyIcon}
-                alt="SlingologyMX"
-                className="h-8 w-8"
-              />
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
               <h1 className="text-2xl font-bold">Feature Requests</h1>
             </div>
           </div>
@@ -87,16 +79,12 @@ const FeatureRequests = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open("https://slingology.blog/category/MX/", "_blank")}
+              onClick={() => window.open("https://slingology.blog/category/mx/?utm_source=slingology-mx", "_blank")}
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Blog
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/profile")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
               <UserIcon className="h-4 w-4 mr-2" />
               Profile
             </Button>
@@ -111,10 +99,7 @@ const FeatureRequests = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <FeatureRequestForm
-              userId={user.id}
-              onFeatureSubmitted={handleFeatureSubmitted}
-            />
+            <FeatureRequestForm userId={user.id} onFeatureSubmitted={handleFeatureSubmitted} />
           </div>
           <div className="lg:col-span-2">
             <FeatureRequestList userId={user.id} refreshKey={refreshKey} />
