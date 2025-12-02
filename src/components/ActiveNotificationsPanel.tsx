@@ -92,7 +92,8 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
             initial_date: nextDate,
             recurrence: notification.recurrence,
             notes: notification.notes,
-            is_completed: false
+            is_completed: false,
+            subscription_id: notification.subscription_id
           });
 
         if (createError) throw createError;
