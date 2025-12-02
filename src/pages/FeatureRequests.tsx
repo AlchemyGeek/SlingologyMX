@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, User as UserIcon, Lightbulb } from "lucide-react";
+import { LogOut, ArrowLeft, User as UserIcon, Lightbulb, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import FeatureRequestForm from "@/components/FeatureRequestForm";
@@ -84,6 +84,14 @@ const FeatureRequests = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open("https://slingology.blog/category/MX/", "_blank")}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
             <Button
               variant="ghost"
               size="sm"
