@@ -19,9 +19,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const {
-      data: {
-        subscription
-      }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -29,11 +27,7 @@ const Dashboard = () => {
         navigate("/auth");
       }
     });
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -49,14 +43,17 @@ const Dashboard = () => {
     navigate("/");
   };
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
+    return (
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
-      </div>;
+      </div>
+    );
   }
   if (!user) {
     return null;
   }
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -72,19 +69,11 @@ const Dashboard = () => {
               <BookOpen className="h-4 w-4 mr-2" />
               Blog
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/profile")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
               <UserIcon className="h-4 w-4 mr-2" />
               Profile
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/feature-requests")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
               <Lightbulb className="h-4 w-4 mr-2" />
               Feature Requests
             </Button>
@@ -103,7 +92,7 @@ const Dashboard = () => {
             <TabsTrigger value="active">Active Notifications</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="logs">Maintenance Logs</TabsTrigger>
+            <TabsTrigger value="logs">Maintenance</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manage">
@@ -127,6 +116,7 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
-    </div>;
+    </div>
+  );
 };
 export default Dashboard;
