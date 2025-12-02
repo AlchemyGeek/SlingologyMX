@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, ArrowLeft, Save } from "lucide-react";
+import { LogOut, ArrowLeft, Save, BookOpen, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 
@@ -178,10 +178,20 @@ const Profile = () => {
               </span>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open("https://slingology.blog/category/MX/", "_blank")}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

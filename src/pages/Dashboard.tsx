@@ -5,7 +5,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon } from "lucide-react";
+import { LogOut, Lightbulb, User as UserIcon, BookOpen } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
@@ -64,6 +64,14 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold">SlingologyMX</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open("https://slingology.blog/category/MX/", "_blank")}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
             <Button
               variant="ghost"
               size="sm"
