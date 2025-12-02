@@ -627,17 +627,6 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
           <Label>Attachment URLs</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label htmlFor="url_input" className="text-sm">URL</Label>
-              <Input
-                id="url_input"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
-                maxLength={255}
-                placeholder="https://example.com/invoice.pdf"
-              />
-            </div>
-            <div className="space-y-1">
               <Label htmlFor="url_desc_input" className="text-sm">Description (optional)</Label>
               <Input
                 id="url_desc_input"
@@ -646,6 +635,17 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
                 onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
                 maxLength={100}
                 placeholder="Invoice, receipt, photo, etc."
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="url_input" className="text-sm">URL Link</Label>
+              <Input
+                id="url_input"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
+                maxLength={255}
+                placeholder="https://example.com/invoice.pdf"
               />
             </div>
           </div>
@@ -662,11 +662,8 @@ const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: Mainten
                     rel="noopener noreferrer" 
                     className="text-sm font-medium hover:underline block truncate"
                   >
-                    {attachment.url}
+                    {attachment.description || attachment.url}
                   </a>
-                  {attachment.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{attachment.description}</p>
-                  )}
                 </div>
                 <X className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive" onClick={() => handleRemoveUrl(index)} />
               </div>

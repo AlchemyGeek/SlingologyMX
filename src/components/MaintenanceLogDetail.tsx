@@ -242,20 +242,17 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
               <CardTitle className="text-lg">Attachments</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {log.attachment_urls.map((attachment: { url: string; description?: string }, index: number) => (
-                  <li key={index} className="border-b last:border-b-0 pb-2 last:pb-0">
+                  <li key={index}>
                     <a
                       href={attachment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline text-sm font-medium block"
+                      className="text-primary hover:underline text-sm font-medium"
                     >
-                      {attachment.url}
+                      {attachment.description || attachment.url}
                     </a>
-                    {attachment.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{attachment.description}</p>
-                    )}
                   </li>
                 ))}
               </ul>
