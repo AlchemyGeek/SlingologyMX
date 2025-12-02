@@ -21,6 +21,7 @@ interface FeatureRequest {
   user_id: string;
   status: FeatureStatus;
   admin_comment: string | null;
+  submitter_name?: string;
 }
 
 interface Vote {
@@ -49,11 +50,23 @@ const FeatureRequestList = ({
     try {
       const { data, error } = await supabase
         .from("feature_requests")
-        .select("*")
+        .select(`
+          *,
+          profiles:user_id (
+            name
+          )
+        `)
         .order("vote_count", { ascending: false });
 
       if (error) throw error;
-      setFeatures(data || []);
+      
+      // Map the data to include submitter name
+      const featuresWithNames = data?.map((feature: any) => ({
+        ...feature,
+        submitter_name: feature.profiles?.name || "Anonymous",
+      })) || [];
+      
+      setFeatures(featuresWithNames);
     } catch (error) {
       toast.error("Failed to load feature requests");
       console.error("Error fetching features:", error);
@@ -211,6 +224,7 @@ const FeatureRequestList = ({
                   )}
                   <div className="flex items-center gap-2 mt-2">
                     <p className="text-xs text-muted-foreground">
+                      Submitted by {feature.submitter_name} •{" "}
                       {formatDistanceToNow(new Date(feature.created_at), {
                         addSuffix: true,
                       })}
