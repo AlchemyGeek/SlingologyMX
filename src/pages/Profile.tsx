@@ -26,6 +26,7 @@ const Profile = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: "",
     email: "",
@@ -62,8 +63,22 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
+      checkAdminStatus();
     }
   }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!data);
+  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -158,6 +173,9 @@ const Profile = () => {
                 className="h-8 w-8"
               />
               <h1 className="text-2xl font-bold">Profile</h1>
+              <span className="text-sm text-muted-foreground">
+                ({isAdmin ? "Admin" : "Regular Member"})
+              </span>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
