@@ -184,6 +184,8 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
               <SelectContent>
                 <SelectItem value="Maintenance">Maintenance</SelectItem>
                 <SelectItem value="Subscription">Subscription</SelectItem>
+                <SelectItem value="Directives">Directives</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
