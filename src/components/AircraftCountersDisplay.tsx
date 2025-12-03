@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ interface AircraftCountersDisplayProps {
   loading: boolean;
   userId: string;
   onUpdateCounter: (field: keyof Omit<AircraftCounters, "id">, value: number) => Promise<void>;
+  onUpdateAllCounters: (updates: Partial<Omit<AircraftCounters, "id">>) => Promise<void>;
   onRefetch: () => void;
 }
 
@@ -30,17 +32,25 @@ const counterConfig = [
   { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
 ];
 
-const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, onRefetch }: AircraftCountersDisplayProps) => {
+const syncableCounters: (keyof Omit<AircraftCounters, "id">)[] = [
+  "tach", "airframe_total_time", "engine_total_time", "prop_total_time"
+];
+
+const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
   const [editingCounter, setEditingCounter] = useState<keyof Omit<AircraftCounters, "id"> | null>(null);
   const [editValue, setEditValue] = useState("");
   const [addValue, setAddValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [syncEnabled, setSyncEnabled] = useState(true);
+
+  const isSyncableCounter = editingCounter && syncableCounters.includes(editingCounter);
 
   const handleOpenEdit = (key: keyof Omit<AircraftCounters, "id">) => {
     setEditingCounter(key);
     setEditValue(counters[key].toString());
     setAddValue("");
+    setSyncEnabled(true);
     setIsDialogOpen(true);
   };
 
@@ -67,10 +77,21 @@ const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, o
       toast.error("Please enter a valid positive number to add");
       return;
     }
-    const newValue = counters[editingCounter] + toAdd;
+
     try {
-      await onUpdateCounter(editingCounter, newValue);
-      toast.success(`Added ${toAdd} to ${counterConfig.find(c => c.key === editingCounter)?.label}`);
+      if (syncEnabled && isSyncableCounter) {
+        // Update all syncable counters
+        const updates: Partial<Omit<AircraftCounters, "id">> = {};
+        syncableCounters.forEach(key => {
+          updates[key] = counters[key] + toAdd;
+        });
+        await onUpdateAllCounters(updates);
+        toast.success(`Added ${toAdd} to all synced counters`);
+      } else {
+        const newValue = counters[editingCounter] + toAdd;
+        await onUpdateCounter(editingCounter, newValue);
+        toast.success(`Added ${toAdd} to ${counterConfig.find(c => c.key === editingCounter)?.label}`);
+      }
       setIsDialogOpen(false);
     } catch {
       toast.error("Failed to update counter");
@@ -171,6 +192,18 @@ const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, o
                   Add
                 </Button>
               </div>
+              {isSyncableCounter && (
+                <div className="flex items-center justify-between pt-2 border-t mt-3">
+                  <Label htmlFor="sync-toggle" className="text-sm text-muted-foreground">
+                    Sync with other counters (Tach, Airframe, Engine, Prop)
+                  </Label>
+                  <Switch
+                    id="sync-toggle"
+                    checked={syncEnabled}
+                    onCheckedChange={setSyncEnabled}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
