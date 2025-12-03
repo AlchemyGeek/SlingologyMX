@@ -5,7 +5,7 @@ import { Trash2, Pencil, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 
 interface NotificationListProps {
   notifications: any[];
@@ -19,7 +19,7 @@ type AlertStatus = "normal" | "reminder" | "due";
 const getDateAlertStatus = (notification: any): AlertStatus => {
   if (notification.is_completed) return "normal";
   
-  const dueDate = new Date(notification.initial_date);
+  const dueDate = parseLocalDate(notification.initial_date);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   dueDate.setHours(0, 0, 0, 0);
@@ -97,7 +97,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
                 <TableCell>{notification.component}</TableCell>
-                <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
+                <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                 <TableCell>{notification.recurrence}</TableCell>
                 <TableCell>
                   <Badge variant={notification.is_completed ? "secondary" : "default"}>

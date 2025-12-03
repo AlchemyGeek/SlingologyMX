@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { parseLocalDate } from "@/lib/utils";
 
 interface MaintenanceLog {
   id: string;
@@ -48,7 +49,7 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
     })
     .sort((a, b) => {
       if (sortBy === "date") {
-        return new Date(b.date_performed).getTime() - new Date(a.date_performed).getTime();
+        return parseLocalDate(b.date_performed).getTime() - parseLocalDate(a.date_performed).getTime();
       }
       return a.category.localeCompare(b.category);
     });
@@ -132,7 +133,7 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => onViewDetail(log)}
                 >
-                  <TableCell>{format(new Date(log.date_performed), "MMM dd, yyyy")}</TableCell>
+                  <TableCell>{format(parseLocalDate(log.date_performed), "MMM dd, yyyy")}</TableCell>
                   <TableCell>{log.category}</TableCell>
                   <TableCell>{log.subcategory}</TableCell>
                   <TableCell className="font-medium">{log.entry_title}</TableCell>

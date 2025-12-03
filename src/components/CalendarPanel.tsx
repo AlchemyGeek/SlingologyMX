@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format, isSameDay, addWeeks, addMonths } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 
 interface CalendarPanelProps {
   userId: string;
@@ -97,7 +98,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
       return "normal";
     } else {
       // Date-based notification
-      const dueDate = new Date(notification.initial_date);
+      const dueDate = parseLocalDate(notification.initial_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       dueDate.setHours(0, 0, 0, 0);
@@ -112,7 +113,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
   const getNotificationsForDate = (date: Date) => {
     return notifications.filter((notification) => {
-      const initialDate = new Date(notification.initial_date);
+      const initialDate = parseLocalDate(notification.initial_date);
       
       if (isSameDay(initialDate, date)) {
         return true;
@@ -134,13 +135,13 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
   const getMaintenanceLogsForDate = (date: Date) => {
     return maintenanceLogs.filter((log) => {
-      const performedDate = new Date(log.date_performed);
+      const performedDate = parseLocalDate(log.date_performed);
       if (isSameDay(performedDate, date)) {
         return true;
       }
       
       if (log.next_due_date) {
-        const nextDueDate = new Date(log.next_due_date);
+        const nextDueDate = parseLocalDate(log.next_due_date);
         if (isSameDay(nextDueDate, date)) {
           return true;
         }
@@ -166,7 +167,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
     notifications.forEach((notification) => {
       const status = getNotificationAlertStatus(notification);
-      const initialDate = new Date(notification.initial_date);
+      const initialDate = parseLocalDate(notification.initial_date);
       
       const targetArray = status === "due" ? due : status === "alert" ? alert : normal;
       targetArray.push(initialDate);
@@ -178,9 +179,9 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     });
 
     maintenanceLogs.forEach((log) => {
-      maintenance.push(new Date(log.date_performed));
+      maintenance.push(parseLocalDate(log.date_performed));
       if (log.next_due_date) {
-        maintenance.push(new Date(log.next_due_date));
+        maintenance.push(parseLocalDate(log.next_due_date));
       }
     });
 
@@ -324,7 +325,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p>Subcategory: {log.subcategory}</p>
                           <p>Performed by: {log.performed_by_name}</p>
-                          {log.next_due_date && selectedDate && isSameDay(new Date(log.next_due_date), selectedDate) && (
+                          {log.next_due_date && selectedDate && isSameDay(parseLocalDate(log.next_due_date), selectedDate) && (
                             <p className="font-medium text-orange-600">Next Due Date</p>
                           )}
                         </div>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { parseLocalDate } from "@/lib/utils";
 
 interface SubscriptionListProps {
   subscriptions: any[];
@@ -53,7 +54,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
                 {subscription.type}
               </TableCell>
               <TableCell>${subscription.cost}</TableCell>
-              <TableCell>{new Date(subscription.initial_date).toLocaleDateString()}</TableCell>
+              <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
               <TableCell>{subscription.recurrence}</TableCell>
               <TableCell>
                 <div className="flex gap-1">

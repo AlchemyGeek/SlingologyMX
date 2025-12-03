@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { parseLocalDate } from "@/lib/utils";
 
 interface MaintenanceLogDetailProps {
   log: any;
@@ -55,7 +56,7 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
               ))}
             </div>
             <p className="text-muted-foreground">
-              Performed on {format(new Date(log.date_performed), "MMMM dd, yyyy")}
+              Performed on {format(parseLocalDate(log.date_performed), "MMMM dd, yyyy")}
             </p>
           </CardContent>
         </Card>
@@ -158,7 +159,7 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
               {log.next_due_date && (
                 <div>
                   <p className="text-sm text-muted-foreground">Next Due Date</p>
-                  <p className="font-medium">{format(new Date(log.next_due_date), "MMM dd, yyyy")}</p>
+                  <p className="font-medium">{format(parseLocalDate(log.next_due_date), "MMM dd, yyyy")}</p>
                 </div>
               )}
             </CardContent>
