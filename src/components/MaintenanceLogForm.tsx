@@ -174,6 +174,12 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       return;
     }
 
+    // Validate Time & Usage fields are filled
+    if (!formData.hobbs_at_event || !formData.tach_at_event || !formData.airframe_total_time || !formData.engine_total_time || !formData.prop_total_time) {
+      toast.error("All Time & Usage fields are required");
+      return;
+    }
+
     if (formData.internal_notes.length > 2000) {
       toast.error("Internal notes must be 2000 characters or less");
       return;
@@ -389,7 +395,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             </Popover>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hobbs_at_event">Hobbs at Event</Label>
+            <Label htmlFor="hobbs_at_event">Hobbs at Event *</Label>
             <Input
               id="hobbs_at_event"
               type="number"
@@ -397,10 +403,11 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               max="9999.9"
               value={formData.hobbs_at_event}
               onChange={(e) => setFormData({ ...formData, hobbs_at_event: e.target.value })}
+              required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tach_at_event">Tach at Event</Label>
+            <Label htmlFor="tach_at_event">Tach at Event *</Label>
             <Input
               id="tach_at_event"
               type="number"
@@ -408,21 +415,23 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               max="9999.9"
               value={formData.tach_at_event}
               onChange={(e) => setFormData({ ...formData, tach_at_event: e.target.value })}
+              required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="airframe_total_time">Airframe Total Time</Label>
+            <Label htmlFor="airframe_total_time">Airframe Total Time *</Label>
             <Input
               id="airframe_total_time"
               type="number"
               step="0.1"
               max="19999.9"
+              required
               value={formData.airframe_total_time}
               onChange={(e) => setFormData({ ...formData, airframe_total_time: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="engine_total_time">Engine Total Time</Label>
+            <Label htmlFor="engine_total_time">Engine Total Time *</Label>
             <Input
               id="engine_total_time"
               type="number"
@@ -430,15 +439,17 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               max="19999.9"
               value={formData.engine_total_time}
               onChange={(e) => setFormData({ ...formData, engine_total_time: e.target.value })}
+              required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="prop_total_time">Prop Total Time</Label>
+            <Label htmlFor="prop_total_time">Prop Total Time *</Label>
             <Input
               id="prop_total_time"
               type="number"
               step="0.1"
               max="19999.9"
+              required
               value={formData.prop_total_time}
               onChange={(e) => setFormData({ ...formData, prop_total_time: e.target.value })}
             />
