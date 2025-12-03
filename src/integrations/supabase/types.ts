@@ -788,7 +788,7 @@ export type Database = {
         | "Scheduled Maintenance"
         | "Other"
       notification_basis: "Date" | "Counter"
-      notification_type: "Maintenance" | "Subscription"
+      notification_type: "Maintenance" | "Subscription" | "Directives" | "Other"
       performed_by_type:
         | "Owner"
         | "A&P"
@@ -1029,7 +1029,7 @@ export const Constants = {
         "Other",
       ],
       notification_basis: ["Date", "Counter"],
-      notification_type: ["Maintenance", "Subscription"],
+      notification_type: ["Maintenance", "Subscription", "Directives", "Other"],
       performed_by_type: ["Owner", "A&P", "LSRM", "Repairman", "Shop", "Other"],
       recurrence_type: [
         "Weekly",
