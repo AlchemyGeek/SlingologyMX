@@ -14,6 +14,227 @@ export type Database = {
   }
   public: {
     Tables: {
+      aircraft_directive_status: {
+        Row: {
+          applicability_reason: string | null
+          applicability_status: Database["public"]["Enums"]["applicability_status"]
+          archived: boolean
+          compliance_links: Json | null
+          compliance_status: Database["public"]["Enums"]["db_compliance_status"]
+          created_at: string | null
+          directive_id: string
+          first_compliance_date: string | null
+          first_compliance_tach: number | null
+          id: string
+          labor_hours_actual: number | null
+          labor_rate: number | null
+          last_compliance_date: string | null
+          last_compliance_tach: number | null
+          maintenance_provider_name: string | null
+          next_due_date: string | null
+          next_due_tach: number | null
+          owner_notes: string | null
+          parts_cost: number | null
+          performed_by_name: string | null
+          performed_by_role:
+            | Database["public"]["Enums"]["directive_performed_by_role"]
+            | null
+          total_cost: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          applicability_reason?: string | null
+          applicability_status?: Database["public"]["Enums"]["applicability_status"]
+          archived?: boolean
+          compliance_links?: Json | null
+          compliance_status?: Database["public"]["Enums"]["db_compliance_status"]
+          created_at?: string | null
+          directive_id: string
+          first_compliance_date?: string | null
+          first_compliance_tach?: number | null
+          id?: string
+          labor_hours_actual?: number | null
+          labor_rate?: number | null
+          last_compliance_date?: string | null
+          last_compliance_tach?: number | null
+          maintenance_provider_name?: string | null
+          next_due_date?: string | null
+          next_due_tach?: number | null
+          owner_notes?: string | null
+          parts_cost?: number | null
+          performed_by_name?: string | null
+          performed_by_role?:
+            | Database["public"]["Enums"]["directive_performed_by_role"]
+            | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          applicability_reason?: string | null
+          applicability_status?: Database["public"]["Enums"]["applicability_status"]
+          archived?: boolean
+          compliance_links?: Json | null
+          compliance_status?: Database["public"]["Enums"]["db_compliance_status"]
+          created_at?: string | null
+          directive_id?: string
+          first_compliance_date?: string | null
+          first_compliance_tach?: number | null
+          id?: string
+          labor_hours_actual?: number | null
+          labor_rate?: number | null
+          last_compliance_date?: string | null
+          last_compliance_tach?: number | null
+          maintenance_provider_name?: string | null
+          next_due_date?: string | null
+          next_due_tach?: number | null
+          owner_notes?: string | null
+          parts_cost?: number | null
+          performed_by_name?: string | null
+          performed_by_role?:
+            | Database["public"]["Enums"]["directive_performed_by_role"]
+            | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_directive_status_directive_id_fkey"
+            columns: ["directive_id"]
+            isOneToOne: false
+            referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aircraft_directive_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directives: {
+        Row: {
+          action_types: string[] | null
+          aircraft_make_model_filter: string | null
+          applicability_notes: string | null
+          applicable_serial_range: string | null
+          archived: boolean
+          category: Database["public"]["Enums"]["directive_category"]
+          compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          created_at: string | null
+          directive_code: string
+          directive_status: Database["public"]["Enums"]["directive_status"]
+          directive_type: Database["public"]["Enums"]["directive_type"]
+          effective_date: string | null
+          engine_model_filter: string | null
+          id: string
+          initial_due_date: string | null
+          initial_due_hours: number | null
+          initial_due_months: number | null
+          initial_due_type:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date: string | null
+          issuing_authority: string | null
+          prop_model_filter: string | null
+          repeat_hours: number | null
+          repeat_months: number | null
+          requires_log_entry: boolean
+          revision: string | null
+          severity: Database["public"]["Enums"]["directive_severity"]
+          source_links: Json | null
+          terminating_action_exists: boolean
+          terminating_action_summary: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_types?: string[] | null
+          aircraft_make_model_filter?: string | null
+          applicability_notes?: string | null
+          applicable_serial_range?: string | null
+          archived?: boolean
+          category: Database["public"]["Enums"]["directive_category"]
+          compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          created_at?: string | null
+          directive_code: string
+          directive_status?: Database["public"]["Enums"]["directive_status"]
+          directive_type: Database["public"]["Enums"]["directive_type"]
+          effective_date?: string | null
+          engine_model_filter?: string | null
+          id?: string
+          initial_due_date?: string | null
+          initial_due_hours?: number | null
+          initial_due_months?: number | null
+          initial_due_type?:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date?: string | null
+          issuing_authority?: string | null
+          prop_model_filter?: string | null
+          repeat_hours?: number | null
+          repeat_months?: number | null
+          requires_log_entry?: boolean
+          revision?: string | null
+          severity: Database["public"]["Enums"]["directive_severity"]
+          source_links?: Json | null
+          terminating_action_exists?: boolean
+          terminating_action_summary?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_types?: string[] | null
+          aircraft_make_model_filter?: string | null
+          applicability_notes?: string | null
+          applicable_serial_range?: string | null
+          archived?: boolean
+          category?: Database["public"]["Enums"]["directive_category"]
+          compliance_scope?: Database["public"]["Enums"]["compliance_scope"]
+          created_at?: string | null
+          directive_code?: string
+          directive_status?: Database["public"]["Enums"]["directive_status"]
+          directive_type?: Database["public"]["Enums"]["directive_type"]
+          effective_date?: string | null
+          engine_model_filter?: string | null
+          id?: string
+          initial_due_date?: string | null
+          initial_due_hours?: number | null
+          initial_due_months?: number | null
+          initial_due_type?:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date?: string | null
+          issuing_authority?: string | null
+          prop_model_filter?: string | null
+          repeat_hours?: number | null
+          repeat_months?: number | null
+          requires_log_entry?: boolean
+          revision?: string | null
+          severity?: Database["public"]["Enums"]["directive_severity"]
+          source_links?: Json | null
+          terminating_action_exists?: boolean
+          terminating_action_summary?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directives_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_requests: {
         Row: {
           admin_comment: string | null
@@ -382,9 +603,59 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      applicability_status: "Applies" | "Does Not Apply" | "Unsure"
+      compliance_scope:
+        | "One-Time"
+        | "Recurring"
+        | "Conditional"
+        | "Informational Only"
       compliance_type: "None" | "AD" | "SB" | "SL" | "KAS" | "ASB" | "Other"
       component_type: "Airframe" | "Propeller" | "Avionics" | "Other"
+      db_compliance_status:
+        | "Not Reviewed"
+        | "Not Complied"
+        | "Complied Once"
+        | "Recurring (Current)"
+        | "Overdue"
+        | "Not Applicable"
+      directive_category:
+        | "Airframe"
+        | "Engine"
+        | "Propeller"
+        | "Avionics"
+        | "System"
+        | "Appliance"
+        | "Other"
+      directive_performed_by_role:
+        | "Owner/Builder"
+        | "Owner/Pilot"
+        | "A&P"
+        | "IA"
+        | "Rotax IRMT"
+        | "Maintenance Shop"
+        | "Other"
+      directive_severity:
+        | "Emergency"
+        | "Mandatory"
+        | "Recommended"
+        | "Informational"
+      directive_status: "Active" | "Superseded" | "Cancelled" | "Proposed"
+      directive_type:
+        | "FAA Airworthiness Directive"
+        | "Manufacturer Alert"
+        | "Manufacturer Mandatory"
+        | "Service Bulletin"
+        | "Service Instruction"
+        | "Information Bulletin"
+        | "Other"
       feature_status: "open" | "completed" | "duplicate" | "closed"
+      initial_due_type:
+        | "Before Next Flight"
+        | "By Date"
+        | "By Total Time (Hours)"
+        | "By Calendar (Months)"
+        | "At Next Inspection"
+        | "Other"
       interval_type: "Hours" | "Calendar" | "Mixed" | "None"
       maintenance_category:
         | "Airframe"
@@ -562,9 +833,66 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      applicability_status: ["Applies", "Does Not Apply", "Unsure"],
+      compliance_scope: [
+        "One-Time",
+        "Recurring",
+        "Conditional",
+        "Informational Only",
+      ],
       compliance_type: ["None", "AD", "SB", "SL", "KAS", "ASB", "Other"],
       component_type: ["Airframe", "Propeller", "Avionics", "Other"],
+      db_compliance_status: [
+        "Not Reviewed",
+        "Not Complied",
+        "Complied Once",
+        "Recurring (Current)",
+        "Overdue",
+        "Not Applicable",
+      ],
+      directive_category: [
+        "Airframe",
+        "Engine",
+        "Propeller",
+        "Avionics",
+        "System",
+        "Appliance",
+        "Other",
+      ],
+      directive_performed_by_role: [
+        "Owner/Builder",
+        "Owner/Pilot",
+        "A&P",
+        "IA",
+        "Rotax IRMT",
+        "Maintenance Shop",
+        "Other",
+      ],
+      directive_severity: [
+        "Emergency",
+        "Mandatory",
+        "Recommended",
+        "Informational",
+      ],
+      directive_status: ["Active", "Superseded", "Cancelled", "Proposed"],
+      directive_type: [
+        "FAA Airworthiness Directive",
+        "Manufacturer Alert",
+        "Manufacturer Mandatory",
+        "Service Bulletin",
+        "Service Instruction",
+        "Information Bulletin",
+        "Other",
+      ],
       feature_status: ["open", "completed", "duplicate", "closed"],
+      initial_due_type: [
+        "Before Next Flight",
+        "By Date",
+        "By Total Time (Hours)",
+        "By Calendar (Months)",
+        "At Next Inspection",
+        "Other",
+      ],
       interval_type: ["Hours", "Calendar", "Mixed", "None"],
       maintenance_category: [
         "Airframe",
