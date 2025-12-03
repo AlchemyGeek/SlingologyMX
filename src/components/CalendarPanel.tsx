@@ -256,7 +256,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                 <span className="text-muted-foreground">Due</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(45 93% 47%)' }}></div>
                 <span className="text-muted-foreground">Maintenance</span>
               </div>
             </div>
