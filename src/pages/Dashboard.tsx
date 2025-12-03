@@ -129,7 +129,16 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="active">
-            <ActiveNotificationsPanel userId={user.id} />
+            <ActiveNotificationsPanel 
+              userId={user.id} 
+              currentCounters={counters ? {
+                hobbs: counters.hobbs || 0,
+                tach: counters.tach || 0,
+                airframe_total_time: counters.airframe_total_time || 0,
+                engine_total_time: counters.engine_total_time || 0,
+                prop_total_time: counters.prop_total_time || 0,
+              } : undefined}
+            />
           </TabsContent>
 
           <TabsContent value="calendar">

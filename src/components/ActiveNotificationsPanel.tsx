@@ -7,12 +7,30 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
+  currentCounters?: {
+    hobbs: number;
+    tach: number;
+    airframe_total_time: number;
+    engine_total_time: number;
+    prop_total_time: number;
+  };
 }
 
-const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => {
+const counterTypeToFieldMap: Record<string, string> = {
+  "Hobbs": "hobbs",
+  "Tach": "tach",
+  "Airframe TT": "airframe_total_time",
+  "Engine TT": "engine_total_time",
+  "Prop TT": "prop_total_time",
+};
+
+type AlertStatus = "normal" | "reminder" | "due";
+
+const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +55,47 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
   useEffect(() => {
     fetchActiveNotifications();
   }, [userId]);
+
+  const getAlertStatus = (notification: any): AlertStatus => {
+    if (notification.notification_basis === "Counter" || notification.counter_type) {
+      // Counter-based
+      if (!currentCounters || !notification.counter_type) return "normal";
+      const field = counterTypeToFieldMap[notification.counter_type];
+      const currentValue = currentCounters[field as keyof typeof currentCounters] || 0;
+      const targetValue = notification.initial_counter_value || 0;
+      const remaining = targetValue - currentValue;
+      const alertHours = notification.alert_hours ?? 10;
+      
+      if (remaining <= 0) return "due";
+      if (remaining <= alertHours) return "reminder";
+      return "normal";
+    } else {
+      // Date-based
+      const dueDate = new Date(notification.initial_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      dueDate.setHours(0, 0, 0, 0);
+      
+      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const alertDays = notification.alert_days ?? 7;
+      
+      if (diffDays <= 0) return "due";
+      if (diffDays <= alertDays) return "reminder";
+      return "normal";
+    }
+  };
+
+  const getDueInfo = (notification: any) => {
+    if (notification.notification_basis === "Counter" || notification.counter_type) {
+      if (!currentCounters || !notification.counter_type) return notification.initial_counter_value?.toFixed(1) || "-";
+      const field = counterTypeToFieldMap[notification.counter_type];
+      const currentValue = currentCounters[field as keyof typeof currentCounters] || 0;
+      const targetValue = notification.initial_counter_value || 0;
+      const remaining = targetValue - currentValue;
+      return `${notification.counter_type}: ${targetValue.toFixed(1)} (${remaining.toFixed(1)} hrs remaining)`;
+    }
+    return new Date(notification.initial_date).toLocaleDateString();
+  };
 
   const calculateNextDate = (currentDate: string, recurrence: string): string => {
     const date = new Date(currentDate);
@@ -93,12 +152,46 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
             recurrence: notification.recurrence,
             notes: notification.notes,
             is_completed: false,
-            subscription_id: notification.subscription_id
+            subscription_id: notification.subscription_id,
+            notification_basis: notification.notification_basis,
+            counter_type: notification.counter_type,
+            initial_counter_value: notification.counter_step 
+              ? (notification.initial_counter_value || 0) + notification.counter_step 
+              : notification.initial_counter_value,
+            counter_step: notification.counter_step,
+            alert_days: notification.alert_days,
+            alert_hours: notification.alert_hours,
           });
 
         if (createError) throw createError;
         
         // Refresh the list to show the new notification
+        await fetchActiveNotifications();
+        toast.success("Notification completed and next instance created");
+      } else if (notification.counter_step) {
+        // Counter-based recurring notification
+        const { error: createError } = await supabase
+          .from("notifications")
+          .insert({
+            user_id: notification.user_id,
+            description: notification.description,
+            type: notification.type,
+            component: notification.component,
+            initial_date: new Date().toISOString().split('T')[0],
+            recurrence: "None",
+            notes: notification.notes,
+            is_completed: false,
+            subscription_id: notification.subscription_id,
+            notification_basis: notification.notification_basis,
+            counter_type: notification.counter_type,
+            initial_counter_value: (notification.initial_counter_value || 0) + notification.counter_step,
+            counter_step: notification.counter_step,
+            alert_days: notification.alert_days,
+            alert_hours: notification.alert_hours,
+          });
+
+        if (createError) throw createError;
+        
         await fetchActiveNotifications();
         toast.success("Notification completed and next instance created");
       } else {
@@ -134,32 +227,44 @@ const ActiveNotificationsPanel = ({ userId }: ActiveNotificationsPanelProps) => 
                   <TableHead>Description</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Component</TableHead>
-                  <TableHead>Due Date</TableHead>
+                  <TableHead>Due</TableHead>
                   <TableHead>Recurrence</TableHead>
                   <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {notifications.map((notification) => (
-                  <TableRow key={notification.id}>
-                    <TableCell className="font-medium">{notification.description}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{notification.type}</Badge>
-                    </TableCell>
-                    <TableCell>{notification.component}</TableCell>
-                    <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
-                    <TableCell>{notification.recurrence}</TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkCompleted(notification.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {notifications.map((notification) => {
+                  const alertStatus = getAlertStatus(notification);
+                  const rowClassName = cn(
+                    alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+                    alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+                  );
+                  
+                  return (
+                    <TableRow key={notification.id} className={rowClassName}>
+                      <TableCell className="font-medium">{notification.description}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{notification.type}</Badge>
+                      </TableCell>
+                      <TableCell>{notification.component}</TableCell>
+                      <TableCell>{getDueInfo(notification)}</TableCell>
+                      <TableCell>
+                        {notification.notification_basis === "Counter" || notification.counter_type
+                          ? notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"
+                          : notification.recurrence}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkCompleted(notification.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Complete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
