@@ -18,6 +18,7 @@ interface FeatureRequest {
   description: string;
   vote_count: number;
   created_at: string;
+  updated_at: string | null;
   user_id: string;
   status: FeatureStatus;
   admin_comment: string | null;
@@ -193,7 +194,13 @@ const FeatureRequestList = ({
   }
 
   const openFeatures = features.filter((f) => f.status === "open");
-  const closedFeatures = features.filter((f) => f.status !== "open");
+  const closedFeatures = features
+    .filter((f) => f.status !== "open")
+    .sort((a, b) => {
+      const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+      const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+      return dateB - dateA; // Most recently closed first
+    });
 
   const renderFeatureList = (featureList: FeatureRequest[], showVoting: boolean) => {
     if (featureList.length === 0) {
