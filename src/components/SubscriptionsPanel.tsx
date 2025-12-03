@@ -9,9 +9,10 @@ import { toast } from "sonner";
 
 interface SubscriptionsPanelProps {
   userId: string;
+  onNotificationChanged?: () => void;
 }
 
-const SubscriptionsPanel = ({ userId }: SubscriptionsPanelProps) => {
+const SubscriptionsPanel = ({ userId, onNotificationChanged }: SubscriptionsPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
@@ -42,6 +43,7 @@ const SubscriptionsPanel = ({ userId }: SubscriptionsPanelProps) => {
     setShowForm(false);
     setEditingSubscription(null);
     fetchSubscriptions();
+    onNotificationChanged?.();
   };
 
   const handleEdit = (subscription: any) => {
@@ -80,7 +82,10 @@ const SubscriptionsPanel = ({ userId }: SubscriptionsPanelProps) => {
         <SubscriptionList
           subscriptions={subscriptions}
           loading={loading}
-          onUpdate={fetchSubscriptions}
+          onUpdate={() => {
+            fetchSubscriptions();
+            onNotificationChanged?.();
+          }}
           onEdit={handleEdit}
         />
       </CardContent>

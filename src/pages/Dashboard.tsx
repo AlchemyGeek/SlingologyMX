@@ -214,7 +214,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="subscriptions">
-            <SubscriptionsPanel userId={user.id} />
+            <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
           </TabsContent>
 
           <TabsContent value="active">
