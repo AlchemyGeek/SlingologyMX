@@ -5,6 +5,7 @@ import { Trash2, Pencil, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface NotificationListProps {
   notifications: any[];
@@ -12,6 +13,24 @@ interface NotificationListProps {
   onUpdate: () => void;
   onEdit: (notification: any) => void;
 }
+
+type AlertStatus = "normal" | "reminder" | "due";
+
+const getDateAlertStatus = (notification: any): AlertStatus => {
+  if (notification.is_completed) return "normal";
+  
+  const dueDate = new Date(notification.initial_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  
+  const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const alertDays = notification.alert_days ?? 7;
+  
+  if (diffDays <= 0) return "due";
+  if (diffDays <= alertDays) return "reminder";
+  return "normal";
+};
 
 const NotificationList = ({ notifications, loading, onUpdate, onEdit }: NotificationListProps) => {
   const handleDelete = async (id: string, subscriptionId: string | null) => {
@@ -56,8 +75,13 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
         <TableBody>
           {notifications.map((notification) => {
             const linkedToSub = isLinkedToSubscription(notification);
+            const alertStatus = getDateAlertStatus(notification);
+            const rowClassName = cn(
+              alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+              alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+            );
             return (
-              <TableRow key={notification.id}>
+              <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {notification.description}

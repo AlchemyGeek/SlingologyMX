@@ -522,6 +522,8 @@ export type Database = {
       }
       notifications: {
         Row: {
+          alert_days: number | null
+          alert_hours: number | null
           completed_at: string | null
           component: Database["public"]["Enums"]["component_type"]
           counter_step: number | null
@@ -541,6 +543,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_days?: number | null
+          alert_hours?: number | null
           completed_at?: string | null
           component: Database["public"]["Enums"]["component_type"]
           counter_step?: number | null
@@ -560,6 +564,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_days?: number | null
+          alert_hours?: number | null
           completed_at?: string | null
           component?: Database["public"]["Enums"]["component_type"]
           counter_step?: number | null

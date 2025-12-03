@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NotificationForm from "./NotificationForm";
 import NotificationList from "./NotificationList";
@@ -46,9 +46,43 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
     } catch (error: any) {
       toast.error("Failed to load notifications");
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
+
+  const counterTypeToFieldMap: Record<string, string> = {
+    "Hobbs": "hobbs",
+    "Tach": "tach",
+    "Airframe TT": "airframe_total_time",
+    "Engine TT": "engine_total_time",
+    "Prop TT": "prop_total_time",
+  };
+
+  const hasActiveAlerts = useMemo(() => {
+    const activeNotifs = [...dateNotifications, ...counterNotifications].filter(n => !n.is_completed);
+    
+    return activeNotifs.some(notification => {
+      if (notification.notification_basis === "Counter" || notification.counter_type) {
+        // Counter-based
+        if (!currentCounters || !notification.counter_type) return false;
+        const field = counterTypeToFieldMap[notification.counter_type];
+        const currentValue = currentCounters[field as keyof typeof currentCounters] || 0;
+        const targetValue = notification.initial_counter_value || 0;
+        const remaining = targetValue - currentValue;
+        const alertHours = notification.alert_hours ?? 10;
+        return remaining <= alertHours;
+      } else {
+        // Date-based
+        const dueDate = new Date(notification.initial_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const alertDays = notification.alert_days ?? 7;
+        return diffDays <= alertDays;
+      }
+    });
+  }, [dateNotifications, counterNotifications, currentCounters]);
 
   useEffect(() => {
     fetchNotifications();
@@ -79,9 +113,16 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Manage Notifications</CardTitle>
-            <CardDescription>Create and view all your maintenance notifications</CardDescription>
+          <div className="flex items-center gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Manage Notifications
+                {hasActiveAlerts && (
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                )}
+              </CardTitle>
+              <CardDescription>Create and view all your maintenance notifications</CardDescription>
+            </div>
           </div>
           <Button onClick={handleNewNotification}>
             <Plus className="h-4 w-4 mr-2" />

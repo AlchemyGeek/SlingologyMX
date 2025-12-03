@@ -46,6 +46,8 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     initial_counter_value: editingNotification?.initial_counter_value?.toString() || "",
     counter_step: editingNotification?.counter_step?.toString() || "",
     is_counter_recurring: editingNotification?.counter_step ? "Yes" : "No",
+    alert_days: editingNotification?.alert_days?.toString() || "7",
+    alert_hours: editingNotification?.alert_hours?.toString() || "10",
   });
 
   // Update initial counter value when counter type changes (for new notifications)
@@ -117,6 +119,9 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
         counter_type: isCounterBased ? formData.counter_type : null,
         initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
         counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
+        // Alert thresholds
+        alert_days: isCounterBased ? null : parseInt(formData.alert_days) || 7,
+        alert_hours: isCounterBased ? parseInt(formData.alert_hours) || 10 : null,
       };
 
       let error;
@@ -236,6 +241,18 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="alert_days">Alert Days Before Due</Label>
+              <Input
+                id="alert_days"
+                type="number"
+                min="0"
+                value={formData.alert_days}
+                onChange={(e) => setFormData({ ...formData, alert_days: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Days before due date to show alert (default: 7)</p>
+            </div>
           </div>
         )}
 
@@ -314,6 +331,19 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                 />
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="alert_hours">Alert Hours Before Due</Label>
+              <Input
+                id="alert_hours"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.alert_hours}
+                onChange={(e) => setFormData({ ...formData, alert_hours: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Hours before due counter value to show alert (default: 10)</p>
+            </div>
           </div>
         )}
 
