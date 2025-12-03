@@ -61,9 +61,21 @@ const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, o
       toast.error("Please enter a valid positive number");
       return;
     }
+    
     try {
-      await onUpdateCounter(editingCounter, newValue);
-      toast.success("Counter updated");
+      if (syncEnabled && isSyncableCounter) {
+        // Calculate difference and apply to all syncable counters
+        const diff = newValue - counters[editingCounter];
+        const updates: Partial<Omit<AircraftCounters, "id">> = {};
+        syncableCounters.forEach(key => {
+          updates[key] = counters[key] + diff;
+        });
+        await onUpdateAllCounters(updates);
+        toast.success(`Counter updated (synced ${diff >= 0 ? "+" : ""}${diff.toFixed(1)} to all)`);
+      } else {
+        await onUpdateCounter(editingCounter, newValue);
+        toast.success("Counter updated");
+      }
       setIsDialogOpen(false);
     } catch {
       toast.error("Failed to update counter");
