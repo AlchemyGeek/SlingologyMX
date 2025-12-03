@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
@@ -76,7 +76,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
       return "normal";
     } else {
       // Date-based
-      const dueDate = new Date(notification.initial_date);
+      const dueDate = parseLocalDate(notification.initial_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       dueDate.setHours(0, 0, 0, 0);
@@ -99,7 +99,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
       const remaining = targetValue - currentValue;
       return `${notification.counter_type}: ${targetValue.toFixed(1)} (${remaining.toFixed(1)} hrs remaining)`;
     }
-    return new Date(notification.initial_date).toLocaleDateString();
+    return parseLocalDate(notification.initial_date).toLocaleDateString();
   };
 
   const calculateNextDate = (currentDate: string, recurrence: string): string => {
@@ -250,7 +250,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
                   <TableCell>{notification.component}</TableCell>
-                  <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                   <TableCell>{notification.recurrence}</TableCell>
                   <TableCell>
                     <Button

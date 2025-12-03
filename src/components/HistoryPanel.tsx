@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { parseLocalDate } from "@/lib/utils";
 
 interface HistoryPanelProps {
   userId: string;
@@ -94,7 +95,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                                 <Badge variant="outline">{notification.type}</Badge>
                               </TableCell>
                               <TableCell>{notification.component}</TableCell>
-                              <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
+                              <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                               <TableCell>
                                 {notification.completed_at
                                   ? new Date(notification.completed_at).toLocaleDateString()
@@ -131,7 +132,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                               </TableCell>
                               <TableCell>{log.subcategory}</TableCell>
                               <TableCell>{log.performed_by_name}</TableCell>
-                              <TableCell>{new Date(log.date_performed).toLocaleDateString()}</TableCell>
+                              <TableCell>{parseLocalDate(log.date_performed).toLocaleDateString()}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -166,7 +167,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                             <Badge variant="outline">{notification.type}</Badge>
                           </TableCell>
                           <TableCell>{notification.component}</TableCell>
-                          <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                           <TableCell>
                             {notification.completed_at
                               ? new Date(notification.completed_at).toLocaleDateString()
@@ -206,7 +207,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                           </TableCell>
                           <TableCell>{log.subcategory}</TableCell>
                           <TableCell>{log.performed_by_name}</TableCell>
-                          <TableCell>{new Date(log.date_performed).toLocaleDateString()}</TableCell>
+                          <TableCell>{parseLocalDate(log.date_performed).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <div className="flex gap-1 flex-wrap">
                               {log.tags?.map((tag: string, idx: number) => (
