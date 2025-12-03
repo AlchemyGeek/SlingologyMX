@@ -181,6 +181,7 @@ const Dashboard = () => {
           loading={countersLoading}
           userId={user.id}
           onUpdateCounter={updateCounter}
+          onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
           onRefetch={refetch}
         />
         <Tabs defaultValue="manage" className="space-y-4">
