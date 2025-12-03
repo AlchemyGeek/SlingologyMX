@@ -1,16 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { format, isSameDay, addDays, addWeeks, addMonths } from "date-fns";
+import { format, isSameDay, addWeeks, addMonths } from "date-fns";
 
 interface CalendarPanelProps {
   userId: string;
+  currentCounters?: {
+    hobbs: number;
+    tach: number;
+    airframe_total_time: number;
+    engine_total_time: number;
+    prop_total_time: number;
+  };
 }
 
-const CalendarPanel = ({ userId }: CalendarPanelProps) => {
+type AlertStatus = "normal" | "alert" | "due";
+
+const counterTypeToFieldMap: Record<string, string> = {
+  "Hobbs": "hobbs",
+  "Tach": "tach",
+  "Airframe TT": "airframe_total_time",
+  "Engine TT": "engine_total_time",
+  "Prop TT": "prop_total_time",
+};
+
+const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -65,22 +82,47 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
     }
   };
 
+  const getNotificationAlertStatus = (notification: any): AlertStatus => {
+    if (notification.notification_basis === "Counter" || notification.counter_type) {
+      // Counter-based notification
+      if (!currentCounters || !notification.counter_type) return "normal";
+      const field = counterTypeToFieldMap[notification.counter_type];
+      const currentValue = Number(currentCounters[field as keyof typeof currentCounters]) || 0;
+      const targetValue = notification.initial_counter_value || 0;
+      const remaining = targetValue - currentValue;
+      const alertHours = notification.alert_hours ?? 10;
+      
+      if (remaining <= 0) return "due";
+      if (remaining <= alertHours) return "alert";
+      return "normal";
+    } else {
+      // Date-based notification
+      const dueDate = new Date(notification.initial_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      dueDate.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const alertDays = notification.alert_days ?? 7;
+      
+      if (diffDays <= 0) return "due";
+      if (diffDays <= alertDays) return "alert";
+      return "normal";
+    }
+  };
+
   const getNotificationsForDate = (date: Date) => {
     return notifications.filter((notification) => {
       const initialDate = new Date(notification.initial_date);
       
-      // Check if the initial date matches
       if (isSameDay(initialDate, date)) {
         return true;
       }
 
-      // Check recurring dates (up to 10 occurrences in the future)
       for (let i = 1; i <= 10; i++) {
         const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
         if (isSameDay(nextDate, date)) {
           return true;
         }
-        // Stop checking if we've gone past the selected date
         if (nextDate > date) {
           break;
         }
@@ -97,7 +139,6 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
         return true;
       }
       
-      // Check next due date if it exists
       if (log.next_due_date) {
         const nextDueDate = new Date(log.next_due_date);
         if (isSameDay(nextDueDate, date)) {
@@ -117,34 +158,58 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
     ? getMaintenanceLogsForDate(selectedDate)
     : [];
 
-  const getDatesWithNotifications = () => {
-    const dates: Date[] = [];
-    notifications.forEach((notification) => {
-      const initialDate = new Date(notification.initial_date);
-      dates.push(initialDate);
+  const { datesNormal, datesAlert, datesDue, datesWithMaintenanceLogs } = useMemo(() => {
+    const normal: Date[] = [];
+    const alert: Date[] = [];
+    const due: Date[] = [];
+    const maintenance: Date[] = [];
 
-      // Add recurring dates for the current month and next 3 months
+    notifications.forEach((notification) => {
+      const status = getNotificationAlertStatus(notification);
+      const initialDate = new Date(notification.initial_date);
+      
+      const targetArray = status === "due" ? due : status === "alert" ? alert : normal;
+      targetArray.push(initialDate);
+
       for (let i = 1; i <= 10; i++) {
         const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
-        dates.push(nextDate);
+        targetArray.push(nextDate);
       }
     });
-    return dates;
-  };
 
-  const getDatesWithMaintenanceLogs = () => {
-    const dates: Date[] = [];
     maintenanceLogs.forEach((log) => {
-      dates.push(new Date(log.date_performed));
+      maintenance.push(new Date(log.date_performed));
       if (log.next_due_date) {
-        dates.push(new Date(log.next_due_date));
+        maintenance.push(new Date(log.next_due_date));
       }
     });
-    return dates;
-  };
 
-  const datesWithNotifications = getDatesWithNotifications();
-  const datesWithMaintenanceLogs = getDatesWithMaintenanceLogs();
+    return { datesNormal: normal, datesAlert: alert, datesDue: due, datesWithMaintenanceLogs: maintenance };
+  }, [notifications, maintenanceLogs, currentCounters]);
+
+  const getNotificationCardStyle = (notification: any) => {
+    const status = getNotificationAlertStatus(notification);
+    switch (status) {
+      case "due":
+        return {
+          className: "p-4 border border-red-500/40 bg-red-500/10 rounded-lg space-y-2",
+          headerClass: "text-sm font-semibold text-red-600 dark:text-red-400",
+          label: "Due/Overdue"
+        };
+      case "alert":
+        return {
+          className: "p-4 border border-orange-500/40 bg-orange-500/10 rounded-lg space-y-2",
+          headerClass: "text-sm font-semibold text-orange-600 dark:text-orange-400",
+          label: "Alert"
+        };
+      default:
+        return {
+          className: "p-4 border border-primary/20 bg-primary/5 rounded-lg space-y-2",
+          headerClass: "text-sm font-semibold text-primary",
+          label: "Normal"
+        };
+    }
+  };
 
   if (loading) {
     return <p className="text-muted-foreground">Loading calendar...</p>;
@@ -165,18 +230,30 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
               onSelect={setSelectedDate}
               className="rounded-md border pointer-events-auto"
               modifiers={{
-                hasNotification: datesWithNotifications,
+                hasNotification: datesNormal,
+                hasNotificationAlert: datesAlert,
+                hasNotificationDue: datesDue,
                 hasMaintenanceLog: datesWithMaintenanceLogs,
               }}
               modifiersClassNames={{
                 hasNotification: "calendar-notification-day",
+                hasNotificationAlert: "calendar-notification-alert-day",
+                hasNotificationDue: "calendar-notification-due-day",
                 hasMaintenanceLog: "calendar-maintenance-day",
               }}
             />
-            <div className="flex gap-4 text-sm">
+            <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-primary"></div>
-                <span className="text-muted-foreground">Notifications</span>
+                <span className="text-muted-foreground">Normal</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                <span className="text-muted-foreground">Alert</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="text-muted-foreground">Due</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-chart-2"></div>
@@ -194,21 +271,37 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
                 {notificationsForSelectedDate.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-semibold text-primary">Notifications</h4>
-                    {notificationsForSelectedDate.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="p-4 border border-primary/20 bg-primary/5 rounded-lg space-y-2"
-                      >
-                        <div className="flex items-start justify-between">
-                          <h4 className="font-medium">{notification.description}</h4>
-                          <Badge variant="outline">{notification.type}</Badge>
+                    {notificationsForSelectedDate.map((notification) => {
+                      const cardStyle = getNotificationCardStyle(notification);
+                      return (
+                        <div
+                          key={notification.id}
+                          className={cardStyle.className}
+                        >
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-medium">{notification.description}</h4>
+                            <div className="flex gap-2">
+                              {cardStyle.label !== "Normal" && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={cardStyle.label === "Due/Overdue" 
+                                    ? "border-red-500 text-red-600 dark:text-red-400" 
+                                    : "border-orange-500 text-orange-600 dark:text-orange-400"
+                                  }
+                                >
+                                  {cardStyle.label}
+                                </Badge>
+                              )}
+                              <Badge variant="outline">{notification.type}</Badge>
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>Component: {notification.component}</p>
+                            <p>Recurrence: {notification.recurrence}</p>
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Component: {notification.component}</p>
-                          <p>Recurrence: {notification.recurrence}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 
@@ -231,7 +324,7 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p>Subcategory: {log.subcategory}</p>
                           <p>Performed by: {log.performed_by_name}</p>
-                          {log.next_due_date && isSameDay(new Date(log.next_due_date), selectedDate) && (
+                          {log.next_due_date && selectedDate && isSameDay(new Date(log.next_due_date), selectedDate) && (
                             <p className="font-medium text-orange-600">Next Due Date</p>
                           )}
                         </div>

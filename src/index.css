@@ -173,6 +173,28 @@ All colors MUST be HSL.
   background-color: hsl(var(--primary) / 0.3) !important;
 }
 
+/* Alert state - orange */
+.calendar-notification-alert-day {
+  background-color: hsl(30 100% 50% / 0.25) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.calendar-notification-alert-day:hover {
+  background-color: hsl(30 100% 50% / 0.35) !important;
+}
+
+/* Due/Overdue state - red */
+.calendar-notification-due-day {
+  background-color: hsl(0 72% 50% / 0.25) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.calendar-notification-due-day:hover {
+  background-color: hsl(0 72% 50% / 0.35) !important;
+}
+
 .calendar-maintenance-day {
   background-color: hsl(var(--chart-2) / 0.2) !important;
   border-radius: var(--radius);
