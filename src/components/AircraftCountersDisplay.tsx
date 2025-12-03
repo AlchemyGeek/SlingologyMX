@@ -94,17 +94,18 @@ const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, o
 
   return (
     <>
-      <div className="relative mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute -top-1 right-0"
-          onClick={() => setIsHistoryOpen(true)}
-          title="View counter history"
-        >
-          <History className="h-4 w-4 mr-1" />
-          History
-        </Button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Aircraft Counters</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryOpen(true)}
+          >
+            <History className="h-4 w-4 mr-1" />
+            History
+          </Button>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {counterConfig.map((config) => (
             <Card
