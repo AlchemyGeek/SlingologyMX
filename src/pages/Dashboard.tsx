@@ -14,11 +14,16 @@ import CalendarPanel from "@/components/CalendarPanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
+import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
+import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { counters, loading: countersLoading, updateCounter } = useAircraftCounters(user?.id || "");
+  
   useEffect(() => {
     const {
       data: { subscription },
@@ -88,6 +93,11 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <AircraftCountersDisplay
+          counters={counters}
+          loading={countersLoading}
+          onUpdateCounter={updateCounter}
+        />
         <Tabs defaultValue="manage" className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="manage">Notifications</TabsTrigger>
@@ -120,7 +130,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="logs">
-            <MaintenanceLogsPanel userId={user.id} />
+            <MaintenanceLogsPanel userId={user.id} counters={counters} />
           </TabsContent>
 
           <TabsContent value="directives">
