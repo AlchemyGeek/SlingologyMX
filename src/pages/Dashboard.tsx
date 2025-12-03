@@ -34,26 +34,27 @@ const Dashboard = () => {
   const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
 
   // Fetch active notifications for alert indicator
+  const fetchActiveNotificationsForAlerts = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("is_completed", false);
+    
+    setActiveNotifications(data || []);
+  };
+
   useEffect(() => {
     if (!user?.id) return;
-    
-    const fetchActiveNotifications = async () => {
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_completed", false);
-      
-      setActiveNotifications(data || []);
-    };
 
-    fetchActiveNotifications();
+    fetchActiveNotificationsForAlerts();
 
     // Subscribe to changes
     const channel = supabase
       .channel('active-notifications-alerts')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-        fetchActiveNotifications();
+        fetchActiveNotificationsForAlerts();
       })
       .subscribe();
 
@@ -208,6 +209,7 @@ const Dashboard = () => {
                 engine_total_time: counters.engine_total_time || 0,
                 prop_total_time: counters.prop_total_time || 0,
               } : undefined}
+              onNotificationCompleted={fetchActiveNotificationsForAlerts}
             />
           </TabsContent>
 

@@ -19,6 +19,7 @@ interface ActiveNotificationsPanelProps {
     engine_total_time: number;
     prop_total_time: number;
   };
+  onNotificationCompleted?: () => void;
 }
 
 const counterTypeToFieldMap: Record<string, string> = {
@@ -31,7 +32,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 type AlertStatus = "normal" | "reminder" | "due";
 
-const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificationsPanelProps) => {
+const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompleted }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -171,6 +172,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificatio
         
         // Refresh the list to show the new notification
         await fetchActiveNotifications();
+        onNotificationCompleted?.();
         toast.success("Notification completed and next instance created");
       } else if (notification.counter_step) {
         // Counter-based recurring notification
@@ -197,16 +199,19 @@ const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificatio
         if (createError) throw createError;
         
         await fetchActiveNotifications();
+        onNotificationCompleted?.();
         toast.success("Notification completed and next instance created");
       } else {
         // Refresh the list
         await fetchActiveNotifications();
+        onNotificationCompleted?.();
         toast.success("Notification marked as completed");
       }
     } catch (error: any) {
       toast.error("Failed to update notification");
       // Refresh anyway to ensure UI is in sync
       await fetchActiveNotifications();
+      onNotificationCompleted?.();
     }
   };
 
