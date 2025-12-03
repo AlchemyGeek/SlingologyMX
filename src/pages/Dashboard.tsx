@@ -13,6 +13,7 @@ import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
+import DirectivesPanel from "@/components/DirectivesPanel";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -88,13 +89,14 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="manage" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="manage">Notifications</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
             <TabsTrigger value="logs">Maintenance</TabsTrigger>
+            <TabsTrigger value="directives">Directives</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manage">
@@ -119,6 +121,10 @@ const Dashboard = () => {
 
           <TabsContent value="logs">
             <MaintenanceLogsPanel userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="directives">
+            <DirectivesPanel userId={user.id} />
           </TabsContent>
         </Tabs>
       </main>
