@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon, BookOpen } from "lucide-react";
+import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
@@ -17,12 +17,76 @@ import DirectivesPanel from "@/components/DirectivesPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
+const counterTypeToFieldMap: Record<string, string> = {
+  "Hobbs": "hobbs",
+  "Tach": "tach",
+  "Airframe TT": "airframe_total_time",
+  "Engine TT": "engine_total_time",
+  "Prop TT": "prop_total_time",
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
+
+  // Fetch active notifications for alert indicator
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchActiveNotifications = async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_completed", false);
+      
+      setActiveNotifications(data || []);
+    };
+
+    fetchActiveNotifications();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('active-notifications-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        fetchActiveNotifications();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const hasActiveAlerts = useMemo(() => {
+    if (!counters) return false;
+    
+    return activeNotifications.some(notification => {
+      if (notification.notification_basis === "Counter" || notification.counter_type) {
+        // Counter-based
+        if (!notification.counter_type) return false;
+        const field = counterTypeToFieldMap[notification.counter_type];
+        const currentValue = Number(counters[field as keyof typeof counters]) || 0;
+        const targetValue = notification.initial_counter_value || 0;
+        const remaining = targetValue - currentValue;
+        const alertHours = notification.alert_hours ?? 10;
+        return remaining <= alertHours;
+      } else {
+        // Date-based
+        const dueDate = new Date(notification.initial_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const alertDays = notification.alert_days ?? 7;
+        return diffDays <= alertDays;
+      }
+    });
+  }, [activeNotifications, counters]);
   
   useEffect(() => {
     const {
@@ -104,7 +168,10 @@ const Dashboard = () => {
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="manage">Notifications</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="active" className="flex items-center gap-1">
+              Active
+              {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
+            </TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
             <TabsTrigger value="logs">Maintenance</TabsTrigger>
