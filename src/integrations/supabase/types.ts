@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      aircraft_counters: {
+        Row: {
+          airframe_total_time: number | null
+          created_at: string | null
+          engine_total_time: number | null
+          hobbs: number | null
+          id: string
+          prop_total_time: number | null
+          tach: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          airframe_total_time?: number | null
+          created_at?: string | null
+          engine_total_time?: number | null
+          hobbs?: number | null
+          id?: string
+          prop_total_time?: number | null
+          tach?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          airframe_total_time?: number | null
+          created_at?: string | null
+          engine_total_time?: number | null
+          hobbs?: number | null
+          id?: string
+          prop_total_time?: number | null
+          tach?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aircraft_directive_status: {
         Row: {
           applicability_reason: string | null

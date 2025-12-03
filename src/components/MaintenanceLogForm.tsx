@@ -24,25 +24,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
+interface DefaultCounters {
+  hobbs: number;
+  tach: number;
+  airframe_total_time: number;
+  engine_total_time: number;
+  prop_total_time: number;
+}
+
 interface MaintenanceLogFormProps {
   userId: string;
   editingLog?: any;
+  defaultCounters?: DefaultCounters;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const MaintenanceLogForm = ({ userId, editingLog, onSuccess, onCancel }: MaintenanceLogFormProps) => {
+const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, onCancel }: MaintenanceLogFormProps) => {
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airframe" as Database["public"]["Enums"]["maintenance_category"],
     subcategory: "Inspection" as Database["public"]["Enums"]["maintenance_subcategory"],
     tags: [] as string[],
     date_performed: new Date(),
-    hobbs_at_event: "",
-    tach_at_event: "",
-    airframe_total_time: "",
-    engine_total_time: "",
-    prop_total_time: "",
+    hobbs_at_event: defaultCounters?.hobbs?.toString() || "",
+    tach_at_event: defaultCounters?.tach?.toString() || "",
+    airframe_total_time: defaultCounters?.airframe_total_time?.toString() || "",
+    engine_total_time: defaultCounters?.engine_total_time?.toString() || "",
+    prop_total_time: defaultCounters?.prop_total_time?.toString() || "",
     has_compliance_item: false,
     compliance_type: "None" as Database["public"]["Enums"]["compliance_type"],
     compliance_reference: "",

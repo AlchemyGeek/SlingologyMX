@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import MaintenanceLogList from "./MaintenanceLogList";
 import MaintenanceLogForm from "./MaintenanceLogForm";
 import MaintenanceLogDetail from "./MaintenanceLogDetail";
+import { AircraftCounters } from "@/hooks/useAircraftCounters";
 
 interface MaintenanceLog {
   id: string;
@@ -44,9 +45,10 @@ interface MaintenanceLog {
 
 interface MaintenanceLogsPanelProps {
   userId: string;
+  counters: AircraftCounters;
 }
 
-const MaintenanceLogsPanel = ({ userId }: MaintenanceLogsPanelProps) => {
+const MaintenanceLogsPanel = ({ userId, counters }: MaintenanceLogsPanelProps) => {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
@@ -138,6 +140,7 @@ const MaintenanceLogsPanel = ({ userId }: MaintenanceLogsPanelProps) => {
       <MaintenanceLogForm
         userId={userId}
         editingLog={editingLog}
+        defaultCounters={counters}
         onSuccess={handleLogCreated}
         onCancel={handleCancelForm}
       />

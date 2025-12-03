@@ -1,0 +1,166 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { AircraftCounters } from "@/hooks/useAircraftCounters";
+
+interface AircraftCountersDisplayProps {
+  counters: AircraftCounters;
+  loading: boolean;
+  onUpdateCounter: (field: keyof Omit<AircraftCounters, "id">, value: number) => Promise<void>;
+}
+
+const counterConfig = [
+  { key: "hobbs" as const, label: "Hobbs", color: "bg-blue-500/10 border-blue-500/20" },
+  { key: "tach" as const, label: "Tach", color: "bg-green-500/10 border-green-500/20" },
+  { key: "airframe_total_time" as const, label: "Airframe TT", color: "bg-purple-500/10 border-purple-500/20" },
+  { key: "engine_total_time" as const, label: "Engine TT", color: "bg-orange-500/10 border-orange-500/20" },
+  { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
+];
+
+const AircraftCountersDisplay = ({ counters, loading, onUpdateCounter }: AircraftCountersDisplayProps) => {
+  const [editingCounter, setEditingCounter] = useState<keyof Omit<AircraftCounters, "id"> | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [addValue, setAddValue] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleOpenEdit = (key: keyof Omit<AircraftCounters, "id">) => {
+    setEditingCounter(key);
+    setEditValue(counters[key].toString());
+    setAddValue("");
+    setIsDialogOpen(true);
+  };
+
+  const handleSetValue = async () => {
+    if (!editingCounter) return;
+    const newValue = parseFloat(editValue);
+    if (isNaN(newValue) || newValue < 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+    try {
+      await onUpdateCounter(editingCounter, newValue);
+      toast.success("Counter updated");
+      setIsDialogOpen(false);
+    } catch {
+      toast.error("Failed to update counter");
+    }
+  };
+
+  const handleAddValue = async () => {
+    if (!editingCounter) return;
+    const toAdd = parseFloat(addValue);
+    if (isNaN(toAdd) || toAdd <= 0) {
+      toast.error("Please enter a valid positive number to add");
+      return;
+    }
+    const newValue = counters[editingCounter] + toAdd;
+    try {
+      await onUpdateCounter(editingCounter, newValue);
+      toast.success(`Added ${toAdd} to ${counterConfig.find(c => c.key === editingCounter)?.label}`);
+      setIsDialogOpen(false);
+    } catch {
+      toast.error("Failed to update counter");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {counterConfig.map((config) => (
+          <Card key={config.key} className={`${config.color} border`}>
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
+              <p className="text-2xl font-bold mt-1">...</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {counterConfig.map((config) => (
+          <Card
+            key={config.key}
+            className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
+            onClick={() => handleOpenEdit(config.key)}
+          >
+            <CardContent className="p-4 text-center relative">
+              <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
+              <p className="text-2xl font-bold mt-1">{counters[config.key].toFixed(1)}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Edit {counterConfig.find(c => c.key === editingCounter)?.label}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Current Value</Label>
+              <p className="text-2xl font-bold">
+                {editingCounter ? counters[editingCounter].toFixed(1) : "0.0"}
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="setvalue">Set to specific value</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="setvalue"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  placeholder="Enter value"
+                />
+                <Button onClick={handleSetValue}>Set</Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="addvalue">Add hours</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="addvalue"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={addValue}
+                  onChange={(e) => setAddValue(e.target.value)}
+                  placeholder="Hours to add"
+                />
+                <Button onClick={handleAddValue} variant="secondary">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+export default AircraftCountersDisplay;
