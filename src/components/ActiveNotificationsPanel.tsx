@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
@@ -55,6 +56,9 @@ const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificatio
   useEffect(() => {
     fetchActiveNotifications();
   }, [userId]);
+
+  const dateNotifications = notifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
+  const counterNotifications = notifications.filter(n => n.notification_basis === "Counter");
 
   const getAlertStatus = (notification: any): AlertStatus => {
     if (notification.notification_basis === "Counter" || notification.counter_type) {
@@ -210,6 +214,123 @@ const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificatio
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
+  const renderDateTable = () => (
+    dateNotifications.length === 0 ? (
+      <p className="text-muted-foreground">No active date-based notifications.</p>
+    ) : (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Component</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Recurrence</TableHead>
+              <TableHead className="w-[100px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {dateNotifications.map((notification) => {
+              const alertStatus = getAlertStatus(notification);
+              const rowClassName = cn(
+                alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+                alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+              );
+              
+              return (
+                <TableRow key={notification.id} className={rowClassName}>
+                  <TableCell className="font-medium">{notification.description}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{notification.type}</Badge>
+                  </TableCell>
+                  <TableCell>{notification.component}</TableCell>
+                  <TableCell>{new Date(notification.initial_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{notification.recurrence}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkCompleted(notification.id)}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Complete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  );
+
+  const renderCounterTable = () => (
+    counterNotifications.length === 0 ? (
+      <p className="text-muted-foreground">No active counter-based notifications.</p>
+    ) : (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Component</TableHead>
+              <TableHead>Counter</TableHead>
+              <TableHead>Due At</TableHead>
+              <TableHead>Remaining</TableHead>
+              <TableHead>Recurrence</TableHead>
+              <TableHead className="w-[100px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {counterNotifications.map((notification) => {
+              const alertStatus = getAlertStatus(notification);
+              const rowClassName = cn(
+                alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+                alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+              );
+              
+              const field = counterTypeToFieldMap[notification.counter_type];
+              const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
+              const targetValue = notification.initial_counter_value || 0;
+              const remaining = targetValue - currentValue;
+              
+              return (
+                <TableRow key={notification.id} className={rowClassName}>
+                  <TableCell className="font-medium">{notification.description}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{notification.type}</Badge>
+                  </TableCell>
+                  <TableCell>{notification.component}</TableCell>
+                  <TableCell>{notification.counter_type}</TableCell>
+                  <TableCell>{targetValue.toFixed(1)}</TableCell>
+                  <TableCell>
+                    <span className={remaining <= 0 ? "text-destructive font-medium" : ""}>
+                      {remaining.toFixed(1)} hrs
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkCompleted(notification.id)}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Complete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -220,54 +341,20 @@ const ActiveNotificationsPanel = ({ userId, currentCounters }: ActiveNotificatio
         {notifications.length === 0 ? (
           <p className="text-muted-foreground">No active notifications. Great job staying on top of maintenance!</p>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Component</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead>Recurrence</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {notifications.map((notification) => {
-                  const alertStatus = getAlertStatus(notification);
-                  const rowClassName = cn(
-                    alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
-                    alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
-                  );
-                  
-                  return (
-                    <TableRow key={notification.id} className={rowClassName}>
-                      <TableCell className="font-medium">{notification.description}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{notification.type}</Badge>
-                      </TableCell>
-                      <TableCell>{notification.component}</TableCell>
-                      <TableCell>{getDueInfo(notification)}</TableCell>
-                      <TableCell>
-                        {notification.notification_basis === "Counter" || notification.counter_type
-                          ? notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"
-                          : notification.recurrence}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleMarkCompleted(notification.id)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Complete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <Tabs defaultValue="date">
+            <TabsList>
+              <TabsTrigger value="date">Date Based ({dateNotifications.length})</TabsTrigger>
+              <TabsTrigger value="counter">Counter Based ({counterNotifications.length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="date" className="mt-4">
+              {renderDateTable()}
+            </TabsContent>
+            
+            <TabsContent value="counter" className="mt-4">
+              {renderCounterTable()}
+            </TabsContent>
+          </Tabs>
         )}
       </CardContent>
     </Card>
