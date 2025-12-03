@@ -5,6 +5,7 @@ import { Trash2, Pencil, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface CounterNotificationListProps {
   notifications: any[];
@@ -27,6 +28,8 @@ const counterTypeToFieldMap: Record<string, string> = {
   "Engine TT": "engine_total_time",
   "Prop TT": "prop_total_time",
 };
+
+type AlertStatus = "normal" | "reminder" | "due";
 
 const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, currentCounters }: CounterNotificationListProps) => {
   const handleDelete = async (id: string, subscriptionId: string | null) => {
@@ -53,6 +56,19 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
     const targetValue = notification.initial_counter_value || 0;
     const remaining = targetValue - currentValue;
     return { currentValue, targetValue, remaining };
+  };
+
+  const getCounterAlertStatus = (notification: any): AlertStatus => {
+    if (notification.is_completed) return "normal";
+    
+    const progress = getCounterProgress(notification);
+    if (!progress) return "normal";
+    
+    const alertHours = notification.alert_hours ?? 10;
+    
+    if (progress.remaining <= 0) return "due";
+    if (progress.remaining <= alertHours) return "reminder";
+    return "normal";
   };
 
   if (loading) {
@@ -84,9 +100,14 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
             const linkedToSub = isLinkedToSubscription(notification);
             const progress = getCounterProgress(notification);
             const isOverdue = progress && progress.remaining <= 0;
+            const alertStatus = getCounterAlertStatus(notification);
+            const rowClassName = cn(
+              alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+              alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+            );
             
             return (
-              <TableRow key={notification.id}>
+              <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {notification.description}
