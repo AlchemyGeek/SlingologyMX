@@ -166,7 +166,10 @@ const Dashboard = () => {
         />
         <Tabs defaultValue="manage" className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="manage">Notifications</TabsTrigger>
+            <TabsTrigger value="manage" className="flex items-center gap-1">
+              Notifications
+              {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
+            </TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="active" className="flex items-center gap-1">
               Active
