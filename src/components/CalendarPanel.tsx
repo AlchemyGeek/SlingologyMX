@@ -168,15 +168,9 @@ const CalendarPanel = ({ userId }: CalendarPanelProps) => {
                 hasNotification: datesWithNotifications,
                 hasMaintenanceLog: datesWithMaintenanceLogs,
               }}
-              modifiersStyles={{
-                hasNotification: {
-                  fontWeight: "bold",
-                  color: "hsl(var(--primary))",
-                },
-                hasMaintenanceLog: {
-                  fontWeight: "bold",
-                  color: "hsl(var(--chart-2))",
-                },
+              modifiersClassNames={{
+                hasNotification: "calendar-notification-day",
+                hasMaintenanceLog: "calendar-maintenance-day",
               }}
             />
             <div className="flex gap-4 text-sm">
