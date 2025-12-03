@@ -222,8 +222,8 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
         <CardDescription>View your scheduled maintenance and notifications</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="space-y-4 shrink-0">
             <Calendar
               mode="single"
               selected={selectedDate}
