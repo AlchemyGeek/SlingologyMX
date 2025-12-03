@@ -161,3 +161,33 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Calendar day cell styles for events */
+.calendar-notification-day {
+  background-color: hsl(var(--primary) / 0.2) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.calendar-notification-day:hover {
+  background-color: hsl(var(--primary) / 0.3) !important;
+}
+
+.calendar-maintenance-day {
+  background-color: hsl(var(--chart-2) / 0.2) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.calendar-maintenance-day:hover {
+  background-color: hsl(var(--chart-2) / 0.3) !important;
+}
+
+/* When both notification and maintenance exist on same day */
+.calendar-notification-day.calendar-maintenance-day {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2) 50%, hsl(var(--chart-2) / 0.2) 50%) !important;
+}
+
+.calendar-notification-day.calendar-maintenance-day:hover {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.3) 50%, hsl(var(--chart-2) / 0.3) 50%) !important;
+}
