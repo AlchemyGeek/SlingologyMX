@@ -17,6 +17,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,15 +42,24 @@ interface DefaultCounters {
   prop_total_time: number;
 }
 
+interface CounterUpdates {
+  hobbs?: number;
+  tach?: number;
+  airframe_total_time?: number;
+  engine_total_time?: number;
+  prop_total_time?: number;
+}
+
 interface MaintenanceLogFormProps {
   userId: string;
   editingLog?: any;
   defaultCounters?: DefaultCounters;
   onSuccess: () => void;
   onCancel: () => void;
+  onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
 }
 
-const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, onCancel }: MaintenanceLogFormProps) => {
+const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airframe" as Database["public"]["Enums"]["maintenance_category"],
@@ -78,6 +97,9 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
   const [tagInput, setTagInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [urlDescInput, setUrlDescInput] = useState("");
+  const [showCounterUpdateDialog, setShowCounterUpdateDialog] = useState(false);
+  const [pendingCounterUpdates, setPendingCounterUpdates] = useState<CounterUpdates>({});
+  const [isUpdatingCounters, setIsUpdatingCounters] = useState(false);
 
   useEffect(() => {
     if (editingLog) {
@@ -205,6 +227,30 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           .insert([logData]);
         if (error) throw error;
       }
+      
+      // Check if any counter values are higher than global counters
+      if (defaultCounters && onUpdateGlobalCounters) {
+        const updates: CounterUpdates = {};
+        
+        const hobbs = formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null;
+        const tach = formData.tach_at_event ? parseFloat(formData.tach_at_event) : null;
+        const airframe = formData.airframe_total_time ? parseFloat(formData.airframe_total_time) : null;
+        const engine = formData.engine_total_time ? parseFloat(formData.engine_total_time) : null;
+        const prop = formData.prop_total_time ? parseFloat(formData.prop_total_time) : null;
+        
+        if (hobbs !== null && hobbs > defaultCounters.hobbs) updates.hobbs = hobbs;
+        if (tach !== null && tach > defaultCounters.tach) updates.tach = tach;
+        if (airframe !== null && airframe > defaultCounters.airframe_total_time) updates.airframe_total_time = airframe;
+        if (engine !== null && engine > defaultCounters.engine_total_time) updates.engine_total_time = engine;
+        if (prop !== null && prop > defaultCounters.prop_total_time) updates.prop_total_time = prop;
+        
+        if (Object.keys(updates).length > 0) {
+          setPendingCounterUpdates(updates);
+          setShowCounterUpdateDialog(true);
+          return; // Don't call onSuccess yet, wait for dialog
+        }
+      }
+      
       onSuccess();
     } catch (error) {
       console.error("Error saving maintenance log:", error);
@@ -212,7 +258,29 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     }
   };
 
+  const handleConfirmCounterUpdate = async () => {
+    if (!onUpdateGlobalCounters) return;
+    
+    setIsUpdatingCounters(true);
+    try {
+      await onUpdateGlobalCounters(pendingCounterUpdates);
+      toast.success("Global counters updated");
+    } catch (error) {
+      console.error("Error updating global counters:", error);
+      toast.error("Failed to update global counters");
+    }
+    setIsUpdatingCounters(false);
+    setShowCounterUpdateDialog(false);
+    onSuccess();
+  };
+
+  const handleSkipCounterUpdate = () => {
+    setShowCounterUpdateDialog(false);
+    onSuccess();
+  };
+
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">
@@ -706,6 +774,43 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         </Button>
       </div>
     </form>
+
+    <AlertDialog open={showCounterUpdateDialog} onOpenChange={setShowCounterUpdateDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Update Global Counters?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Some counter values in this maintenance record are higher than your current global counters. Would you like to update the global counters to match?
+            <div className="mt-3 space-y-1 text-sm">
+              {pendingCounterUpdates.hobbs !== undefined && (
+                <div>Hobbs: {defaultCounters?.hobbs.toFixed(1)} → {pendingCounterUpdates.hobbs.toFixed(1)}</div>
+              )}
+              {pendingCounterUpdates.tach !== undefined && (
+                <div>Tach: {defaultCounters?.tach.toFixed(1)} → {pendingCounterUpdates.tach.toFixed(1)}</div>
+              )}
+              {pendingCounterUpdates.airframe_total_time !== undefined && (
+                <div>Airframe TT: {defaultCounters?.airframe_total_time.toFixed(1)} → {pendingCounterUpdates.airframe_total_time.toFixed(1)}</div>
+              )}
+              {pendingCounterUpdates.engine_total_time !== undefined && (
+                <div>Engine TT: {defaultCounters?.engine_total_time.toFixed(1)} → {pendingCounterUpdates.engine_total_time.toFixed(1)}</div>
+              )}
+              {pendingCounterUpdates.prop_total_time !== undefined && (
+                <div>Prop TT: {defaultCounters?.prop_total_time.toFixed(1)} → {pendingCounterUpdates.prop_total_time.toFixed(1)}</div>
+              )}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleSkipCounterUpdate} disabled={isUpdatingCounters}>
+            No, Keep Current
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmCounterUpdate} disabled={isUpdatingCounters}>
+            {isUpdatingCounters ? "Updating..." : "Yes, Update Counters"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

@@ -22,7 +22,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { counters, loading: countersLoading, updateCounter, refetch } = useAircraftCounters(user?.id || "");
+  const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
   
   useEffect(() => {
     const {
@@ -132,7 +132,11 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="logs">
-            <MaintenanceLogsPanel userId={user.id} counters={counters} />
+            <MaintenanceLogsPanel 
+              userId={user.id} 
+              counters={counters} 
+              onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
+            />
           </TabsContent>
 
           <TabsContent value="directives">
