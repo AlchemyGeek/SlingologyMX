@@ -524,12 +524,16 @@ export type Database = {
         Row: {
           completed_at: string | null
           component: Database["public"]["Enums"]["component_type"]
+          counter_step: number | null
+          counter_type: Database["public"]["Enums"]["counter_type"] | null
           created_at: string | null
           description: string
           id: string
+          initial_counter_value: number | null
           initial_date: string
           is_completed: boolean | null
           notes: string | null
+          notification_basis: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           subscription_id: string | null
           type: Database["public"]["Enums"]["notification_type"]
@@ -539,12 +543,16 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           component: Database["public"]["Enums"]["component_type"]
+          counter_step?: number | null
+          counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null
           description: string
           id?: string
+          initial_counter_value?: number | null
           initial_date: string
           is_completed?: boolean | null
           notes?: string | null
+          notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           subscription_id?: string | null
           type: Database["public"]["Enums"]["notification_type"]
@@ -554,12 +562,16 @@ export type Database = {
         Update: {
           completed_at?: string | null
           component?: Database["public"]["Enums"]["component_type"]
+          counter_step?: number | null
+          counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null
           description?: string
           id?: string
+          initial_counter_value?: number | null
           initial_date?: string
           is_completed?: boolean | null
           notes?: string | null
+          notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
           subscription_id?: string | null
           type?: Database["public"]["Enums"]["notification_type"]
@@ -702,6 +714,7 @@ export type Database = {
         | "Informational Only"
       compliance_type: "None" | "AD" | "SB" | "SL" | "KAS" | "ASB" | "Other"
       component_type: "Airframe" | "Propeller" | "Avionics" | "Other"
+      counter_type: "Hobbs" | "Tach" | "Airframe TT" | "Engine TT" | "Prop TT"
       db_compliance_status:
         | "Not Reviewed"
         | "Not Complied"
@@ -768,6 +781,7 @@ export type Database = {
         | "Troubleshooting"
         | "Scheduled Maintenance"
         | "Other"
+      notification_basis: "Date" | "Counter"
       notification_type: "Maintenance" | "Subscription"
       performed_by_type:
         | "Owner"
@@ -933,6 +947,7 @@ export const Constants = {
       ],
       compliance_type: ["None", "AD", "SB", "SL", "KAS", "ASB", "Other"],
       component_type: ["Airframe", "Propeller", "Avionics", "Other"],
+      counter_type: ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"],
       db_compliance_status: [
         "Not Reviewed",
         "Not Complied",
@@ -1007,6 +1022,7 @@ export const Constants = {
         "Scheduled Maintenance",
         "Other",
       ],
+      notification_basis: ["Date", "Counter"],
       notification_type: ["Maintenance", "Subscription"],
       performed_by_type: ["Owner", "A&P", "LSRM", "Repairman", "Shop", "Other"],
       recurrence_type: [
