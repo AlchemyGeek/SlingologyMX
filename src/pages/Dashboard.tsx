@@ -22,7 +22,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { counters, loading: countersLoading, updateCounter } = useAircraftCounters(user?.id || "");
+  const { counters, loading: countersLoading, updateCounter, refetch } = useAircraftCounters(user?.id || "");
   
   useEffect(() => {
     const {
@@ -96,7 +96,9 @@ const Dashboard = () => {
         <AircraftCountersDisplay
           counters={counters}
           loading={countersLoading}
+          userId={user.id}
           onUpdateCounter={updateCounter}
+          onRefetch={refetch}
         />
         <Tabs defaultValue="manage" className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">

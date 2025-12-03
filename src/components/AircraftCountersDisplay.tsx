@@ -8,16 +8,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, History } from "lucide-react";
 import { toast } from "sonner";
 import { AircraftCounters } from "@/hooks/useAircraftCounters";
+import CounterHistoryDialog from "./CounterHistoryDialog";
 
 interface AircraftCountersDisplayProps {
   counters: AircraftCounters;
   loading: boolean;
+  userId: string;
   onUpdateCounter: (field: keyof Omit<AircraftCounters, "id">, value: number) => Promise<void>;
+  onRefetch: () => void;
 }
 
 const counterConfig = [
@@ -28,11 +30,12 @@ const counterConfig = [
   { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
 ];
 
-const AircraftCountersDisplay = ({ counters, loading, onUpdateCounter }: AircraftCountersDisplayProps) => {
+const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, onRefetch }: AircraftCountersDisplayProps) => {
   const [editingCounter, setEditingCounter] = useState<keyof Omit<AircraftCounters, "id"> | null>(null);
   const [editValue, setEditValue] = useState("");
   const [addValue, setAddValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const handleOpenEdit = (key: keyof Omit<AircraftCounters, "id">) => {
     setEditingCounter(key);
@@ -91,20 +94,32 @@ const AircraftCountersDisplay = ({ counters, loading, onUpdateCounter }: Aircraf
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        {counterConfig.map((config) => (
-          <Card
-            key={config.key}
-            className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
-            onClick={() => handleOpenEdit(config.key)}
-          >
-            <CardContent className="p-4 text-center relative">
-              <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-              <p className="text-2xl font-bold mt-1">{counters[config.key].toFixed(1)}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="relative mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute -top-1 right-0"
+          onClick={() => setIsHistoryOpen(true)}
+          title="View counter history"
+        >
+          <History className="h-4 w-4 mr-1" />
+          History
+        </Button>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {counterConfig.map((config) => (
+            <Card
+              key={config.key}
+              className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
+              onClick={() => handleOpenEdit(config.key)}
+            >
+              <CardContent className="p-4 text-center relative">
+                <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
+                <p className="text-2xl font-bold mt-1">{counters[config.key].toFixed(1)}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -159,6 +174,13 @@ const AircraftCountersDisplay = ({ counters, loading, onUpdateCounter }: Aircraf
           </div>
         </DialogContent>
       </Dialog>
+
+      <CounterHistoryDialog
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+        userId={userId}
+        onRevert={onRefetch}
+      />
     </>
   );
 };

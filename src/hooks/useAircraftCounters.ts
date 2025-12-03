@@ -18,6 +18,8 @@ const defaultCounters: AircraftCounters = {
   prop_total_time: 0,
 };
 
+export type CounterChangeSource = "Dashboard" | "Maintenance Record";
+
 export const useAircraftCounters = (userId: string) => {
   const [counters, setCounters] = useState<AircraftCounters>(defaultCounters);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,40 @@ export const useAircraftCounters = (userId: string) => {
     fetchCounters();
   }, [fetchCounters]);
 
-  const updateCounter = async (field: keyof Omit<AircraftCounters, "id">, value: number) => {
+  const logCounterHistory = async (newCounters: Partial<AircraftCounters>, source: CounterChangeSource) => {
+    if (!userId) return;
+    
+    // Merge current counters with new values
+    const finalCounters = {
+      hobbs: newCounters.hobbs ?? counters.hobbs,
+      tach: newCounters.tach ?? counters.tach,
+      airframe_total_time: newCounters.airframe_total_time ?? counters.airframe_total_time,
+      engine_total_time: newCounters.engine_total_time ?? counters.engine_total_time,
+      prop_total_time: newCounters.prop_total_time ?? counters.prop_total_time,
+    };
+
+    const { error } = await supabase
+      .from("aircraft_counter_history")
+      .insert([{
+        user_id: userId,
+        hobbs: finalCounters.hobbs,
+        tach: finalCounters.tach,
+        airframe_total_time: finalCounters.airframe_total_time,
+        engine_total_time: finalCounters.engine_total_time,
+        prop_total_time: finalCounters.prop_total_time,
+        source,
+      }]);
+
+    if (error) {
+      console.error("Error logging counter history:", error);
+    }
+  };
+
+  const updateCounter = async (
+    field: keyof Omit<AircraftCounters, "id">, 
+    value: number, 
+    source: CounterChangeSource = "Dashboard"
+  ) => {
     if (!counters.id) return;
 
     const { error } = await supabase
@@ -84,8 +119,33 @@ export const useAircraftCounters = (userId: string) => {
       throw error;
     }
 
+    // Log the history
+    await logCounterHistory({ [field]: value }, source);
+
     setCounters((prev) => ({ ...prev, [field]: value }));
   };
 
-  return { counters, loading, updateCounter, refetch: fetchCounters };
+  const updateAllCounters = async (
+    newCounters: Partial<Omit<AircraftCounters, "id">>,
+    source: CounterChangeSource = "Dashboard"
+  ) => {
+    if (!counters.id) return;
+
+    const { error } = await supabase
+      .from("aircraft_counters")
+      .update(newCounters)
+      .eq("id", counters.id);
+
+    if (error) {
+      console.error("Error updating counters:", error);
+      throw error;
+    }
+
+    // Log the history
+    await logCounterHistory(newCounters, source);
+
+    setCounters((prev) => ({ ...prev, ...newCounters }));
+  };
+
+  return { counters, loading, updateCounter, updateAllCounters, refetch: fetchCounters };
 };

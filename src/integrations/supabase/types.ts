@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      aircraft_counter_history: {
+        Row: {
+          airframe_total_time: number | null
+          change_date: string
+          created_at: string | null
+          engine_total_time: number | null
+          hobbs: number | null
+          id: string
+          prop_total_time: number | null
+          source: string
+          tach: number | null
+          user_id: string
+        }
+        Insert: {
+          airframe_total_time?: number | null
+          change_date?: string
+          created_at?: string | null
+          engine_total_time?: number | null
+          hobbs?: number | null
+          id?: string
+          prop_total_time?: number | null
+          source: string
+          tach?: number | null
+          user_id: string
+        }
+        Update: {
+          airframe_total_time?: number | null
+          change_date?: string
+          created_at?: string | null
+          engine_total_time?: number | null
+          hobbs?: number | null
+          id?: string
+          prop_total_time?: number | null
+          source?: string
+          tach?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_counter_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aircraft_counters: {
         Row: {
           airframe_total_time: number | null
