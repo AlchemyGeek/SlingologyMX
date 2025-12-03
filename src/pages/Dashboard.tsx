@@ -31,6 +31,7 @@ const Dashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
+  const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
 
   // Fetch active notifications for alert indicator
@@ -50,7 +51,7 @@ const Dashboard = () => {
 
     fetchActiveNotificationsForAlerts();
 
-    // Subscribe to changes
+    // Subscribe to notification changes
     const channel = supabase
       .channel('active-notifications-alerts')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
@@ -58,10 +59,27 @@ const Dashboard = () => {
       })
       .subscribe();
 
+    // Check for date change every minute
+    const dateCheckInterval = setInterval(() => {
+      const newDate = new Date().toDateString();
+      if (newDate !== currentDate) {
+        setCurrentDate(newDate);
+        fetchActiveNotificationsForAlerts();
+      }
+    }, 60000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(dateCheckInterval);
     };
-  }, [user?.id]);
+  }, [user?.id, currentDate]);
+
+  // Re-evaluate alerts when counters change
+  useEffect(() => {
+    if (counters && user?.id) {
+      fetchActiveNotificationsForAlerts();
+    }
+  }, [counters?.hobbs, counters?.tach, counters?.airframe_total_time, counters?.engine_total_time, counters?.prop_total_time]);
 
   const hasActiveAlerts = useMemo(() => {
     if (!counters) return false;
