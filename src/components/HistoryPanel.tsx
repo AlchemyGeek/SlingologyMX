@@ -52,8 +52,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
-  const totalItems = notifications.length + maintenanceLogs.length;
-
+  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0;
   return (
     <Card>
       <CardHeader>
@@ -61,87 +60,14 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
         <CardDescription>All completed notifications and maintenance records</CardDescription>
       </CardHeader>
       <CardContent>
-        {totalItems === 0 ? (
+        {!hasHistory ? (
           <p className="text-muted-foreground">No history items yet.</p>
         ) : (
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="notifications" className="w-full">
             <TabsList>
-              <TabsTrigger value="all">All ({totalItems})</TabsTrigger>
               <TabsTrigger value="notifications">Notifications ({notifications.length})</TabsTrigger>
               <TabsTrigger value="maintenance">Maintenance ({maintenanceLogs.length})</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="all" className="mt-4">
-              <div className="space-y-6">
-                {notifications.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3 text-primary">Completed Notifications</h3>
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Component</TableHead>
-                            <TableHead>Initial Date</TableHead>
-                            <TableHead>Completed Date</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {notifications.map((notification) => (
-                            <TableRow key={notification.id}>
-                              <TableCell className="font-medium">{notification.description}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{notification.type}</Badge>
-                              </TableCell>
-                              <TableCell>{notification.component}</TableCell>
-                              <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                              <TableCell>
-                                {notification.completed_at
-                                  ? new Date(notification.completed_at).toLocaleDateString()
-                                  : "N/A"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                )}
-                
-                {maintenanceLogs.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3" style={{ color: "hsl(var(--chart-2))" }}>Maintenance Records</h3>
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Subcategory</TableHead>
-                            <TableHead>Performed By</TableHead>
-                            <TableHead>Date Performed</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {maintenanceLogs.map((log) => (
-                            <TableRow key={log.id}>
-                              <TableCell className="font-medium">{log.entry_title}</TableCell>
-                              <TableCell>
-                                <Badge variant="secondary">{log.category}</Badge>
-                              </TableCell>
-                              <TableCell>{log.subcategory}</TableCell>
-                              <TableCell>{log.performed_by_name}</TableCell>
-                              <TableCell>{parseLocalDate(log.date_performed).toLocaleDateString()}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
             
             <TabsContent value="notifications" className="mt-4">
               {notifications.length === 0 ? (
