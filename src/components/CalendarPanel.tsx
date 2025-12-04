@@ -31,7 +31,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
-  const [directives, setDirectives] = useState<any[]>([]);
+  const [directiveHistory, setDirectiveHistory] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +41,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
   const fetchData = async () => {
     try {
-      const [notificationsRes, logsRes, directivesRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -52,18 +52,18 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
           .select("*")
           .eq("user_id", userId),
         supabase
-          .from("directives")
+          .from("directive_history")
           .select("*")
           .eq("user_id", userId)
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
-      if (directivesRes.error) throw directivesRes.error;
+      if (directiveHistoryRes.error) throw directiveHistoryRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
-      setDirectives(directivesRes.data || []);
+      setDirectiveHistory(directiveHistoryRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load calendar data");
     } finally {
@@ -158,10 +158,10 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     });
   };
 
-  const getDirectivesForDate = (date: Date) => {
-    return directives.filter((directive) => {
-      if (directive.created_at) {
-        const createdDate = new Date(directive.created_at);
+  const getDirectiveHistoryForDate = (date: Date) => {
+    return directiveHistory.filter((entry) => {
+      if (entry.created_at) {
+        const createdDate = new Date(entry.created_at);
         if (isSameDay(createdDate, date)) {
           return true;
         }
@@ -178,8 +178,8 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     ? getMaintenanceLogsForDate(selectedDate)
     : [];
 
-  const directivesForSelectedDate = selectedDate
-    ? getDirectivesForDate(selectedDate)
+  const directiveHistoryForSelectedDate = selectedDate
+    ? getDirectiveHistoryForDate(selectedDate)
     : [];
 
   const { datesNormal, datesAlert, datesDue, datesWithMaintenanceLogs, datesWithDirectives } = useMemo(() => {
@@ -209,9 +209,9 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
       }
     });
 
-    directives.forEach((directive) => {
-      if (directive.created_at) {
-        directiveDates.push(new Date(directive.created_at));
+    directiveHistory.forEach((entry) => {
+      if (entry.created_at) {
+        directiveDates.push(new Date(entry.created_at));
       }
     });
 
@@ -222,7 +222,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
       datesWithMaintenanceLogs: maintenance,
       datesWithDirectives: directiveDates
     };
-  }, [notifications, maintenanceLogs, directives, currentCounters]);
+  }, [notifications, maintenanceLogs, directiveHistory, currentCounters]);
 
   const getNotificationCardStyle = (notification: any) => {
     const status = getNotificationAlertStatus(notification);
@@ -309,7 +309,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
             <h3 className="font-semibold mb-4">
               {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a date"}
             </h3>
-            {(notificationsForSelectedDate.length > 0 || maintenanceLogsForSelectedDate.length > 0 || directivesForSelectedDate.length > 0) ? (
+            {(notificationsForSelectedDate.length > 0 || maintenanceLogsForSelectedDate.length > 0 || directiveHistoryForSelectedDate.length > 0) ? (
               <div className="space-y-4">
                 {notificationsForSelectedDate.length > 0 && (
                   <div className="space-y-3">
@@ -376,12 +376,12 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                   </div>
                 )}
 
-                {directivesForSelectedDate.length > 0 && (
+                {directiveHistoryForSelectedDate.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold" style={{ color: "hsl(280 70% 50%)" }}>Directives</h4>
-                    {directivesForSelectedDate.map((directive) => (
+                    <h4 className="text-sm font-semibold" style={{ color: "hsl(280 70% 50%)" }}>Directive History</h4>
+                    {directiveHistoryForSelectedDate.map((entry) => (
                       <div
-                        key={directive.id}
+                        key={entry.id}
                         className="p-4 border rounded-lg space-y-2"
                         style={{ 
                           borderColor: "hsl(280 70% 50% / 0.3)",
@@ -389,22 +389,25 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                         }}
                       >
                         <div className="flex items-start justify-between">
-                          <h4 className="font-medium">{directive.directive_code}</h4>
+                          <h4 className="font-medium">{entry.directive_code}</h4>
                           <Badge 
                             variant={
-                              directive.severity === "Emergency" ? "destructive" :
-                              directive.severity === "Mandatory" ? "default" :
+                              entry.action_type === "Delete" ? "destructive" :
+                              entry.action_type === "Create" ? "default" :
                               "secondary"
                             }
                           >
-                            {directive.severity}
+                            {entry.action_type}
                           </Badge>
                         </div>
-                        <p className="text-sm">{directive.title}</p>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Type: {directive.directive_type}</p>
-                          <p>Category: {directive.category}</p>
-                        </div>
+                        <p className="text-sm">{entry.directive_title}</p>
+                        {entry.action_type === "Compliance" && (
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>Status: {entry.compliance_status}</p>
+                            {entry.first_compliance_date && <p>First: {new Date(entry.first_compliance_date).toLocaleDateString()}</p>}
+                            {entry.last_compliance_date && <p>Last: {new Date(entry.last_compliance_date).toLocaleDateString()}</p>}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

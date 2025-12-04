@@ -92,6 +92,20 @@ const DirectivesPanel = ({ userId }: DirectivesPanelProps) => {
 
   const handleDelete = async (directiveId: string) => {
     try {
+      // Find the directive to get its details for history
+      const directiveToDelete = directives.find(d => d.id === directiveId);
+      
+      // Log Delete action to directive history before deleting
+      if (directiveToDelete) {
+        await supabase.from("directive_history").insert({
+          user_id: userId,
+          directive_id: directiveId,
+          directive_code: directiveToDelete.directive_code,
+          directive_title: directiveToDelete.title,
+          action_type: "Delete",
+        });
+      }
+      
       const { error } = await supabase
         .from("directives")
         .delete()

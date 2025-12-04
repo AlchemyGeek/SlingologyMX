@@ -211,10 +211,23 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           .eq("id", editingDirective.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data: newDirective, error } = await supabase
           .from("directives")
-          .insert([directiveData]);
+          .insert([directiveData])
+          .select()
+          .single();
         if (error) throw error;
+        
+        // Log Create action to directive history
+        if (newDirective) {
+          await supabase.from("directive_history").insert({
+            user_id: userId,
+            directive_id: newDirective.id,
+            directive_code: newDirective.directive_code,
+            directive_title: newDirective.title,
+            action_type: "Create",
+          });
+        }
       }
       onSuccess();
     } catch (error: any) {
