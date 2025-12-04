@@ -205,6 +205,17 @@ All colors MUST be HSL.
   background-color: hsl(45 93% 47% / 0.35) !important;
 }
 
+/* Directive day - purple */
+.calendar-directive-day {
+  background-color: hsl(280 70% 50% / 0.25) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.calendar-directive-day:hover {
+  background-color: hsl(280 70% 50% / 0.35) !important;
+}
+
 /* When both notification and maintenance exist on same day */
 .calendar-notification-day.calendar-maintenance-day {
   background: linear-gradient(135deg, hsl(var(--primary) / 0.2) 50%, hsl(45 93% 47% / 0.25) 50%) !important;
@@ -212,4 +223,14 @@ All colors MUST be HSL.
 
 .calendar-notification-day.calendar-maintenance-day:hover {
   background: linear-gradient(135deg, hsl(var(--primary) / 0.3) 50%, hsl(45 93% 47% / 0.35) 50%) !important;
+}
+
+/* When directive and notification exist on same day */
+.calendar-notification-day.calendar-directive-day {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2) 50%, hsl(280 70% 50% / 0.25) 50%) !important;
+}
+
+/* When directive and maintenance exist on same day */
+.calendar-maintenance-day.calendar-directive-day {
+  background: linear-gradient(135deg, hsl(45 93% 47% / 0.25) 50%, hsl(280 70% 50% / 0.25) 50%) !important;
 }
