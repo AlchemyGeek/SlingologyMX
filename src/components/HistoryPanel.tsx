@@ -11,15 +11,28 @@ interface HistoryPanelProps {
   userId: string;
 }
 
+interface DirectiveHistoryEntry {
+  id: string;
+  directive_id: string | null;
+  directive_code: string;
+  directive_title: string;
+  action_type: string;
+  compliance_status: string | null;
+  first_compliance_date: string | null;
+  last_compliance_date: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 const HistoryPanel = ({ userId }: HistoryPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
-  const [directives, setDirectives] = useState<any[]>([]);
+  const [directiveHistory, setDirectiveHistory] = useState<DirectiveHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes, directivesRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -32,7 +45,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
           .eq("user_id", userId)
           .order("date_performed", { ascending: false }),
         supabase
-          .from("directives")
+          .from("directive_history")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
@@ -40,11 +53,11 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
-      if (directivesRes.error) throw directivesRes.error;
+      if (directiveHistoryRes.error) throw directiveHistoryRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
-      setDirectives(directivesRes.data || []);
+      setDirectiveHistory(directiveHistoryRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -60,13 +73,26 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
-  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0 || directives.length > 0;
+  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0 || directiveHistory.length > 0;
+
+  const getActionBadgeVariant = (actionType: string) => {
+    switch (actionType) {
+      case "Create":
+        return "default";
+      case "Delete":
+        return "destructive";
+      case "Compliance":
+        return "secondary";
+      default:
+        return "outline";
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>History</CardTitle>
-        <CardDescription>All completed notifications, maintenance records, and directives</CardDescription>
+        <CardDescription>All completed notifications, maintenance records, and directive history</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasHistory ? (
@@ -76,7 +102,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
             <TabsList>
               <TabsTrigger value="notifications">Notifications ({notifications.length})</TabsTrigger>
               <TabsTrigger value="maintenance">Maintenance ({maintenanceLogs.length})</TabsTrigger>
-              <TabsTrigger value="directives">Directives ({directives.length})</TabsTrigger>
+              <TabsTrigger value="directives">Directives ({directiveHistory.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="notifications" className="mt-4">
@@ -162,8 +188,8 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
             </TabsContent>
 
             <TabsContent value="directives" className="mt-4">
-              {directives.length === 0 ? (
-                <p className="text-muted-foreground">No directives yet.</p>
+              {directiveHistory.length === 0 ? (
+                <p className="text-muted-foreground">No directive history yet.</p>
               ) : (
                 <div className="rounded-md border">
                   <Table>
@@ -171,36 +197,36 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                       <TableRow>
                         <TableHead>Code</TableHead>
                         <TableHead>Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead>Created Date</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Compliance Status</TableHead>
+                        <TableHead>First Compliance</TableHead>
+                        <TableHead>Last Compliance</TableHead>
+                        <TableHead>Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {directives.map((directive) => (
-                        <TableRow key={directive.id}>
-                          <TableCell className="font-medium">{directive.directive_code}</TableCell>
-                          <TableCell>{directive.title}</TableCell>
+                      {directiveHistory.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell className="font-medium">{entry.directive_code}</TableCell>
+                          <TableCell>{entry.directive_title}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{directive.directive_type}</Badge>
-                          </TableCell>
-                          <TableCell>{directive.category}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={
-                                directive.severity === "Emergency" ? "destructive" :
-                                directive.severity === "Mandatory" ? "default" :
-                                "secondary"
-                              }
-                            >
-                              {directive.severity}
+                            <Badge variant={getActionBadgeVariant(entry.action_type)}>
+                              {entry.action_type}
                             </Badge>
                           </TableCell>
+                          <TableCell>{entry.compliance_status || "-"}</TableCell>
                           <TableCell>
-                            {directive.created_at
-                              ? new Date(directive.created_at).toLocaleDateString()
-                              : "N/A"}
+                            {entry.first_compliance_date
+                              ? parseLocalDate(entry.first_compliance_date).toLocaleDateString()
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {entry.last_compliance_date
+                              ? parseLocalDate(entry.last_compliance_date).toLocaleDateString()
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(entry.created_at).toLocaleDateString()}
                           </TableCell>
                         </TableRow>
                       ))}

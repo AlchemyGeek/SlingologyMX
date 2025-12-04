@@ -170,16 +170,52 @@ const DirectiveComplianceForm = ({
     };
 
     try {
+      // Check if first or last compliance date changed
+      const firstDateChanged = existingStatus && 
+        (existingStatus.first_compliance_date !== statusData.first_compliance_date);
+      const lastDateChanged = existingStatus && 
+        (existingStatus.last_compliance_date !== statusData.last_compliance_date);
+      const isNewCompliance = !existingStatus && 
+        (statusData.first_compliance_date || statusData.last_compliance_date);
+      
       if (existingStatus) {
         const { error } = await supabase
           .from("aircraft_directive_status")
           .update(statusData)
           .eq("id", existingStatus.id);
         if (error) throw error;
+        
+        // Log Compliance action if dates changed
+        if (firstDateChanged || lastDateChanged) {
+          await supabase.from("directive_history").insert({
+            user_id: userId,
+            directive_id: directive.id,
+            directive_code: directive.directive_code,
+            directive_title: directive.title,
+            action_type: "Compliance",
+            compliance_status: statusData.compliance_status,
+            first_compliance_date: statusData.first_compliance_date,
+            last_compliance_date: statusData.last_compliance_date,
+          });
+        }
         toast.success("Compliance status updated");
       } else {
         const { error } = await supabase.from("aircraft_directive_status").insert([statusData]);
         if (error) throw error;
+        
+        // Log Compliance action if dates are set on new record
+        if (isNewCompliance) {
+          await supabase.from("directive_history").insert({
+            user_id: userId,
+            directive_id: directive.id,
+            directive_code: directive.directive_code,
+            directive_title: directive.title,
+            action_type: "Compliance",
+            compliance_status: statusData.compliance_status,
+            first_compliance_date: statusData.first_compliance_date,
+            last_compliance_date: statusData.last_compliance_date,
+          });
+        }
         toast.success("Compliance status created");
       }
       onSuccess();

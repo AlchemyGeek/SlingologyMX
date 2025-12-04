@@ -207,6 +207,48 @@ export type Database = {
           },
         ]
       }
+      directive_history: {
+        Row: {
+          action_type: string
+          compliance_status: string | null
+          created_at: string
+          directive_code: string
+          directive_id: string | null
+          directive_title: string
+          first_compliance_date: string | null
+          id: string
+          last_compliance_date: string | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          compliance_status?: string | null
+          created_at?: string
+          directive_code: string
+          directive_id?: string | null
+          directive_title: string
+          first_compliance_date?: string | null
+          id?: string
+          last_compliance_date?: string | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          compliance_status?: string | null
+          created_at?: string
+          directive_code?: string
+          directive_id?: string | null
+          directive_title?: string
+          first_compliance_date?: string | null
+          id?: string
+          last_compliance_date?: string | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       directives: {
         Row: {
           action_types: string[] | null
