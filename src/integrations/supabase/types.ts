@@ -122,6 +122,8 @@ export type Database = {
           last_compliance_date: string | null
           last_compliance_tach: number | null
           maintenance_provider_name: string | null
+          next_due_basis: string | null
+          next_due_counter_type: string | null
           next_due_date: string | null
           next_due_tach: number | null
           owner_notes: string | null
@@ -150,6 +152,8 @@ export type Database = {
           last_compliance_date?: string | null
           last_compliance_tach?: number | null
           maintenance_provider_name?: string | null
+          next_due_basis?: string | null
+          next_due_counter_type?: string | null
           next_due_date?: string | null
           next_due_tach?: number | null
           owner_notes?: string | null
@@ -178,6 +182,8 @@ export type Database = {
           last_compliance_date?: string | null
           last_compliance_tach?: number | null
           maintenance_provider_name?: string | null
+          next_due_basis?: string | null
+          next_due_counter_type?: string | null
           next_due_date?: string | null
           next_due_tach?: number | null
           owner_notes?: string | null
