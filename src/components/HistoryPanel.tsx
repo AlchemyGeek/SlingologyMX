@@ -14,11 +14,12 @@ interface HistoryPanelProps {
 const HistoryPanel = ({ userId }: HistoryPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
+  const [directives, setDirectives] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes] = await Promise.all([
+      const [notificationsRes, logsRes, directivesRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -29,14 +30,21 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
           .from("maintenance_logs")
           .select("*")
           .eq("user_id", userId)
-          .order("date_performed", { ascending: false })
+          .order("date_performed", { ascending: false }),
+        supabase
+          .from("directives")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
+      if (directivesRes.error) throw directivesRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
+      setDirectives(directivesRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -52,12 +60,13 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
-  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0;
+  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0 || directives.length > 0;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>History</CardTitle>
-        <CardDescription>All completed notifications and maintenance records</CardDescription>
+        <CardDescription>All completed notifications, maintenance records, and directives</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasHistory ? (
@@ -67,6 +76,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
             <TabsList>
               <TabsTrigger value="notifications">Notifications ({notifications.length})</TabsTrigger>
               <TabsTrigger value="maintenance">Maintenance ({maintenanceLogs.length})</TabsTrigger>
+              <TabsTrigger value="directives">Directives ({directives.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="notifications" className="mt-4">
@@ -142,6 +152,55 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
                                 </Badge>
                               ))}
                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="directives" className="mt-4">
+              {directives.length === 0 ? (
+                <p className="text-muted-foreground">No directives yet.</p>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Code</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Severity</TableHead>
+                        <TableHead>Created Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {directives.map((directive) => (
+                        <TableRow key={directive.id}>
+                          <TableCell className="font-medium">{directive.directive_code}</TableCell>
+                          <TableCell>{directive.title}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{directive.directive_type}</Badge>
+                          </TableCell>
+                          <TableCell>{directive.category}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                directive.severity === "Emergency" ? "destructive" :
+                                directive.severity === "Mandatory" ? "default" :
+                                "secondary"
+                              }
+                            >
+                              {directive.severity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {directive.created_at
+                              ? new Date(directive.created_at).toLocaleDateString()
+                              : "N/A"}
                           </TableCell>
                         </TableRow>
                       ))}
