@@ -178,6 +178,11 @@ const DirectiveComplianceForm = ({
       const isNewCompliance = !existingStatus && 
         (statusData.first_compliance_date || statusData.last_compliance_date);
       
+      // Only log compliance if status is "Complied Once" or "Recurring (Current)"
+      const isComplianceLoggableStatus = 
+        statusData.compliance_status === "Complied Once" || 
+        statusData.compliance_status === "Recurring (Current)";
+      
       if (existingStatus) {
         const { error } = await supabase
           .from("aircraft_directive_status")
@@ -185,8 +190,8 @@ const DirectiveComplianceForm = ({
           .eq("id", existingStatus.id);
         if (error) throw error;
         
-        // Log Compliance action if dates changed
-        if (firstDateChanged || lastDateChanged) {
+        // Log Compliance action if dates changed AND status is compliant
+        if ((firstDateChanged || lastDateChanged) && isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             directive_id: directive.id,
@@ -203,8 +208,8 @@ const DirectiveComplianceForm = ({
         const { error } = await supabase.from("aircraft_directive_status").insert([statusData]);
         if (error) throw error;
         
-        // Log Compliance action if dates are set on new record
-        if (isNewCompliance) {
+        // Log Compliance action if dates are set on new record AND status is compliant
+        if (isNewCompliance && isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             directive_id: directive.id,
