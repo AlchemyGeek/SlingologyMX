@@ -31,6 +31,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
+  const [directives, setDirectives] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +41,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
   const fetchData = async () => {
     try {
-      const [notificationsRes, logsRes] = await Promise.all([
+      const [notificationsRes, logsRes, directivesRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -49,14 +50,20 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
         supabase
           .from("maintenance_logs")
           .select("*")
+          .eq("user_id", userId),
+        supabase
+          .from("directives")
+          .select("*")
           .eq("user_id", userId)
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
+      if (directivesRes.error) throw directivesRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
+      setDirectives(directivesRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load calendar data");
     } finally {
@@ -151,6 +158,18 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     });
   };
 
+  const getDirectivesForDate = (date: Date) => {
+    return directives.filter((directive) => {
+      if (directive.created_at) {
+        const createdDate = new Date(directive.created_at);
+        if (isSameDay(createdDate, date)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  };
+
   const notificationsForSelectedDate = selectedDate
     ? getNotificationsForDate(selectedDate)
     : [];
@@ -159,11 +178,16 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     ? getMaintenanceLogsForDate(selectedDate)
     : [];
 
-  const { datesNormal, datesAlert, datesDue, datesWithMaintenanceLogs } = useMemo(() => {
+  const directivesForSelectedDate = selectedDate
+    ? getDirectivesForDate(selectedDate)
+    : [];
+
+  const { datesNormal, datesAlert, datesDue, datesWithMaintenanceLogs, datesWithDirectives } = useMemo(() => {
     const normal: Date[] = [];
     const alert: Date[] = [];
     const due: Date[] = [];
     const maintenance: Date[] = [];
+    const directiveDates: Date[] = [];
 
     notifications.forEach((notification) => {
       const status = getNotificationAlertStatus(notification);
@@ -185,8 +209,20 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
       }
     });
 
-    return { datesNormal: normal, datesAlert: alert, datesDue: due, datesWithMaintenanceLogs: maintenance };
-  }, [notifications, maintenanceLogs, currentCounters]);
+    directives.forEach((directive) => {
+      if (directive.created_at) {
+        directiveDates.push(new Date(directive.created_at));
+      }
+    });
+
+    return { 
+      datesNormal: normal, 
+      datesAlert: alert, 
+      datesDue: due, 
+      datesWithMaintenanceLogs: maintenance,
+      datesWithDirectives: directiveDates
+    };
+  }, [notifications, maintenanceLogs, directives, currentCounters]);
 
   const getNotificationCardStyle = (notification: any) => {
     const status = getNotificationAlertStatus(notification);
@@ -220,7 +256,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
     <Card>
       <CardHeader>
         <CardTitle>Calendar View</CardTitle>
-        <CardDescription>View your scheduled maintenance and notifications</CardDescription>
+        <CardDescription>View your scheduled maintenance, notifications, and directives</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-6">
@@ -235,12 +271,14 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                 hasNotificationAlert: datesAlert,
                 hasNotificationDue: datesDue,
                 hasMaintenanceLog: datesWithMaintenanceLogs,
+                hasDirective: datesWithDirectives,
               }}
               modifiersClassNames={{
                 hasNotification: "calendar-notification-day",
                 hasNotificationAlert: "calendar-notification-alert-day",
                 hasNotificationDue: "calendar-notification-due-day",
                 hasMaintenanceLog: "calendar-maintenance-day",
+                hasDirective: "calendar-directive-day",
               }}
             />
             <div className="flex flex-wrap gap-4 text-sm">
@@ -260,6 +298,10 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(45 93% 47%)' }}></div>
                 <span className="text-muted-foreground">Maintenance</span>
               </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(280 70% 50%)' }}></div>
+                <span className="text-muted-foreground">Directives</span>
+              </div>
             </div>
           </div>
 
@@ -267,7 +309,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
             <h3 className="font-semibold mb-4">
               {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a date"}
             </h3>
-            {(notificationsForSelectedDate.length > 0 || maintenanceLogsForSelectedDate.length > 0) ? (
+            {(notificationsForSelectedDate.length > 0 || maintenanceLogsForSelectedDate.length > 0 || directivesForSelectedDate.length > 0) ? (
               <div className="space-y-4">
                 {notificationsForSelectedDate.length > 0 && (
                   <div className="space-y-3">
@@ -328,6 +370,40 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                           {log.next_due_date && selectedDate && isSameDay(parseLocalDate(log.next_due_date), selectedDate) && (
                             <p className="font-medium text-orange-600">Next Due Date</p>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {directivesForSelectedDate.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold" style={{ color: "hsl(280 70% 50%)" }}>Directives</h4>
+                    {directivesForSelectedDate.map((directive) => (
+                      <div
+                        key={directive.id}
+                        className="p-4 border rounded-lg space-y-2"
+                        style={{ 
+                          borderColor: "hsl(280 70% 50% / 0.3)",
+                          backgroundColor: "hsl(280 70% 50% / 0.05)"
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-medium">{directive.directive_code}</h4>
+                          <Badge 
+                            variant={
+                              directive.severity === "Emergency" ? "destructive" :
+                              directive.severity === "Mandatory" ? "default" :
+                              "secondary"
+                            }
+                          >
+                            {directive.severity}
+                          </Badge>
+                        </div>
+                        <p className="text-sm">{directive.title}</p>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>Type: {directive.directive_type}</p>
+                          <p>Category: {directive.category}</p>
                         </div>
                       </div>
                     ))}
