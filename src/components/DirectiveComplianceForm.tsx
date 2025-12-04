@@ -67,6 +67,8 @@ const DirectiveComplianceForm = ({
     first_compliance_tach: "",
     last_compliance_date: null as Date | null,
     last_compliance_tach: "",
+    next_due_basis: "" as string,
+    next_due_counter_type: "" as string,
     next_due_date: null as Date | null,
     next_due_tach: "",
     performed_by_name: "",
@@ -79,6 +81,8 @@ const DirectiveComplianceForm = ({
     total_cost: "",
     maintenance_provider_name: "",
   });
+
+  const COUNTER_TYPES = ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"];
 
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
@@ -97,6 +101,8 @@ const DirectiveComplianceForm = ({
           ? new Date(existingStatus.last_compliance_date)
           : null,
         last_compliance_tach: existingStatus.last_compliance_tach?.toString() || "",
+        next_due_basis: existingStatus.next_due_basis || "",
+        next_due_counter_type: existingStatus.next_due_counter_type || "",
         next_due_date: existingStatus.next_due_date ? new Date(existingStatus.next_due_date) : null,
         next_due_tach: existingStatus.next_due_tach?.toString() || "",
         performed_by_name: existingStatus.performed_by_name || "",
@@ -154,8 +160,14 @@ const DirectiveComplianceForm = ({
       last_compliance_tach: formData.last_compliance_tach
         ? parseFloat(formData.last_compliance_tach)
         : null,
-      next_due_date: formData.next_due_date ? format(formData.next_due_date, "yyyy-MM-dd") : null,
-      next_due_tach: formData.next_due_tach ? parseFloat(formData.next_due_tach) : null,
+      next_due_basis: formData.next_due_basis || null,
+      next_due_counter_type: formData.next_due_counter_type || null,
+      next_due_date: formData.next_due_basis === "Date" && formData.next_due_date 
+        ? format(formData.next_due_date, "yyyy-MM-dd") 
+        : null,
+      next_due_tach: formData.next_due_basis === "Counter" && formData.next_due_tach 
+        ? parseFloat(formData.next_due_tach) 
+        : null,
       performed_by_name: formData.performed_by_name || null,
       performed_by_role: (formData.performed_by_role || null) as Database["public"]["Enums"]["directive_performed_by_role"] | null,
       owner_notes: formData.owner_notes || null,
@@ -385,47 +397,107 @@ const DirectiveComplianceForm = ({
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Next Due Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.next_due_date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.next_due_date
-                        ? format(formData.next_due_date, "PPP")
-                        : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.next_due_date || undefined}
-                      onSelect={(date) =>
-                        setFormData({ ...formData, next_due_date: date || null })
-                      }
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="next_due_tach">Next Due Tach/Hobbs</Label>
-                <Input
-                  id="next_due_tach"
-                  type="number"
-                  step="0.1"
-                  value={formData.next_due_tach}
-                  onChange={(e) => setFormData({ ...formData, next_due_tach: e.target.value })}
-                />
-              </div>
             </div>
+
+            {/* Next Due Section - Only for Recurring (Current) */}
+            {formData.compliance_status === "Recurring (Current)" && (
+              <div className="space-y-4 mt-4 p-4 border rounded-md bg-muted/30">
+                <h4 className="font-medium">Next Due Compliance</h4>
+                <div className="space-y-2">
+                  <Label>Next Due Basis *</Label>
+                  <Select
+                    value={formData.next_due_basis}
+                    onValueChange={(value) =>
+                      setFormData({ 
+                        ...formData, 
+                        next_due_basis: value,
+                        // Clear the other field when switching
+                        next_due_date: value === "Counter" ? null : formData.next_due_date,
+                        next_due_tach: value === "Date" ? "" : formData.next_due_tach,
+                        next_due_counter_type: value === "Date" ? "" : formData.next_due_counter_type,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select basis" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Date">Date Based</SelectItem>
+                      <SelectItem value="Counter">Counter Based</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.next_due_basis === "Date" && (
+                  <div className="space-y-2">
+                    <Label>Next Due Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.next_due_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.next_due_date
+                            ? format(formData.next_due_date, "PPP")
+                            : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.next_due_date || undefined}
+                          onSelect={(date) =>
+                            setFormData({ ...formData, next_due_date: date || null })
+                          }
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                {formData.next_due_basis === "Counter" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Counter Type *</Label>
+                      <Select
+                        value={formData.next_due_counter_type}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, next_due_counter_type: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select counter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COUNTER_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="next_due_tach">Next Due Value</Label>
+                      <Input
+                        id="next_due_tach"
+                        type="number"
+                        step="0.1"
+                        value={formData.next_due_tach}
+                        onChange={(e) => setFormData({ ...formData, next_due_tach: e.target.value })}
+                        placeholder="Enter counter value"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Performer Info */}
