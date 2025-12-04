@@ -168,8 +168,14 @@ All colors MUST be HSL.
 .calendar-notification-due-day,
 .calendar-maintenance-day,
 .calendar-directive-day {
-  width: 36px !important;
-  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: var(--radius) !important;
   font-weight: 600;
 }
 
