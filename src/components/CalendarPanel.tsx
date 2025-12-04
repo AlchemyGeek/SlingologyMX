@@ -305,7 +305,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
             </div>
           </div>
 
-          <div>
+          <div className="flex-1 min-w-0">
             <h3 className="font-semibold mb-4">
               {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a date"}
             </h3>
