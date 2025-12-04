@@ -162,11 +162,19 @@ All colors MUST be HSL.
   }
 }
 
-/* Calendar day cell styles for events */
+/* Calendar day cell styles for events - ensure consistent sizing */
+.calendar-notification-day,
+.calendar-notification-alert-day,
+.calendar-notification-due-day,
+.calendar-maintenance-day,
+.calendar-directive-day {
+  width: 36px !important;
+  height: 36px !important;
+  font-weight: 600;
+}
+
 .calendar-notification-day {
   background-color: hsl(var(--primary) / 0.2) !important;
-  border-radius: var(--radius);
-  font-weight: 600;
 }
 
 .calendar-notification-day:hover {
@@ -176,8 +184,6 @@ All colors MUST be HSL.
 /* Alert state - orange */
 .calendar-notification-alert-day {
   background-color: hsl(30 100% 50% / 0.25) !important;
-  border-radius: var(--radius);
-  font-weight: 600;
 }
 
 .calendar-notification-alert-day:hover {
@@ -187,8 +193,6 @@ All colors MUST be HSL.
 /* Due/Overdue state - red */
 .calendar-notification-due-day {
   background-color: hsl(0 72% 50% / 0.25) !important;
-  border-radius: var(--radius);
-  font-weight: 600;
 }
 
 .calendar-notification-due-day:hover {
@@ -197,8 +201,6 @@ All colors MUST be HSL.
 
 .calendar-maintenance-day {
   background-color: hsl(45 93% 47% / 0.25) !important;
-  border-radius: var(--radius);
-  font-weight: 600;
 }
 
 .calendar-maintenance-day:hover {
@@ -208,8 +210,6 @@ All colors MUST be HSL.
 /* Directive day - purple */
 .calendar-directive-day {
   background-color: hsl(280 70% 50% / 0.25) !important;
-  border-radius: var(--radius);
-  font-weight: 600;
 }
 
 .calendar-directive-day:hover {
