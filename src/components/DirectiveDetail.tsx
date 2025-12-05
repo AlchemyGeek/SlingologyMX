@@ -5,6 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, Edit, Trash2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -60,6 +70,7 @@ const getSeverityColor = (severity: string) => {
 const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
   const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | null>(null);
   const [showComplianceForm, setShowComplianceForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchComplianceStatus = async () => {
@@ -136,12 +147,32 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Directive</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this directive? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card>
         <CardHeader>
