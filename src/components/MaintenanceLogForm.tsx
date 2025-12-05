@@ -57,7 +57,7 @@ interface MaintenanceLogFormProps {
 const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
   const [formData, setFormData] = useState({
     entry_title: "",
-    category: "Airframe" as Database["public"]["Enums"]["maintenance_category"],
+    category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
     subcategory: "Inspection" as Database["public"]["Enums"]["maintenance_subcategory"],
     tags: [] as string[],
     date_performed: new Date(),
