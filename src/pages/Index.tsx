@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import slingologyIcon from "@/assets/slingology-icon.png";
 const Index = () => {
   const navigate = useNavigate();
+  
   return <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
       <div className="text-center space-y-6 p-8">
         <img src={slingologyIcon} alt="SlingologyMX" className="h-48 w-48 mx-auto" />
