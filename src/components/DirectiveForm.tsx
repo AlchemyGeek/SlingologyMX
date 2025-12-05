@@ -12,14 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -355,31 +350,19 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               </div>
               <div className="space-y-2">
                 <Label>Issue Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.issue_date && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.issue_date ? format(formData.issue_date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={formData.issue_date || undefined} onSelect={(date) => setFormData({ ...formData, issue_date: date || null })} initialFocus className="pointer-events-auto" />
-                  </PopoverContent>
-                </Popover>
+                <DateInput
+                  value={formData.issue_date}
+                  onChange={(date) => setFormData({ ...formData, issue_date: date })}
+                  placeholder="Pick a date"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Effective Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.effective_date && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.effective_date ? format(formData.effective_date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={formData.effective_date || undefined} onSelect={(date) => setFormData({ ...formData, effective_date: date || null })} initialFocus className="pointer-events-auto" />
-                  </PopoverContent>
-                </Popover>
+                <DateInput
+                  value={formData.effective_date}
+                  onChange={(date) => setFormData({ ...formData, effective_date: date })}
+                  placeholder="Pick a date"
+                />
               </div>
             </div>
           </div>
@@ -490,17 +473,11 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               </div>
               <div className="space-y-2">
                 <Label>Initial Due Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.initial_due_date && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.initial_due_date ? format(formData.initial_due_date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={formData.initial_due_date || undefined} onSelect={(date) => setFormData({ ...formData, initial_due_date: date || null })} initialFocus className="pointer-events-auto" />
-                  </PopoverContent>
-                </Popover>
+                <DateInput
+                  value={formData.initial_due_date}
+                  onChange={(date) => setFormData({ ...formData, initial_due_date: date })}
+                  placeholder="Pick a date"
+                />
               </div>
             </div>
 
