@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
@@ -13,6 +24,8 @@ interface MaintenanceLogDetailProps {
 }
 
 const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLogDetailProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
@@ -27,17 +40,33 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
           </Button>
           <Button
             variant="destructive"
-            onClick={() => {
-              if (confirm("Are you sure you want to delete this maintenance log?")) {
-                onDelete(log.id);
-              }
-            }}
+            onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Maintenance Log</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this maintenance log? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDelete(log.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="space-y-4">
         {/* Header */}
