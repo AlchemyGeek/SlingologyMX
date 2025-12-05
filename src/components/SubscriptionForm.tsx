@@ -106,7 +106,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
                 type: "Subscription" as const,
                 component: "Other" as const,
                 initial_date: initialDateStr,
-                recurrence: formData.recurrence,
+                recurrence: "None" as const,
               })
               .eq("subscription_id", editingSubscription.id);
           } else {
@@ -118,7 +118,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
               type: "Subscription" as const,
               component: "Other" as const,
               initial_date: initialDateStr,
-              recurrence: formData.recurrence,
+              recurrence: "None" as const,
               subscription_id: editingSubscription.id,
             }]);
 
@@ -154,7 +154,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
             type: "Subscription" as const,
             component: "Other" as const,
             initial_date: initialDateStr,
-            recurrence: formData.recurrence,
+            recurrence: "None" as const,
             subscription_id: newSubscription.id,
           };
 
