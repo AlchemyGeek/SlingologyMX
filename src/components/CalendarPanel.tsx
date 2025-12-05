@@ -9,6 +9,7 @@ import { parseLocalDate } from "@/lib/utils";
 
 interface CalendarPanelProps {
   userId: string;
+  refreshKey?: number;
   currentCounters?: {
     hobbs: number;
     tach: number;
@@ -28,7 +29,7 @@ const counterTypeToFieldMap: Record<string, string> = {
   "Prop TT": "prop_total_time",
 };
 
-const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
+const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<any[]>([]);
@@ -37,7 +38,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
   useEffect(() => {
     fetchData();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   const fetchData = async () => {
     try {

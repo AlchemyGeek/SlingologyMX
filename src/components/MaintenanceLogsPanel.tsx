@@ -55,9 +55,10 @@ interface MaintenanceLogsPanelProps {
   userId: string;
   counters: AircraftCounters;
   onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
+  onRecordChanged?: () => void;
 }
 
-const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters }: MaintenanceLogsPanelProps) => {
+const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters, onRecordChanged }: MaintenanceLogsPanelProps) => {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
@@ -90,6 +91,7 @@ const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters }: Main
     setShowForm(false);
     setEditingLog(null);
     fetchLogs();
+    onRecordChanged?.();
     toast.success(editingLog ? "Maintenance log updated" : "Maintenance log created");
   };
 
@@ -110,6 +112,7 @@ const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters }: Main
       toast.success("Maintenance log deleted");
       setSelectedLog(null);
       fetchLogs();
+      onRecordChanged?.();
     } catch (error) {
       console.error("Error deleting maintenance log:", error);
       toast.error("Failed to delete maintenance log");

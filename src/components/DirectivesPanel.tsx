@@ -45,9 +45,10 @@ export interface Directive {
 
 interface DirectivesPanelProps {
   userId: string;
+  onRecordChanged?: () => void;
 }
 
-const DirectivesPanel = ({ userId }: DirectivesPanelProps) => {
+const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
   const [directives, setDirectives] = useState<Directive[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -81,6 +82,7 @@ const DirectivesPanel = ({ userId }: DirectivesPanelProps) => {
     setShowForm(false);
     setEditingDirective(null);
     fetchDirectives();
+    onRecordChanged?.();
     toast.success(editingDirective ? "Directive updated successfully" : "Directive created successfully");
   };
 
@@ -114,6 +116,7 @@ const DirectivesPanel = ({ userId }: DirectivesPanelProps) => {
       if (error) throw error;
       toast.success("Directive deleted successfully");
       fetchDirectives();
+      onRecordChanged?.();
       setSelectedDirective(null);
     } catch (error: any) {
       toast.error("Failed to delete directive");
@@ -152,7 +155,10 @@ const DirectivesPanel = ({ userId }: DirectivesPanelProps) => {
         onClose={handleCloseDetail}
         onEdit={() => handleEdit(selectedDirective)}
         onDelete={() => handleDelete(selectedDirective.id)}
-        onUpdate={fetchDirectives}
+        onUpdate={() => {
+          fetchDirectives();
+          onRecordChanged?.();
+        }}
       />
     );
   }
