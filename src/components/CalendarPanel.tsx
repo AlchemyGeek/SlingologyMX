@@ -150,6 +150,16 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
 
   const getDirectiveHistoryForDate = (date: Date) => {
     return directiveHistory.filter((entry) => {
+      // For Compliance events, show on the compliance dates
+      if (entry.action_type === "Compliance") {
+        if (entry.first_compliance_date && isSameDay(parseLocalDate(entry.first_compliance_date), date)) {
+          return true;
+        }
+        if (entry.last_compliance_date && isSameDay(parseLocalDate(entry.last_compliance_date), date)) {
+          return true;
+        }
+      }
+      // For Create/Delete events, show on created_at date
       if (entry.created_at) {
         const createdDate = new Date(entry.created_at);
         if (isSameDay(createdDate, date)) {
@@ -197,6 +207,16 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
     });
 
     directiveHistory.forEach((entry) => {
+      // For Compliance events, add compliance dates
+      if (entry.action_type === "Compliance") {
+        if (entry.first_compliance_date) {
+          directiveDates.push(parseLocalDate(entry.first_compliance_date));
+        }
+        if (entry.last_compliance_date) {
+          directiveDates.push(parseLocalDate(entry.last_compliance_date));
+        }
+      }
+      // For Create/Delete events, add created_at date
       if (entry.created_at) {
         directiveDates.push(new Date(entry.created_at));
       }
