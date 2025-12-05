@@ -223,7 +223,7 @@ const Dashboard = () => {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="max-h-[600px] overflow-y-auto">
+              <CardContent>
                 <Tabs defaultValue="calendar" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -234,7 +234,7 @@ const Dashboard = () => {
                     <TabsTrigger value="history">History</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="calendar">
+                  <TabsContent value="calendar" className="max-h-[500px] overflow-y-auto">
                     <CalendarPanel
                       userId={user.id}
                       refreshKey={recordsRefreshKey}
@@ -252,7 +252,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="notifications">
+                  <TabsContent value="notifications" className="max-h-[500px] overflow-y-auto">
                     <ActiveNotificationsPanel
                       userId={user.id}
                       currentCounters={
@@ -270,7 +270,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="history">
+                  <TabsContent value="history" className="max-h-[500px] overflow-y-auto">
                     <HistoryPanel userId={user.id} refreshKey={recordsRefreshKey} />
                   </TabsContent>
                 </Tabs>
@@ -296,7 +296,7 @@ const Dashboard = () => {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="max-h-[600px] overflow-y-auto">
+              <CardContent>
                 <Tabs defaultValue="subscriptions" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
@@ -304,7 +304,7 @@ const Dashboard = () => {
                     <TabsTrigger value="directives">Directives & Bulletins</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="subscriptions">
+                  <TabsContent value="subscriptions" className="max-h-[500px] overflow-y-auto">
                     <SubscriptionsPanel 
                       userId={user.id} 
                       onNotificationChanged={fetchActiveNotificationsForAlerts}
@@ -312,7 +312,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="maintenance">
+                  <TabsContent value="maintenance" className="max-h-[500px] overflow-y-auto">
                     <MaintenanceLogsPanel
                       userId={user.id}
                       counters={counters}
@@ -321,7 +321,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="directives">
+                  <TabsContent value="directives" className="max-h-[500px] overflow-y-auto">
                     <DirectivesPanel 
                       userId={user.id} 
                       onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
