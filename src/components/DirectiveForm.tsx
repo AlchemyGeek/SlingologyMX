@@ -63,12 +63,17 @@ const ACTION_TYPES = [
 ];
 
 const COUNTER_TYPES = [
-  { value: "hobbs", label: "Hobbs" },
-  { value: "tach", label: "Tach" },
-  { value: "airframe_total_time", label: "Airframe TT" },
-  { value: "engine_total_time", label: "Engine TT" },
-  { value: "prop_total_time", label: "Prop TT" },
+  { value: "Hobbs", label: "Hobbs", counterKey: "hobbs" },
+  { value: "Tach", label: "Tach", counterKey: "tach" },
+  { value: "Airframe TT", label: "Airframe TT", counterKey: "airframe_total_time" },
+  { value: "Engine TT", label: "Engine TT", counterKey: "engine_total_time" },
+  { value: "Prop TT", label: "Prop TT", counterKey: "prop_total_time" },
 ];
+
+const getCounterKey = (counterType: string): string => {
+  const ct = COUNTER_TYPES.find(c => c.value === counterType);
+  return ct?.counterKey || "hobbs";
+};
 
 const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: DirectiveFormProps) => {
   const { counters } = useAircraftCounters(userId);
@@ -102,7 +107,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     requires_log_entry: true,
     source_links: [] as Array<{ description: string; url: string }>,
     // New fields for counter-based compliance
-    counter_type: "hobbs" as string,
+    counter_type: "Hobbs" as string,
     counter_value_mode: "absolute" as "absolute" | "incremental",
     counter_absolute_value: "",
     counter_increment_value: "",
@@ -141,7 +146,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         terminating_action_summary: editingDirective.terminating_action_summary || "",
         requires_log_entry: editingDirective.requires_log_entry ?? true,
         source_links: editingDirective.source_links || [],
-        counter_type: "hobbs",
+        counter_type: "Hobbs",
         counter_value_mode: "absolute",
         counter_absolute_value: editingDirective.initial_due_hours?.toString() || "",
         counter_increment_value: "",
@@ -230,7 +235,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     } else if (formData.initial_due_type === "By Total Time (Hours)") {
       // Create counter-based notification
       let counterValue: number;
-      const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+      const counterKey = getCounterKey(formData.counter_type);
+      const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
       
       if (formData.counter_value_mode === "absolute") {
         counterValue = parseFloat(formData.counter_absolute_value) || currentCounterValue;
@@ -239,7 +245,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         counterValue = currentCounterValue + increment;
       }
       
-      await supabase.from("notifications").insert({
+      const { error } = await supabase.from("notifications").insert({
         user_id: userId,
         description: notificationDescription,
         type: "Maintenance",
@@ -249,8 +255,12 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         notification_basis: "Counter",
         counter_type: formData.counter_type as any,
         initial_counter_value: counterValue,
-        notes: `Directive compliance due at ${counterValue} ${formData.counter_type.replace(/_/g, " ")}`,
+        notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
       });
+      
+      if (error) {
+        console.error("Error creating counter notification:", error);
+      }
     }
     // "Other" - no notification created
   };
@@ -270,11 +280,12 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
 
     // Validation for By Total Time (Hours)
     if (formData.initial_due_type === "By Total Time (Hours)") {
+      const counterKey = getCounterKey(formData.counter_type);
       if (formData.counter_value_mode === "absolute") {
         const absoluteValue = parseFloat(formData.counter_absolute_value);
-        const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+        const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
         if (isNaN(absoluteValue) || absoluteValue < currentCounterValue) {
-          toast.error(`Absolute value must be greater than or equal to current ${formData.counter_type.replace(/_/g, " ")} value (${currentCounterValue})`);
+          toast.error(`Absolute value must be greater than or equal to current ${formData.counter_type} value (${currentCounterValue})`);
           return;
         }
       } else {
@@ -289,7 +300,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     // Compute initial_due_hours for counter-based
     let computedInitialDueHours = formData.initial_due_hours ? parseFloat(formData.initial_due_hours) : null;
     if (formData.initial_due_type === "By Total Time (Hours)") {
-      const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+      const counterKey = getCounterKey(formData.counter_type);
+      const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
       if (formData.counter_value_mode === "absolute") {
         computedInitialDueHours = parseFloat(formData.counter_absolute_value) || null;
       } else {
@@ -657,7 +669,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Current value: {Number(counters[formData.counter_type as keyof typeof counters]) || 0}
+                      Current value: {Number(counters[getCounterKey(formData.counter_type) as keyof typeof counters]) || 0}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -687,13 +699,13 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                         id="counter_absolute_value"
                         type="number"
                         step="0.1"
-                        min={Number(counters[formData.counter_type as keyof typeof counters]) || 0}
+                        min={Number(counters[getCounterKey(formData.counter_type) as keyof typeof counters]) || 0}
                         value={formData.counter_absolute_value}
                         onChange={(e) => setFormData({ ...formData, counter_absolute_value: e.target.value })}
-                        placeholder={`Must be ≥ ${Number(counters[formData.counter_type as keyof typeof counters]) || 0}`}
+                        placeholder={`Must be ≥ ${Number(counters[getCounterKey(formData.counter_type) as keyof typeof counters]) || 0}`}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Must be greater than or equal to current value ({Number(counters[formData.counter_type as keyof typeof counters]) || 0})
+                        Must be greater than or equal to current value ({Number(counters[getCounterKey(formData.counter_type) as keyof typeof counters]) || 0})
                       </p>
                     </div>
                   </div>
@@ -714,7 +726,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                       />
                       {formData.counter_increment_value && (
                         <p className="text-xs text-muted-foreground">
-                          Due at: {(Number(counters[formData.counter_type as keyof typeof counters]) || 0) + (parseFloat(formData.counter_increment_value) || 0)} {formData.counter_type.replace(/_/g, " ")}
+                          Due at: {(Number(counters[getCounterKey(formData.counter_type) as keyof typeof counters]) || 0) + (parseFloat(formData.counter_increment_value) || 0)} {formData.counter_type}
                         </p>
                       )}
                     </div>
