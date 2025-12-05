@@ -143,18 +143,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
   const getMaintenanceLogsForDate = (date: Date) => {
     return maintenanceLogs.filter((log) => {
       const performedDate = parseLocalDate(log.date_performed);
-      if (isSameDay(performedDate, date)) {
-        return true;
-      }
-      
-      if (log.next_due_date) {
-        const nextDueDate = parseLocalDate(log.next_due_date);
-        if (isSameDay(nextDueDate, date)) {
-          return true;
-        }
-      }
-      
-      return false;
+      return isSameDay(performedDate, date);
     });
   };
 
@@ -204,9 +193,6 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
 
     maintenanceLogs.forEach((log) => {
       maintenance.push(parseLocalDate(log.date_performed));
-      if (log.next_due_date) {
-        maintenance.push(parseLocalDate(log.next_due_date));
-      }
     });
 
     directiveHistory.forEach((entry) => {
@@ -367,9 +353,6 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p>Subcategory: {log.subcategory}</p>
                           <p>Performed by: {log.performed_by_name}</p>
-                          {log.next_due_date && selectedDate && isSameDay(parseLocalDate(log.next_due_date), selectedDate) && (
-                            <p className="font-medium text-orange-600">Next Due Date</p>
-                          )}
                         </div>
                       </div>
                     ))}
