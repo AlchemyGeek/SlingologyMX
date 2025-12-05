@@ -103,6 +103,13 @@ const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters, onReco
 
   const handleDelete = async (logId: string) => {
     try {
+      // Delete linked notifications that haven't been modified by user
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("maintenance_log_id", logId)
+        .eq("user_modified", false);
+      
       const { error } = await supabase
         .from("maintenance_logs")
         .delete()

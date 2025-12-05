@@ -194,6 +194,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
   const createComplianceNotification = async (directiveId: string, directiveCode: string, directiveTitle: string) => {
     const notificationDescription = `Directive Compliance: ${directiveCode} - ${directiveTitle}`;
     const today = new Date();
+    const componentMap = formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe";
     
     // Determine notification type and values based on initial_due_type
     if (formData.initial_due_type === "Before Next Flight" || formData.initial_due_type === "At Next Inspection") {
@@ -202,11 +203,12 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Maintenance",
-        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
         notes: `Initial Due: ${formData.initial_due_type}`,
+        directive_id: directiveId,
       });
     } else if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
       // Create date-based notification for the specified date
@@ -214,11 +216,12 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Maintenance",
-        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
         notes: `Directive compliance due by date`,
+        directive_id: directiveId,
       });
     } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
       // Create date-based notification for the calculated/specified date
@@ -226,11 +229,12 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Maintenance",
-        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
         notes: `Directive compliance due in ${formData.initial_due_months} months`,
+        directive_id: directiveId,
       });
     } else if (formData.initial_due_type === "By Total Time (Hours)") {
       // Create counter-based notification
@@ -249,13 +253,14 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Maintenance",
-        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Counter",
         counter_type: formData.counter_type as any,
         initial_counter_value: counterValue,
         notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
+        directive_id: directiveId,
       });
       
       if (error) {
@@ -348,6 +353,61 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           .update(directiveData)
           .eq("id", editingDirective.id);
         if (error) throw error;
+        
+        // Update linked notifications (if not user_modified)
+        const notificationDescription = `Directive Compliance: ${formData.directive_code} - ${formData.title}`;
+        const componentMap = formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe";
+        
+        if (formData.initial_due_type === "Before Next Flight" || formData.initial_due_type === "At Next Inspection") {
+          await supabase.from("notifications")
+            .update({
+              description: notificationDescription,
+              component: componentMap,
+              initial_date: format(new Date(), "yyyy-MM-dd"),
+              notes: `Initial Due: ${formData.initial_due_type}`,
+            })
+            .eq("directive_id", editingDirective.id)
+            .eq("user_modified", false);
+        } else if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
+          await supabase.from("notifications")
+            .update({
+              description: notificationDescription,
+              component: componentMap,
+              initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
+              notes: `Directive compliance due by date`,
+            })
+            .eq("directive_id", editingDirective.id)
+            .eq("user_modified", false);
+        } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
+          await supabase.from("notifications")
+            .update({
+              description: notificationDescription,
+              component: componentMap,
+              initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
+              notes: `Directive compliance due in ${formData.initial_due_months} months`,
+            })
+            .eq("directive_id", editingDirective.id)
+            .eq("user_modified", false);
+        } else if (formData.initial_due_type === "By Total Time (Hours)") {
+          const counterKey = getCounterKey(formData.counter_type);
+          const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
+          let counterValue: number;
+          if (formData.counter_value_mode === "absolute") {
+            counterValue = parseFloat(formData.counter_absolute_value) || currentCounterValue;
+          } else {
+            counterValue = currentCounterValue + (parseFloat(formData.counter_increment_value) || 0);
+          }
+          await supabase.from("notifications")
+            .update({
+              description: notificationDescription,
+              component: componentMap,
+              counter_type: formData.counter_type as any,
+              initial_counter_value: counterValue,
+              notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
+            })
+            .eq("directive_id", editingDirective.id)
+            .eq("user_modified", false);
+        }
       } else {
         const { data: newDirective, error } = await supabase
           .from("directives")

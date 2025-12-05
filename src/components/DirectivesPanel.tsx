@@ -108,6 +108,13 @@ const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
         });
       }
       
+      // Delete linked notifications that haven't been modified by user
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("directive_id", directiveId)
+        .eq("user_modified", false);
+      
       const { error } = await supabase
         .from("directives")
         .delete()
