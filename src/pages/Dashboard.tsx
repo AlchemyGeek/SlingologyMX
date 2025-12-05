@@ -223,7 +223,7 @@ const Dashboard = () => {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent>
+              <CardContent className="max-h-[600px] overflow-y-auto">
                 <Tabs defaultValue="calendar" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -296,7 +296,7 @@ const Dashboard = () => {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent>
+              <CardContent className="max-h-[600px] overflow-y-auto">
                 <Tabs defaultValue="subscriptions" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
