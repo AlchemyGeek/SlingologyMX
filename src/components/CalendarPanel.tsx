@@ -260,7 +260,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-6">
-          <div className="space-y-4 shrink-0">
+          <div className="space-y-4 shrink-0 max-w-fit">
             <Calendar
               mode="single"
               selected={selectedDate}
