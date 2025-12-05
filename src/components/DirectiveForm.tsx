@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
+import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
 interface DirectiveFormProps {
   userId: string;
@@ -47,7 +49,7 @@ const INITIAL_DUE_TYPES = [
   "Before Next Flight",
   "By Date",
   "By Total Time (Hours)",
-  "By Calendar (Months)",
+  "By Calendar",
   "At Next Inspection",
   "Other",
 ];
@@ -60,7 +62,17 @@ const ACTION_TYPES = [
   "Documentation Update",
 ];
 
+const COUNTER_TYPES = [
+  { value: "hobbs", label: "Hobbs" },
+  { value: "tach", label: "Tach" },
+  { value: "airframe_total_time", label: "Airframe TT" },
+  { value: "engine_total_time", label: "Engine TT" },
+  { value: "prop_total_time", label: "Prop TT" },
+];
+
 const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: DirectiveFormProps) => {
+  const { counters } = useAircraftCounters(userId);
+  
   const [formData, setFormData] = useState({
     directive_code: "",
     title: "",
@@ -89,6 +101,11 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     terminating_action_summary: "",
     requires_log_entry: true,
     source_links: [] as Array<{ description: string; url: string }>,
+    // New fields for counter-based compliance
+    counter_type: "hobbs" as string,
+    counter_value_mode: "absolute" as "absolute" | "incremental",
+    counter_absolute_value: "",
+    counter_increment_value: "",
   });
 
   const [linkDescInput, setLinkDescInput] = useState("");
@@ -124,9 +141,24 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         terminating_action_summary: editingDirective.terminating_action_summary || "",
         requires_log_entry: editingDirective.requires_log_entry ?? true,
         source_links: editingDirective.source_links || [],
+        counter_type: "hobbs",
+        counter_value_mode: "absolute",
+        counter_absolute_value: editingDirective.initial_due_hours?.toString() || "",
+        counter_increment_value: "",
       });
     }
   }, [editingDirective]);
+
+  // Auto-calculate initial_due_date when months change for "By Calendar"
+  useEffect(() => {
+    if (formData.initial_due_type === "By Calendar" && formData.initial_due_months) {
+      const months = parseInt(formData.initial_due_months);
+      if (!isNaN(months) && months > 0) {
+        const calculatedDate = addMonths(new Date(), months);
+        setFormData(prev => ({ ...prev, initial_due_date: calculatedDate }));
+      }
+    }
+  }, [formData.initial_due_months, formData.initial_due_type]);
 
   const handleAddLink = () => {
     if (linkDescInput.trim() && linkUrlInput.trim()) {
@@ -154,6 +186,75 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     }
   };
 
+  const createComplianceNotification = async (directiveId: string, directiveCode: string, directiveTitle: string) => {
+    const notificationDescription = `Directive Compliance: ${directiveCode} - ${directiveTitle}`;
+    const today = new Date();
+    
+    // Determine notification type and values based on initial_due_type
+    if (formData.initial_due_type === "Before Next Flight" || formData.initial_due_type === "At Next Inspection") {
+      // Create date-based notification with current date
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        description: notificationDescription,
+        type: "Maintenance",
+        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        initial_date: format(today, "yyyy-MM-dd"),
+        recurrence: "None",
+        notification_basis: "Date",
+        notes: `Initial Due: ${formData.initial_due_type}`,
+      });
+    } else if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
+      // Create date-based notification for the specified date
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        description: notificationDescription,
+        type: "Maintenance",
+        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
+        recurrence: "None",
+        notification_basis: "Date",
+        notes: `Directive compliance due by date`,
+      });
+    } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
+      // Create date-based notification for the calculated/specified date
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        description: notificationDescription,
+        type: "Maintenance",
+        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
+        recurrence: "None",
+        notification_basis: "Date",
+        notes: `Directive compliance due in ${formData.initial_due_months} months`,
+      });
+    } else if (formData.initial_due_type === "By Total Time (Hours)") {
+      // Create counter-based notification
+      let counterValue: number;
+      const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+      
+      if (formData.counter_value_mode === "absolute") {
+        counterValue = parseFloat(formData.counter_absolute_value) || currentCounterValue;
+      } else {
+        const increment = parseFloat(formData.counter_increment_value) || 0;
+        counterValue = currentCounterValue + increment;
+      }
+      
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        description: notificationDescription,
+        type: "Maintenance",
+        component: formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe",
+        initial_date: format(today, "yyyy-MM-dd"),
+        recurrence: "None",
+        notification_basis: "Counter",
+        counter_type: formData.counter_type as any,
+        initial_counter_value: counterValue,
+        notes: `Directive compliance due at ${counterValue} ${formData.counter_type.replace(/_/g, " ")}`,
+      });
+    }
+    // "Other" - no notification created
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -165,6 +266,36 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     if (!formData.title.trim()) {
       toast.error("Title is required");
       return;
+    }
+
+    // Validation for By Total Time (Hours)
+    if (formData.initial_due_type === "By Total Time (Hours)") {
+      if (formData.counter_value_mode === "absolute") {
+        const absoluteValue = parseFloat(formData.counter_absolute_value);
+        const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+        if (isNaN(absoluteValue) || absoluteValue < currentCounterValue) {
+          toast.error(`Absolute value must be greater than or equal to current ${formData.counter_type.replace(/_/g, " ")} value (${currentCounterValue})`);
+          return;
+        }
+      } else {
+        const incrementValue = parseFloat(formData.counter_increment_value);
+        if (isNaN(incrementValue) || incrementValue <= 0) {
+          toast.error("Increment value must be a positive number");
+          return;
+        }
+      }
+    }
+
+    // Compute initial_due_hours for counter-based
+    let computedInitialDueHours = formData.initial_due_hours ? parseFloat(formData.initial_due_hours) : null;
+    if (formData.initial_due_type === "By Total Time (Hours)") {
+      const currentCounterValue = Number(counters[formData.counter_type as keyof typeof counters]) || 0;
+      if (formData.counter_value_mode === "absolute") {
+        computedInitialDueHours = parseFloat(formData.counter_absolute_value) || null;
+      } else {
+        const increment = parseFloat(formData.counter_increment_value) || 0;
+        computedInitialDueHours = currentCounterValue + increment;
+      }
     }
 
     const directiveData = {
@@ -187,7 +318,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       compliance_scope: formData.compliance_scope as Database["public"]["Enums"]["compliance_scope"],
       action_types: formData.action_types.length > 0 ? formData.action_types : null,
       initial_due_type: (formData.initial_due_type || null) as Database["public"]["Enums"]["initial_due_type"] | null,
-      initial_due_hours: formData.initial_due_hours ? parseFloat(formData.initial_due_hours) : null,
+      initial_due_hours: computedInitialDueHours,
       initial_due_months: formData.initial_due_months ? parseInt(formData.initial_due_months) : null,
       initial_due_date: formData.initial_due_date ? format(formData.initial_due_date, "yyyy-MM-dd") : null,
       repeat_hours: formData.repeat_hours ? parseFloat(formData.repeat_hours) : null,
@@ -222,6 +353,11 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             directive_title: newDirective.title,
             action_type: "Create",
           });
+
+          // Create compliance notification for new directives (not "Other")
+          if (formData.initial_due_type && formData.initial_due_type !== "Other") {
+            await createComplianceNotification(newDirective.id, newDirective.directive_code, newDirective.title);
+          }
         }
       }
       onSuccess();
@@ -441,7 +577,19 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               </div>
               <div className="space-y-2">
                 <Label>Initial Due Type</Label>
-                <Select value={formData.initial_due_type} onValueChange={(value) => setFormData({ ...formData, initial_due_type: value })}>
+                <Select 
+                  value={formData.initial_due_type} 
+                  onValueChange={(value) => setFormData({ 
+                    ...formData, 
+                    initial_due_type: value,
+                    // Reset related fields when type changes
+                    initial_due_hours: "",
+                    initial_due_months: "",
+                    initial_due_date: null,
+                    counter_absolute_value: "",
+                    counter_increment_value: "",
+                  })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select..." />
                   </SelectTrigger>
@@ -452,34 +600,128 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="initial_due_hours">Initial Due Hours</Label>
-                <Input
-                  id="initial_due_hours"
-                  type="number"
-                  step="0.1"
-                  value={formData.initial_due_hours}
-                  onChange={(e) => setFormData({ ...formData, initial_due_hours: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="initial_due_months">Initial Due Months</Label>
-                <Input
-                  id="initial_due_months"
-                  type="number"
-                  value={formData.initial_due_months}
-                  onChange={(e) => setFormData({ ...formData, initial_due_months: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Initial Due Date</Label>
-                <DateInput
-                  value={formData.initial_due_date}
-                  onChange={(date) => setFormData({ ...formData, initial_due_date: date })}
-                  placeholder="Pick a date"
-                />
-              </div>
             </div>
+
+            {/* Conditional fields based on Initial Due Type */}
+            {formData.initial_due_type === "By Date" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label>Due Date *</Label>
+                  <DateInput
+                    value={formData.initial_due_date}
+                    onChange={(date) => setFormData({ ...formData, initial_due_date: date })}
+                    placeholder="Pick a date"
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.initial_due_type === "By Calendar" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="initial_due_months">Months from Today *</Label>
+                  <Input
+                    id="initial_due_months"
+                    type="number"
+                    min="1"
+                    value={formData.initial_due_months}
+                    onChange={(e) => setFormData({ ...formData, initial_due_months: e.target.value })}
+                    placeholder="Enter number of months"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Calculated Due Date</Label>
+                  <DateInput
+                    value={formData.initial_due_date}
+                    onChange={(date) => setFormData({ ...formData, initial_due_date: date })}
+                    placeholder="Auto-calculated"
+                  />
+                  <p className="text-xs text-muted-foreground">Auto-calculated based on months, but can be adjusted</p>
+                </div>
+              </div>
+            )}
+
+            {formData.initial_due_type === "By Total Time (Hours)" && (
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Counter Type *</Label>
+                    <Select value={formData.counter_type} onValueChange={(value) => setFormData({ ...formData, counter_type: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTER_TYPES.map((ct) => (
+                          <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Current value: {Number(counters[formData.counter_type as keyof typeof counters]) || 0}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Value Mode *</Label>
+                    <RadioGroup
+                      value={formData.counter_value_mode}
+                      onValueChange={(value) => setFormData({ ...formData, counter_value_mode: value as "absolute" | "incremental" })}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="absolute" id="absolute" />
+                        <Label htmlFor="absolute" className="font-normal">Absolute Value</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="incremental" id="incremental" />
+                        <Label htmlFor="incremental" className="font-normal">Incremental</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
+                {formData.counter_value_mode === "absolute" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="counter_absolute_value">Due at Counter Value *</Label>
+                      <Input
+                        id="counter_absolute_value"
+                        type="number"
+                        step="0.1"
+                        min={Number(counters[formData.counter_type as keyof typeof counters]) || 0}
+                        value={formData.counter_absolute_value}
+                        onChange={(e) => setFormData({ ...formData, counter_absolute_value: e.target.value })}
+                        placeholder={`Must be ≥ ${Number(counters[formData.counter_type as keyof typeof counters]) || 0}`}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Must be greater than or equal to current value ({Number(counters[formData.counter_type as keyof typeof counters]) || 0})
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {formData.counter_value_mode === "incremental" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="counter_increment_value">Add Hours to Current *</Label>
+                      <Input
+                        id="counter_increment_value"
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        value={formData.counter_increment_value}
+                        onChange={(e) => setFormData({ ...formData, counter_increment_value: e.target.value })}
+                        placeholder="Enter hours to add"
+                      />
+                      {formData.counter_increment_value && (
+                        <p className="text-xs text-muted-foreground">
+                          Due at: {(Number(counters[formData.counter_type as keyof typeof counters]) || 0) + (parseFloat(formData.counter_increment_value) || 0)} {formData.counter_type.replace(/_/g, " ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {formData.compliance_scope === "Recurring" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
