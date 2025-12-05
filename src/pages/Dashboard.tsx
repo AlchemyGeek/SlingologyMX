@@ -273,7 +273,7 @@ const Dashboard = () => {
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
                     <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                    <TabsTrigger value="directives">Directives</TabsTrigger>
+                    <TabsTrigger value="directives">Directives & Bulletins</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="subscriptions">
