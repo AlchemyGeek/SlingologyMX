@@ -5,8 +5,9 @@ import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle } from "lucide-react";
+import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle, ChevronDown } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
@@ -32,6 +33,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
+  const [eventsOpen, setEventsOpen] = useState(true);
+  const [recordsOpen, setRecordsOpen] = useState(true);
   const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
 
   // Fetch active notifications for alert indicator
@@ -186,91 +189,113 @@ const Dashboard = () => {
         />
 
         {/* Events Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              Events
-              {hasActiveAlerts && <AlertCircle className="h-5 w-5 text-destructive" />}
-            </CardTitle>
-            <CardDescription>Track your calendar, notifications, and history</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="calendar" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-1">
-                  Notifications
-                  {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
-                </TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
+        <Collapsible open={eventsOpen} onOpenChange={setEventsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      Events
+                      {hasActiveAlerts && <AlertCircle className="h-5 w-5 text-destructive" />}
+                    </CardTitle>
+                    <CardDescription>Track your calendar, notifications, and history</CardDescription>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${eventsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <Tabs defaultValue="calendar" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="calendar">Calendar</TabsTrigger>
+                    <TabsTrigger value="notifications" className="flex items-center gap-1">
+                      Notifications
+                      {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
+                    </TabsTrigger>
+                    <TabsTrigger value="history">History</TabsTrigger>
+                  </TabsList>
 
-              <TabsContent value="calendar">
-                <CalendarPanel 
-                  userId={user.id} 
-                  currentCounters={counters ? {
-                    hobbs: counters.hobbs || 0,
-                    tach: counters.tach || 0,
-                    airframe_total_time: counters.airframe_total_time || 0,
-                    engine_total_time: counters.engine_total_time || 0,
-                    prop_total_time: counters.prop_total_time || 0,
-                  } : undefined}
-                />
-              </TabsContent>
+                  <TabsContent value="calendar">
+                    <CalendarPanel 
+                      userId={user.id} 
+                      currentCounters={counters ? {
+                        hobbs: counters.hobbs || 0,
+                        tach: counters.tach || 0,
+                        airframe_total_time: counters.airframe_total_time || 0,
+                        engine_total_time: counters.engine_total_time || 0,
+                        prop_total_time: counters.prop_total_time || 0,
+                      } : undefined}
+                    />
+                  </TabsContent>
 
-              <TabsContent value="notifications">
-                <ActiveNotificationsPanel 
-                  userId={user.id} 
-                  currentCounters={counters ? {
-                    hobbs: counters.hobbs || 0,
-                    tach: counters.tach || 0,
-                    airframe_total_time: counters.airframe_total_time || 0,
-                    engine_total_time: counters.engine_total_time || 0,
-                    prop_total_time: counters.prop_total_time || 0,
-                  } : undefined}
-                  onNotificationCompleted={fetchActiveNotificationsForAlerts}
-                />
-              </TabsContent>
+                  <TabsContent value="notifications">
+                    <ActiveNotificationsPanel 
+                      userId={user.id} 
+                      currentCounters={counters ? {
+                        hobbs: counters.hobbs || 0,
+                        tach: counters.tach || 0,
+                        airframe_total_time: counters.airframe_total_time || 0,
+                        engine_total_time: counters.engine_total_time || 0,
+                        prop_total_time: counters.prop_total_time || 0,
+                      } : undefined}
+                      onNotificationCompleted={fetchActiveNotificationsForAlerts}
+                    />
+                  </TabsContent>
 
-              <TabsContent value="history">
-                <HistoryPanel userId={user.id} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  <TabsContent value="history">
+                    <HistoryPanel userId={user.id} />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Records Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Records</CardTitle>
-            <CardDescription>Manage your subscriptions, maintenance logs, and directives</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="subscriptions" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                <TabsTrigger value="directives">Directives</TabsTrigger>
-              </TabsList>
+        <Collapsible open={recordsOpen} onOpenChange={setRecordsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Records</CardTitle>
+                    <CardDescription>Manage your subscriptions, maintenance logs, and directives</CardDescription>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${recordsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <Tabs defaultValue="subscriptions" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+                    <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                    <TabsTrigger value="directives">Directives</TabsTrigger>
+                  </TabsList>
 
-              <TabsContent value="subscriptions">
-                <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
-              </TabsContent>
+                  <TabsContent value="subscriptions">
+                    <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
+                  </TabsContent>
 
-              <TabsContent value="maintenance">
-                <MaintenanceLogsPanel 
-                  userId={user.id} 
-                  counters={counters} 
-                  onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
-                />
-              </TabsContent>
+                  <TabsContent value="maintenance">
+                    <MaintenanceLogsPanel 
+                      userId={user.id} 
+                      counters={counters} 
+                      onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
+                    />
+                  </TabsContent>
 
-              <TabsContent value="directives">
-                <DirectivesPanel userId={user.id} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  <TabsContent value="directives">
+                    <DirectivesPanel userId={user.id} />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </main>
     </div>
   );
