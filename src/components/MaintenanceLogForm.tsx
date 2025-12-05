@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -108,7 +108,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         category: editingLog.category || "Airframe",
         subcategory: editingLog.subcategory || "Inspection",
         tags: editingLog.tags || [],
-        date_performed: new Date(editingLog.date_performed),
+        date_performed: parseLocalDate(editingLog.date_performed),
         hobbs_at_event: editingLog.hobbs_at_event?.toString() || "",
         tach_at_event: editingLog.tach_at_event?.toString() || "",
         airframe_total_time: editingLog.airframe_total_time?.toString() || "",
@@ -123,7 +123,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         interval_hours: editingLog.interval_hours?.toString() || "",
         interval_months: editingLog.interval_months?.toString() || "",
         next_due_hours: editingLog.next_due_hours?.toString() || "",
-        next_due_date: editingLog.next_due_date ? new Date(editingLog.next_due_date) : null,
+        next_due_date: editingLog.next_due_date ? parseLocalDate(editingLog.next_due_date) : null,
         performed_by_type: editingLog.performed_by_type || "Owner",
         performed_by_name: editingLog.performed_by_name || "",
         organization: editingLog.organization || "",
