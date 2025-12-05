@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
@@ -174,7 +175,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-8">
         <AircraftCountersDisplay
           counters={counters}
           loading={countersLoading}
@@ -183,66 +184,93 @@ const Dashboard = () => {
           onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
           onRefetch={refetch}
         />
-        <Tabs defaultValue="notifications" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="notifications" className="flex items-center gap-1">
-              Notifications
-              {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
-            </TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="logs">Maintenance</TabsTrigger>
-            <TabsTrigger value="directives">Directives</TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="notifications">
-            <ActiveNotificationsPanel 
-              userId={user.id} 
-              currentCounters={counters ? {
-                hobbs: counters.hobbs || 0,
-                tach: counters.tach || 0,
-                airframe_total_time: counters.airframe_total_time || 0,
-                engine_total_time: counters.engine_total_time || 0,
-                prop_total_time: counters.prop_total_time || 0,
-              } : undefined}
-              onNotificationCompleted={fetchActiveNotificationsForAlerts}
-            />
-          </TabsContent>
+        {/* Events Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              Events
+              {hasActiveAlerts && <AlertCircle className="h-5 w-5 text-destructive" />}
+            </CardTitle>
+            <CardDescription>Track your calendar, notifications, and history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="calendar" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="calendar">Calendar</TabsTrigger>
+                <TabsTrigger value="notifications" className="flex items-center gap-1">
+                  Notifications
+                  {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
+                </TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="subscriptions">
-            <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
-          </TabsContent>
+              <TabsContent value="calendar">
+                <CalendarPanel 
+                  userId={user.id} 
+                  currentCounters={counters ? {
+                    hobbs: counters.hobbs || 0,
+                    tach: counters.tach || 0,
+                    airframe_total_time: counters.airframe_total_time || 0,
+                    engine_total_time: counters.engine_total_time || 0,
+                    prop_total_time: counters.prop_total_time || 0,
+                  } : undefined}
+                />
+              </TabsContent>
 
-          <TabsContent value="calendar">
-            <CalendarPanel 
-              userId={user.id} 
-              currentCounters={counters ? {
-                hobbs: counters.hobbs || 0,
-                tach: counters.tach || 0,
-                airframe_total_time: counters.airframe_total_time || 0,
-                engine_total_time: counters.engine_total_time || 0,
-                prop_total_time: counters.prop_total_time || 0,
-              } : undefined}
-            />
-          </TabsContent>
+              <TabsContent value="notifications">
+                <ActiveNotificationsPanel 
+                  userId={user.id} 
+                  currentCounters={counters ? {
+                    hobbs: counters.hobbs || 0,
+                    tach: counters.tach || 0,
+                    airframe_total_time: counters.airframe_total_time || 0,
+                    engine_total_time: counters.engine_total_time || 0,
+                    prop_total_time: counters.prop_total_time || 0,
+                  } : undefined}
+                  onNotificationCompleted={fetchActiveNotificationsForAlerts}
+                />
+              </TabsContent>
 
-          <TabsContent value="history">
-            <HistoryPanel userId={user.id} />
-          </TabsContent>
+              <TabsContent value="history">
+                <HistoryPanel userId={user.id} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="logs">
-            <MaintenanceLogsPanel 
-              userId={user.id} 
-              counters={counters} 
-              onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
-            />
-          </TabsContent>
+        {/* Records Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Records</CardTitle>
+            <CardDescription>Manage your subscriptions, maintenance logs, and directives</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="subscriptions" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                <TabsTrigger value="directives">Directives</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="directives">
-            <DirectivesPanel userId={user.id} />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="subscriptions">
+                <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
+              </TabsContent>
+
+              <TabsContent value="maintenance">
+                <MaintenanceLogsPanel 
+                  userId={user.id} 
+                  counters={counters} 
+                  onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
+                />
+              </TabsContent>
+
+              <TabsContent value="directives">
+                <DirectivesPanel userId={user.id} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
