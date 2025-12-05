@@ -129,7 +129,12 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
 
       let error;
       if (editingNotification) {
-        const result = await supabase.from("notifications").update(data).eq("id", editingNotification.id);
+        // Mark as user_modified when editing a record-linked notification
+        const updateData = {
+          ...data,
+          user_modified: editingNotification.maintenance_log_id || editingNotification.directive_id || editingNotification.subscription_id ? true : data.user_modified
+        };
+        const result = await supabase.from("notifications").update(updateData).eq("id", editingNotification.id);
         error = result.error;
       } else {
         const result = await supabase.from("notifications").insert([data]);

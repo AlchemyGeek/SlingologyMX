@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Link } from "lucide-react";
+import { Trash2, Pencil, Link, FileText, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -32,11 +32,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 type AlertStatus = "normal" | "reminder" | "due";
 
 const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, currentCounters }: CounterNotificationListProps) => {
-  const handleDelete = async (id: string, subscriptionId: string | null) => {
-    if (subscriptionId) {
-      toast.error("This notification is linked to a subscription. Delete the subscription instead.");
-      return;
-    }
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from("notifications").delete().eq("id", id);
       if (error) throw error;
@@ -48,6 +44,9 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
   };
 
   const isLinkedToSubscription = (notification: any) => !!notification.subscription_id;
+  const isLinkedToMaintenanceLog = (notification: any) => !!notification.maintenance_log_id;
+  const isLinkedToDirective = (notification: any) => !!notification.directive_id;
+  const isUserModified = (notification: any) => notification.user_modified === true;
 
   const getCounterProgress = (notification: any) => {
     if (!currentCounters || !notification.counter_type) return null;
@@ -119,6 +118,26 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
                         <TooltipContent>Linked to subscription</TooltipContent>
                       </Tooltip>
                     )}
+                    {isLinkedToMaintenanceLog(notification) && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <ClipboardList className={cn("h-3 w-3", isUserModified(notification) ? "text-amber-500" : "text-muted-foreground")} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isUserModified(notification) ? "Linked to maintenance (modified)" : "Linked to maintenance record"}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {isLinkedToDirective(notification) && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <FileText className={cn("h-3 w-3", isUserModified(notification) ? "text-amber-500" : "text-muted-foreground")} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isUserModified(notification) ? "Linked to directive (modified)" : "Linked to directive"}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
@@ -142,29 +161,15 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    {linkedToSub ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span>
-                            <Button variant="ghost" size="icon" disabled>
-                              <Pencil className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit via Subscriptions tab</TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(notification)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(notification)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(notification.id, notification.subscription_id)}
-                      disabled={linkedToSub}
+                      onClick={() => handleDelete(notification.id)}
                     >
-                      <Trash2 className={`h-4 w-4 ${linkedToSub ? "text-muted-foreground" : "text-destructive"}`} />
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </TableCell>

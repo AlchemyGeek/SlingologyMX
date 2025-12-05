@@ -584,10 +584,12 @@ export type Database = {
           counter_type: Database["public"]["Enums"]["counter_type"] | null
           created_at: string | null
           description: string
+          directive_id: string | null
           id: string
           initial_counter_value: number | null
           initial_date: string
           is_completed: boolean | null
+          maintenance_log_id: string | null
           notes: string | null
           notification_basis: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
@@ -595,6 +597,7 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"]
           updated_at: string | null
           user_id: string
+          user_modified: boolean
         }
         Insert: {
           alert_days?: number | null
@@ -605,10 +608,12 @@ export type Database = {
           counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null
           description: string
+          directive_id?: string | null
           id?: string
           initial_counter_value?: number | null
           initial_date: string
           is_completed?: boolean | null
+          maintenance_log_id?: string | null
           notes?: string | null
           notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
@@ -616,6 +621,7 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
           user_id: string
+          user_modified?: boolean
         }
         Update: {
           alert_days?: number | null
@@ -626,10 +632,12 @@ export type Database = {
           counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null
           description?: string
+          directive_id?: string | null
           id?: string
           initial_counter_value?: number | null
           initial_date?: string
           is_completed?: boolean | null
+          maintenance_log_id?: string | null
           notes?: string | null
           notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
@@ -637,8 +645,23 @@ export type Database = {
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
           user_id?: string
+          user_modified?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_directive_id_fkey"
+            columns: ["directive_id"]
+            isOneToOne: false
+            referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_subscription_id_fkey"
             columns: ["subscription_id"]

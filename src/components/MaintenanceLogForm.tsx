@@ -230,35 +230,87 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     };
 
     try {
+      let logId = editingLog?.id;
+      
       if (editingLog) {
         const { error } = await supabase
           .from("maintenance_logs")
           .update(logData)
           .eq("id", editingLog.id);
         if (error) throw error;
+        
+        // Update linked notifications (if not user_modified)
+        if (formData.is_recurring_task && formData.interval_type !== "None") {
+          const notificationDescription = `Recurring: ${formData.entry_title}`;
+          const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
+            "Airplane": "Airframe", "Airframe": "Airframe", "Propeller": "Propeller",
+            "Avionics": "Avionics", "Engine": "Other", "Electrical": "Other",
+            "Interior": "Other", "Exterior": "Other", "Accessories": "Other", "Other": "Other"
+          };
+          const component = categoryToComponent[formData.category] || "Other";
+          
+          // Update date-based notification
+          if ((formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && formData.next_due_date) {
+            await supabase.from("notifications")
+              .update({
+                description: notificationDescription,
+                component: component,
+                initial_date: format(formData.next_due_date, "yyyy-MM-dd"),
+                notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              })
+              .eq("maintenance_log_id", editingLog.id)
+              .eq("notification_basis", "Date")
+              .eq("user_modified", false);
+          }
+          
+          // Update counter-based notification
+          if ((formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
+              formData.recurrence_counter_type && formData.recurrence_counter_increment) {
+            const counterTypeMap: Record<string, Database["public"]["Enums"]["counter_type"]> = {
+              "Hobbs": "Hobbs", "Tach": "Tach", "Airframe TT": "Airframe TT",
+              "Engine TT": "Engine TT", "Prop TT": "Prop TT"
+            };
+            const currentCounterValues: Record<string, number> = {
+              "Hobbs": parseFloat(formData.hobbs_at_event) || 0, "Tach": parseFloat(formData.tach_at_event) || 0,
+              "Airframe TT": parseFloat(formData.airframe_total_time) || 0,
+              "Engine TT": parseFloat(formData.engine_total_time) || 0, "Prop TT": parseFloat(formData.prop_total_time) || 0
+            };
+            const currentValue = currentCounterValues[formData.recurrence_counter_type] || 0;
+            const increment = parseInt(formData.recurrence_counter_increment) || 0;
+            const nextDueValue = currentValue + increment;
+            
+            await supabase.from("notifications")
+              .update({
+                description: notificationDescription,
+                component: component,
+                counter_type: counterTypeMap[formData.recurrence_counter_type],
+                initial_counter_value: nextDueValue,
+                counter_step: increment,
+                notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              })
+              .eq("maintenance_log_id", editingLog.id)
+              .eq("notification_basis", "Counter")
+              .eq("user_modified", false);
+          }
+        }
       } else {
-        const { error } = await supabase
+        const { data: newLog, error } = await supabase
           .from("maintenance_logs")
-          .insert([logData]);
+          .insert([logData])
+          .select()
+          .single();
         if (error) throw error;
+        logId = newLog?.id;
       }
 
-      // Create notifications for recurring tasks (only for new logs, not edits)
-      if (!editingLog && formData.is_recurring_task && formData.interval_type !== "None") {
+      // Create notifications for recurring tasks (only for new logs)
+      if (!editingLog && logId && formData.is_recurring_task && formData.interval_type !== "None") {
         const notificationDescription = `Recurring: ${formData.entry_title}`;
         
-        // Map maintenance category to component type
         const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
-          "Airplane": "Airframe",
-          "Airframe": "Airframe",
-          "Propeller": "Propeller",
-          "Avionics": "Avionics",
-          "Engine": "Other",
-          "Electrical": "Other",
-          "Interior": "Other",
-          "Exterior": "Other",
-          "Accessories": "Other",
-          "Other": "Other"
+          "Airplane": "Airframe", "Airframe": "Airframe", "Propeller": "Propeller",
+          "Avionics": "Avionics", "Engine": "Other", "Electrical": "Other",
+          "Interior": "Other", "Exterior": "Other", "Accessories": "Other", "Other": "Other"
         };
         const component = categoryToComponent[formData.category] || "Other";
         
@@ -275,7 +327,8 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
               notes: `Auto-created from maintenance record: ${formData.entry_title}`,
-              alert_days: 7
+              alert_days: 7,
+              maintenance_log_id: logId,
             }]);
           
           if (dateNotifError) {
@@ -289,22 +342,15 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         if ((formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
             formData.recurrence_counter_type && formData.recurrence_counter_increment) {
           
-          // Map counter type to the correct enum value
           const counterTypeMap: Record<string, Database["public"]["Enums"]["counter_type"]> = {
-            "Hobbs": "Hobbs",
-            "Tach": "Tach",
-            "Airframe TT": "Airframe TT",
-            "Engine TT": "Engine TT",
-            "Prop TT": "Prop TT"
+            "Hobbs": "Hobbs", "Tach": "Tach", "Airframe TT": "Airframe TT",
+            "Engine TT": "Engine TT", "Prop TT": "Prop TT"
           };
           
-          // Get current counter value based on the selected counter type
           const currentCounterValues: Record<string, number> = {
-            "Hobbs": parseFloat(formData.hobbs_at_event) || 0,
-            "Tach": parseFloat(formData.tach_at_event) || 0,
+            "Hobbs": parseFloat(formData.hobbs_at_event) || 0, "Tach": parseFloat(formData.tach_at_event) || 0,
             "Airframe TT": parseFloat(formData.airframe_total_time) || 0,
-            "Engine TT": parseFloat(formData.engine_total_time) || 0,
-            "Prop TT": parseFloat(formData.prop_total_time) || 0
+            "Engine TT": parseFloat(formData.engine_total_time) || 0, "Prop TT": parseFloat(formData.prop_total_time) || 0
           };
           
           const currentValue = currentCounterValues[formData.recurrence_counter_type] || 0;
@@ -325,7 +371,8 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               initial_counter_value: nextDueValue,
               counter_step: increment,
               notes: `Auto-created from maintenance record: ${formData.entry_title}`,
-              alert_hours: 10
+              alert_hours: 10,
+              maintenance_log_id: logId,
             }]);
           
           if (counterNotifError) {
