@@ -10,14 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -315,33 +310,12 @@ const DirectiveComplianceForm = ({
               </div>
               <div className="space-y-2">
                 <Label>First Compliance Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.first_compliance_date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.first_compliance_date
-                        ? format(formData.first_compliance_date, "PPP")
-                        : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.first_compliance_date || undefined}
-                      onSelect={(date) =>
-                        setFormData({ ...formData, first_compliance_date: date || null })
-                      }
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DateInput
+                  value={formData.first_compliance_date}
+                  onChange={(date) =>
+                    setFormData({ ...formData, first_compliance_date: date })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="first_compliance_tach">First Compliance Tach/Hobbs</Label>
@@ -357,33 +331,12 @@ const DirectiveComplianceForm = ({
               </div>
               <div className="space-y-2">
                 <Label>Last Compliance Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.last_compliance_date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.last_compliance_date
-                        ? format(formData.last_compliance_date, "PPP")
-                        : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.last_compliance_date || undefined}
-                      onSelect={(date) =>
-                        setFormData({ ...formData, last_compliance_date: date || null })
-                      }
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DateInput
+                  value={formData.last_compliance_date}
+                  onChange={(date) =>
+                    setFormData({ ...formData, last_compliance_date: date })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="last_compliance_tach">Last Compliance Tach/Hobbs</Label>
@@ -431,33 +384,12 @@ const DirectiveComplianceForm = ({
                 {formData.next_due_basis === "Date" && (
                   <div className="space-y-2">
                     <Label>Next Due Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !formData.next_due_date && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.next_due_date
-                            ? format(formData.next_due_date, "PPP")
-                            : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.next_due_date || undefined}
-                          onSelect={(date) =>
-                            setFormData({ ...formData, next_due_date: date || null })
-                          }
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DateInput
+                      value={formData.next_due_date}
+                      onChange={(date) =>
+                        setFormData({ ...formData, next_due_date: date })
+                      }
+                    />
                   </div>
                 )}
 
