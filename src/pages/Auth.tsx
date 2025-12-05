@@ -43,7 +43,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
+            emailRedirectTo: "https://id-preview--751708b1-7870-443f-af82-ebabf3659c9a.lovable.app/auth",
           },
         });
         if (error) throw error;
