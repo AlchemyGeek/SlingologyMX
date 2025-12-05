@@ -168,7 +168,12 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open("https://slingology.blog/category/mx/?utm_source=slingology-mx", "_blank")}
+              onClick={() =>
+                window.open(
+                  "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
+                  "_blank",
+                )
+              }
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Blog

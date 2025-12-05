@@ -19,8 +19,8 @@ import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
 const counterTypeToFieldMap: Record<string, string> = {
-  "Hobbs": "hobbs",
-  "Tach": "tach",
+  Hobbs: "hobbs",
+  Tach: "tach",
   "Airframe TT": "airframe_total_time",
   "Engine TT": "engine_total_time",
   "Prop TT": "prop_total_time",
@@ -35,17 +35,19 @@ const Dashboard = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [eventsOpen, setEventsOpen] = useState(true);
   const [recordsOpen, setRecordsOpen] = useState(true);
-  const { counters, loading: countersLoading, updateCounter, updateAllCounters, refetch } = useAircraftCounters(user?.id || "");
+  const {
+    counters,
+    loading: countersLoading,
+    updateCounter,
+    updateAllCounters,
+    refetch,
+  } = useAircraftCounters(user?.id || "");
 
   // Fetch active notifications for alert indicator
   const fetchActiveNotificationsForAlerts = async () => {
     if (!user?.id) return;
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("is_completed", false);
-    
+    const { data } = await supabase.from("notifications").select("*").eq("user_id", user.id).eq("is_completed", false);
+
     setActiveNotifications(data || []);
   };
 
@@ -56,8 +58,8 @@ const Dashboard = () => {
 
     // Subscribe to notification changes
     const channel = supabase
-      .channel('active-notifications-alerts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+      .channel("active-notifications-alerts")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
         fetchActiveNotificationsForAlerts();
       })
       .subscribe();
@@ -82,12 +84,18 @@ const Dashboard = () => {
     if (counters && user?.id) {
       fetchActiveNotificationsForAlerts();
     }
-  }, [counters?.hobbs, counters?.tach, counters?.airframe_total_time, counters?.engine_total_time, counters?.prop_total_time]);
+  }, [
+    counters?.hobbs,
+    counters?.tach,
+    counters?.airframe_total_time,
+    counters?.engine_total_time,
+    counters?.prop_total_time,
+  ]);
 
   const hasActiveAlerts = useMemo(() => {
     if (!counters) return false;
-    
-    return activeNotifications.some(notification => {
+
+    return activeNotifications.some((notification) => {
       if (notification.notification_basis === "Counter" || notification.counter_type) {
         // Counter-based
         if (!notification.counter_type) return false;
@@ -109,7 +117,7 @@ const Dashboard = () => {
       }
     });
   }, [activeNotifications, counters]);
-  
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -157,7 +165,12 @@ const Dashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open("https://slingology.blog/category/mx/?utm_source=slingology-mx", "_blank")}
+              onClick={() =>
+                window.open(
+                  "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
+                  "_blank",
+                )
+              }
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Blog
@@ -201,7 +214,9 @@ const Dashboard = () => {
                     </CardTitle>
                     <CardDescription>Track your calendar, notifications, and history</CardDescription>
                   </div>
-                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${eventsOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${eventsOpen ? "rotate-180" : ""}`}
+                  />
                 </div>
               </CardHeader>
             </CollapsibleTrigger>
@@ -218,28 +233,36 @@ const Dashboard = () => {
                   </TabsList>
 
                   <TabsContent value="calendar">
-                    <CalendarPanel 
-                      userId={user.id} 
-                      currentCounters={counters ? {
-                        hobbs: counters.hobbs || 0,
-                        tach: counters.tach || 0,
-                        airframe_total_time: counters.airframe_total_time || 0,
-                        engine_total_time: counters.engine_total_time || 0,
-                        prop_total_time: counters.prop_total_time || 0,
-                      } : undefined}
+                    <CalendarPanel
+                      userId={user.id}
+                      currentCounters={
+                        counters
+                          ? {
+                              hobbs: counters.hobbs || 0,
+                              tach: counters.tach || 0,
+                              airframe_total_time: counters.airframe_total_time || 0,
+                              engine_total_time: counters.engine_total_time || 0,
+                              prop_total_time: counters.prop_total_time || 0,
+                            }
+                          : undefined
+                      }
                     />
                   </TabsContent>
 
                   <TabsContent value="notifications">
-                    <ActiveNotificationsPanel 
-                      userId={user.id} 
-                      currentCounters={counters ? {
-                        hobbs: counters.hobbs || 0,
-                        tach: counters.tach || 0,
-                        airframe_total_time: counters.airframe_total_time || 0,
-                        engine_total_time: counters.engine_total_time || 0,
-                        prop_total_time: counters.prop_total_time || 0,
-                      } : undefined}
+                    <ActiveNotificationsPanel
+                      userId={user.id}
+                      currentCounters={
+                        counters
+                          ? {
+                              hobbs: counters.hobbs || 0,
+                              tach: counters.tach || 0,
+                              airframe_total_time: counters.airframe_total_time || 0,
+                              engine_total_time: counters.engine_total_time || 0,
+                              prop_total_time: counters.prop_total_time || 0,
+                            }
+                          : undefined
+                      }
                       onNotificationCompleted={fetchActiveNotificationsForAlerts}
                     />
                   </TabsContent>
@@ -263,7 +286,9 @@ const Dashboard = () => {
                     <CardTitle>Records</CardTitle>
                     <CardDescription>Manage your subscriptions, maintenance logs, and directives</CardDescription>
                   </div>
-                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${recordsOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${recordsOpen ? "rotate-180" : ""}`}
+                  />
                 </div>
               </CardHeader>
             </CollapsibleTrigger>
@@ -281,9 +306,9 @@ const Dashboard = () => {
                   </TabsContent>
 
                   <TabsContent value="maintenance">
-                    <MaintenanceLogsPanel 
-                      userId={user.id} 
-                      counters={counters} 
+                    <MaintenanceLogsPanel
+                      userId={user.id}
+                      counters={counters}
                       onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
                     />
                   </TabsContent>
