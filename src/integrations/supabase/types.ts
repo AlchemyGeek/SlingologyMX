@@ -822,6 +822,7 @@ export type Database = {
         | "Other"
       interval_type: "Hours" | "Calendar" | "Mixed" | "None"
       maintenance_category:
+        | "Airplane"
         | "Airframe"
         | "Engine"
         | "Propeller"
@@ -1061,6 +1062,7 @@ export const Constants = {
       ],
       interval_type: ["Hours", "Calendar", "Mixed", "None"],
       maintenance_category: [
+        "Airplane",
         "Airframe",
         "Engine",
         "Propeller",
