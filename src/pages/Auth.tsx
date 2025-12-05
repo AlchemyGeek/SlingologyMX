@@ -20,7 +20,9 @@ const Auth = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/dashboard");
+        // Clear disclaimer acknowledgment so it shows on new login
+        sessionStorage.removeItem("disclaimer_acknowledged");
+        navigate("/disclaimer");
       }
     });
   }, [navigate]);
@@ -37,7 +39,8 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Logged in successfully!");
-        navigate("/dashboard");
+        sessionStorage.removeItem("disclaimer_acknowledged");
+        navigate("/disclaimer");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
