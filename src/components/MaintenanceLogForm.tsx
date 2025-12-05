@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,6 +133,20 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       });
     }
   }, [editingLog]);
+
+  // Auto-calculate next_due_date when date_performed or interval_months changes
+  useEffect(() => {
+    if (formData.is_recurring_task && 
+        (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && 
+        formData.interval_months && 
+        formData.date_performed) {
+      const months = parseInt(formData.interval_months);
+      if (months > 0) {
+        const calculatedDate = addMonths(formData.date_performed, months);
+        setFormData(prev => ({ ...prev, next_due_date: calculatedDate }));
+      }
+    }
+  }, [formData.date_performed, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && tagInput.length <= 30) {
@@ -651,6 +665,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                       value={formData.next_due_date}
                       onChange={(date) => setFormData({ ...formData, next_due_date: date })}
                     />
+                    <p className="text-xs text-muted-foreground">Auto-calculated from Date Performed + Interval. You can modify if needed.</p>
                   </div>
                 </>
               )}
