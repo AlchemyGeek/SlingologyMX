@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,8 +109,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         directive_status: editingDirective.directive_status || "Active",
         category: editingDirective.category || "Airframe",
         issuing_authority: editingDirective.issuing_authority || "",
-        issue_date: editingDirective.issue_date ? new Date(editingDirective.issue_date) : null,
-        effective_date: editingDirective.effective_date ? new Date(editingDirective.effective_date) : null,
+        issue_date: editingDirective.issue_date ? parseLocalDate(editingDirective.issue_date) : null,
+        effective_date: editingDirective.effective_date ? parseLocalDate(editingDirective.effective_date) : null,
         revision: editingDirective.revision || "",
         aircraft_make_model_filter: editingDirective.aircraft_make_model_filter || "",
         engine_model_filter: editingDirective.engine_model_filter || "",
@@ -122,7 +122,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         initial_due_type: editingDirective.initial_due_type || "",
         initial_due_hours: editingDirective.initial_due_hours?.toString() || "",
         initial_due_months: editingDirective.initial_due_months?.toString() || "",
-        initial_due_date: editingDirective.initial_due_date ? new Date(editingDirective.initial_due_date) : null,
+        initial_due_date: editingDirective.initial_due_date ? parseLocalDate(editingDirective.initial_due_date) : null,
         repeat_hours: editingDirective.repeat_hours?.toString() || "",
         repeat_months: editingDirective.repeat_months?.toString() || "",
         terminating_action_exists: editingDirective.terminating_action_exists || false,

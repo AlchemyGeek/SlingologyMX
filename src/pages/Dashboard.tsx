@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle, ChevronDown } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
+import { parseLocalDate } from "@/lib/utils";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
@@ -107,7 +108,7 @@ const Dashboard = () => {
         return remaining <= alertHours;
       } else {
         // Date-based
-        const dueDate = new Date(notification.initial_date);
+        const dueDate = parseLocalDate(notification.initial_date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         dueDate.setHours(0, 0, 0, 0);
