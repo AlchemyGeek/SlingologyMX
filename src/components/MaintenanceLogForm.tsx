@@ -249,6 +249,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         
         // Map maintenance category to component type
         const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
+          "Airplane": "Airframe",
           "Airframe": "Airframe",
           "Propeller": "Propeller",
           "Avionics": "Avionics",
@@ -426,6 +427,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Airplane">Airplane</SelectItem>
                 <SelectItem value="Airframe">Airframe</SelectItem>
                 <SelectItem value="Engine">Engine</SelectItem>
                 <SelectItem value="Propeller">Propeller</SelectItem>
