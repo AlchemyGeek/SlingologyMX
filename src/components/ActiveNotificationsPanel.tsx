@@ -98,7 +98,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
   }
 
   const calculateNextDate = (currentDate: string, recurrence: string): string => {
-    const date = new Date(currentDate);
+    const date = parseLocalDate(currentDate);
     
     switch (recurrence) {
       case "Weekly":

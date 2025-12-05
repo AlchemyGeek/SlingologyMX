@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -193,9 +194,9 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                   </TableCell>
                   <TableCell>
                     {directive.effective_date
-                      ? format(new Date(directive.effective_date), "MMM dd, yyyy")
+                      ? format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")
                       : directive.issue_date
-                      ? format(new Date(directive.issue_date), "MMM dd, yyyy")
+                      ? format(parseLocalDate(directive.issue_date), "MMM dd, yyyy")
                       : "-"}
                   </TableCell>
                 </TableRow>

@@ -8,6 +8,7 @@ import NotificationForm from "./NotificationForm";
 import NotificationList from "./NotificationList";
 import CounterNotificationList from "./CounterNotificationList";
 import { toast } from "sonner";
+import { parseLocalDate } from "@/lib/utils";
 
 interface NotificationsPanelProps {
   userId: string;
@@ -73,7 +74,7 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
         return remaining <= alertHours;
       } else {
         // Date-based
-        const dueDate = new Date(notification.initial_date);
+        const dueDate = parseLocalDate(notification.initial_date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         dueDate.setHours(0, 0, 0, 0);

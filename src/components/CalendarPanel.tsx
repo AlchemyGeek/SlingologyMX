@@ -387,8 +387,8 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                         {entry.action_type === "Compliance" && (
                           <div className="text-sm text-muted-foreground space-y-1">
                             <p>Status: {entry.compliance_status}</p>
-                            {entry.first_compliance_date && <p>First: {new Date(entry.first_compliance_date).toLocaleDateString()}</p>}
-                            {entry.last_compliance_date && <p>Last: {new Date(entry.last_compliance_date).toLocaleDateString()}</p>}
+                            {entry.first_compliance_date && <p>First: {parseLocalDate(entry.first_compliance_date).toLocaleDateString()}</p>}
+                            {entry.last_compliance_date && <p>Last: {parseLocalDate(entry.last_compliance_date).toLocaleDateString()}</p>}
                           </div>
                         )}
                       </div>

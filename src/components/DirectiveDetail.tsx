@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -185,13 +186,13 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             {directive.issue_date && (
               <div>
                 <p className="text-sm text-muted-foreground">Issue Date</p>
-                <p className="font-medium">{format(new Date(directive.issue_date), "MMM dd, yyyy")}</p>
+                <p className="font-medium">{format(parseLocalDate(directive.issue_date), "MMM dd, yyyy")}</p>
               </div>
             )}
             {directive.effective_date && (
               <div>
                 <p className="text-sm text-muted-foreground">Effective Date</p>
-                <p className="font-medium">{format(new Date(directive.effective_date), "MMM dd, yyyy")}</p>
+                <p className="font-medium">{format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")}</p>
               </div>
             )}
             {directive.revision && (
@@ -267,7 +268,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
               {directive.initial_due_date && (
                 <div>
                   <p className="text-sm text-muted-foreground">Due Date</p>
-                  <p className="font-medium">{format(new Date(directive.initial_due_date), "MMM dd, yyyy")}</p>
+                  <p className="font-medium">{format(parseLocalDate(directive.initial_due_date), "MMM dd, yyyy")}</p>
                 </div>
               )}
               {directive.repeat_hours && (
@@ -366,13 +367,13 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                 {complianceStatus.last_compliance_date && (
                   <div>
                     <p className="text-sm text-muted-foreground">Last Complied</p>
-                    <p className="font-medium">{format(new Date(complianceStatus.last_compliance_date), "MMM dd, yyyy")}</p>
+                    <p className="font-medium">{format(parseLocalDate(complianceStatus.last_compliance_date), "MMM dd, yyyy")}</p>
                   </div>
                 )}
                 {complianceStatus.next_due_date && (
                   <div>
                     <p className="text-sm text-muted-foreground">Next Due</p>
-                    <p className="font-medium">{format(new Date(complianceStatus.next_due_date), "MMM dd, yyyy")}</p>
+                    <p className="font-medium">{format(parseLocalDate(complianceStatus.next_due_date), "MMM dd, yyyy")}</p>
                   </div>
                 )}
               </div>

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,16 +94,16 @@ const DirectiveComplianceForm = ({
         applicability_reason: existingStatus.applicability_reason || "",
         compliance_status: existingStatus.compliance_status || "Not Reviewed",
         first_compliance_date: existingStatus.first_compliance_date
-          ? new Date(existingStatus.first_compliance_date)
+          ? parseLocalDate(existingStatus.first_compliance_date)
           : null,
         first_compliance_tach: existingStatus.first_compliance_tach?.toString() || "",
         last_compliance_date: existingStatus.last_compliance_date
-          ? new Date(existingStatus.last_compliance_date)
+          ? parseLocalDate(existingStatus.last_compliance_date)
           : null,
         last_compliance_tach: existingStatus.last_compliance_tach?.toString() || "",
         next_due_basis: existingStatus.next_due_basis || "",
         next_due_counter_type: existingStatus.next_due_counter_type || "",
-        next_due_date: existingStatus.next_due_date ? new Date(existingStatus.next_due_date) : null,
+        next_due_date: existingStatus.next_due_date ? parseLocalDate(existingStatus.next_due_date) : null,
         next_due_tach: existingStatus.next_due_tach?.toString() || "",
         performed_by_name: existingStatus.performed_by_name || "",
         performed_by_role: existingStatus.performed_by_role || "",
