@@ -92,8 +92,8 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
 
         if (isRecurring) {
           if (existingNotif) {
-            // Update existing notification
-            const { error: notifError } = await supabase
+            // Update existing notification (might fail if user deleted it, that's ok)
+            await supabase
               .from("notifications")
               .update({
                 description: formData.subscription_name,
@@ -104,8 +104,6 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
                 recurrence: formData.recurrence,
               })
               .eq("subscription_id", editingSubscription.id);
-
-            if (notifError) throw notifError;
           } else {
             // Create new notification (subscription changed from non-recurring to recurring)
             const { error: notifError } = await supabase.from("notifications").insert([{
@@ -124,12 +122,11 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
           }
         } else if (existingNotif) {
           // Delete notification if subscription changed to non-recurring
-          const { error: notifError } = await supabase
+          // Notification might already be deleted by user, so ignore errors
+          await supabase
             .from("notifications")
             .delete()
             .eq("subscription_id", editingSubscription.id);
-
-          if (notifError) throw notifError;
         }
 
         toast.success("Subscription updated successfully!");

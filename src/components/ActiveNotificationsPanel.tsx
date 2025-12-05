@@ -9,7 +9,6 @@ import { CheckCircle, Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import NotificationForm from "./NotificationForm";
 
 interface ActiveNotificationsPanelProps {
@@ -209,12 +208,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string, subscriptionId: string | null) => {
-    if (subscriptionId) {
-      toast.error("Cannot delete notifications linked to subscriptions. Delete the subscription instead.");
-      return;
-    }
-    
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from("notifications")
@@ -241,8 +235,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
     setEditingNotification(null);
     setShowForm(true);
   };
-
-  const isLinkedToSubscription = (notification: any) => !!notification.subscription_id;
 
   if (loading) {
     return <p className="text-muted-foreground">Loading...</p>;
@@ -271,7 +263,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                 alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
                 alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
               );
-              const linked = isLinkedToSubscription(notification);
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
@@ -291,48 +282,20 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Complete
                       </Button>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(notification)}
-                                disabled={linked}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {linked && (
-                            <TooltipContent>
-                              <p>Linked to subscription - edit from Subscriptions tab</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(notification.id, notification.subscription_id)}
-                                disabled={linked}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {linked && (
-                            <TooltipContent>
-                              <p>Linked to subscription - delete from Subscriptions tab</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(notification)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(notification.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -374,7 +337,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
               const targetValue = notification.initial_counter_value || 0;
               const remaining = targetValue - currentValue;
-              const linked = isLinkedToSubscription(notification);
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
@@ -402,48 +364,20 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Complete
                       </Button>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(notification)}
-                                disabled={linked}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {linked && (
-                            <TooltipContent>
-                              <p>Linked to subscription - edit from Subscriptions tab</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(notification.id, notification.subscription_id)}
-                                disabled={linked}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {linked && (
-                            <TooltipContent>
-                              <p>Linked to subscription - delete from Subscriptions tab</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(notification)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(notification.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
