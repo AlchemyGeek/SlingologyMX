@@ -11,12 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DateInput } from "@/components/ui/date-input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -382,17 +377,11 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Date Performed *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.date_performed && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date_performed ? format(formData.date_performed, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={formData.date_performed} onSelect={(date) => date && setFormData({ ...formData, date_performed: date })} initialFocus className="pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
+            <DateInput
+              value={formData.date_performed}
+              onChange={(date) => date && setFormData({ ...formData, date_performed: date })}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="hobbs_at_event">Hobbs at Event *</Label>
@@ -578,17 +567,10 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                   </div>
                   <div className="space-y-2">
                     <Label>Next Due Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.next_due_date && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.next_due_date ? format(formData.next_due_date, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={formData.next_due_date || undefined} onSelect={(date) => setFormData({ ...formData, next_due_date: date || null })} initialFocus className="pointer-events-auto" />
-                      </PopoverContent>
-                    </Popover>
+                    <DateInput
+                      value={formData.next_due_date}
+                      onChange={(date) => setFormData({ ...formData, next_due_date: date })}
+                    />
                   </div>
                 </>
               )}

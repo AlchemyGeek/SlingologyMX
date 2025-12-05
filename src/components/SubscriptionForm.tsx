@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
+import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface SubscriptionFormProps {
@@ -36,7 +39,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
     notes: editingSubscription?.notes || "",
     type: editingSubscription?.type || "Other",
     cost: editingSubscription?.cost?.toString() || "",
-    initial_date: editingSubscription?.initial_date || "",
+    initial_date: editingSubscription?.initial_date ? parseLocalDate(editingSubscription.initial_date) : null as Date | null,
     recurrence: editingSubscription?.recurrence || "Yearly",
   });
 
@@ -62,13 +65,15 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
     setLoading(true);
 
     try {
+      const initialDateStr = formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : "";
+      
       const subscriptionData = {
         user_id: userId,
         subscription_name: formData.subscription_name,
         notes: formData.notes || null,
         type: formData.type as typeof SUBSCRIPTION_TYPES[number],
         cost: costValue,
-        initial_date: formData.initial_date,
+        initial_date: initialDateStr,
         recurrence: formData.recurrence as "None" | "Weekly" | "Bi-Monthly" | "Monthly" | "Semi-Annual" | "Yearly",
       };
 
@@ -100,7 +105,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
                 notes: formData.notes || null,
                 type: "Subscription" as const,
                 component: "Other" as const,
-                initial_date: formData.initial_date,
+                initial_date: initialDateStr,
                 recurrence: formData.recurrence,
               })
               .eq("subscription_id", editingSubscription.id);
@@ -112,7 +117,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
               notes: formData.notes || null,
               type: "Subscription" as const,
               component: "Other" as const,
-              initial_date: formData.initial_date,
+              initial_date: initialDateStr,
               recurrence: formData.recurrence,
               subscription_id: editingSubscription.id,
             }]);
@@ -148,7 +153,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
             notes: formData.notes || null,
             type: "Subscription" as const,
             component: "Other" as const,
-            initial_date: formData.initial_date,
+            initial_date: initialDateStr,
             recurrence: formData.recurrence,
             subscription_id: newSubscription.id,
           };
@@ -232,11 +237,10 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
 
           <div className="space-y-2">
             <Label htmlFor="initial_date">Initial Date</Label>
-            <Input
+            <DateInput
               id="initial_date"
-              type="date"
               value={formData.initial_date}
-              onChange={(e) => setFormData({ ...formData, initial_date: e.target.value })}
+              onChange={(date) => setFormData({ ...formData, initial_date: date })}
               required
             />
           </div>

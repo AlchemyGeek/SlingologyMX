@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { DateInput } from "@/components/ui/date-input";
+import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface NotificationFormProps {
@@ -39,7 +42,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     notes: editingNotification?.notes || "",
     type: editingNotification?.type || "Maintenance",
     component: editingNotification?.component || "Airframe",
-    initial_date: editingNotification?.initial_date || "",
+    initial_date: editingNotification?.initial_date ? parseLocalDate(editingNotification.initial_date) : null as Date | null,
     recurrence: editingNotification?.recurrence || "None",
     notification_basis: editingNotification?.notification_basis || notificationBasis,
     counter_type: editingNotification?.counter_type || "Hobbs",
@@ -113,7 +116,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
         component: formData.component as "Airframe" | "Propeller" | "Avionics" | "Other",
         notification_basis: formData.notification_basis,
         // For date-based
-        initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : formData.initial_date,
+        initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
         recurrence: isCounterBased ? "None" : formData.recurrence,
         // For counter-based
         counter_type: isCounterBased ? formData.counter_type : null,
@@ -214,11 +217,10 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="initial_date">Initial Date</Label>
-              <Input
+              <DateInput
                 id="initial_date"
-                type="date"
                 value={formData.initial_date}
-                onChange={(e) => setFormData({ ...formData, initial_date: e.target.value })}
+                onChange={(date) => setFormData({ ...formData, initial_date: date })}
                 required
               />
             </div>
