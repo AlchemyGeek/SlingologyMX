@@ -281,7 +281,7 @@ const CalendarPanel = ({ userId, currentCounters }: CalendarPanelProps) => {
                 hasDirective: "calendar-directive-day",
               }}
             />
-            <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm max-w-[220px]">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-primary"></div>
                 <span className="text-muted-foreground">Normal</span>
