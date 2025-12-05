@@ -264,12 +264,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         
         // Create date-based notification for Calendar or Mixed type
         if ((formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && formData.next_due_date) {
-          const recurrenceMap: Record<string, Database["public"]["Enums"]["recurrence_type"]> = {
-            "1": "Monthly",
-            "6": "Semi-Annual", 
-            "12": "Yearly"
-          };
-          
           const { error: dateNotifError } = await supabase
             .from("notifications")
             .insert([{
@@ -278,7 +272,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
               component: component,
               initial_date: format(formData.next_due_date, "yyyy-MM-dd"),
-              recurrence: recurrenceMap[formData.interval_months] || "None",
+              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
               notes: `Auto-created from maintenance record: ${formData.entry_title}`,
               alert_days: 7
