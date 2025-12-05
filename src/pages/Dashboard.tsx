@@ -36,6 +36,7 @@ const Dashboard = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [eventsOpen, setEventsOpen] = useState(true);
   const [recordsOpen, setRecordsOpen] = useState(true);
+  const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
   const {
     counters,
     loading: countersLoading,
@@ -236,6 +237,7 @@ const Dashboard = () => {
                   <TabsContent value="calendar">
                     <CalendarPanel
                       userId={user.id}
+                      refreshKey={recordsRefreshKey}
                       currentCounters={
                         counters
                           ? {
@@ -269,7 +271,7 @@ const Dashboard = () => {
                   </TabsContent>
 
                   <TabsContent value="history">
-                    <HistoryPanel userId={user.id} />
+                    <HistoryPanel userId={user.id} refreshKey={recordsRefreshKey} />
                   </TabsContent>
                 </Tabs>
               </CardContent>
@@ -303,7 +305,11 @@ const Dashboard = () => {
                   </TabsList>
 
                   <TabsContent value="subscriptions">
-                    <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
+                    <SubscriptionsPanel 
+                      userId={user.id} 
+                      onNotificationChanged={fetchActiveNotificationsForAlerts}
+                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
+                    />
                   </TabsContent>
 
                   <TabsContent value="maintenance">
@@ -311,11 +317,15 @@ const Dashboard = () => {
                       userId={user.id}
                       counters={counters}
                       onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
+                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
                     />
                   </TabsContent>
 
                   <TabsContent value="directives">
-                    <DirectivesPanel userId={user.id} />
+                    <DirectivesPanel 
+                      userId={user.id} 
+                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
+                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>

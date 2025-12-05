@@ -9,6 +9,7 @@ import { parseLocalDate } from "@/lib/utils";
 
 interface HistoryPanelProps {
   userId: string;
+  refreshKey?: number;
 }
 
 interface DirectiveHistoryEntry {
@@ -24,7 +25,7 @@ interface DirectiveHistoryEntry {
   created_at: string;
 }
 
-const HistoryPanel = ({ userId }: HistoryPanelProps) => {
+const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<DirectiveHistoryEntry[]>([]);
@@ -67,7 +68,7 @@ const HistoryPanel = ({ userId }: HistoryPanelProps) => {
 
   useEffect(() => {
     fetchHistory();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   if (loading) {
     return <p className="text-muted-foreground">Loading...</p>;
