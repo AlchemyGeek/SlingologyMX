@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
-import NotificationsPanel from "@/components/NotificationsPanel";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
@@ -184,41 +183,20 @@ const Dashboard = () => {
           onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
           onRefetch={refetch}
         />
-        <Tabs defaultValue="manage" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="manage" className="flex items-center gap-1">
+        <Tabs defaultValue="notifications" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="notifications" className="flex items-center gap-1">
               Notifications
               {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
             </TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="active" className="flex items-center gap-1">
-              Active
-              {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
-            </TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
             <TabsTrigger value="logs">Maintenance</TabsTrigger>
             <TabsTrigger value="directives">Directives</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="manage">
-            <NotificationsPanel 
-              userId={user.id} 
-              currentCounters={counters ? {
-                hobbs: counters.hobbs || 0,
-                tach: counters.tach || 0,
-                airframe_total_time: counters.airframe_total_time || 0,
-                engine_total_time: counters.engine_total_time || 0,
-                prop_total_time: counters.prop_total_time || 0,
-              } : undefined}
-            />
-          </TabsContent>
-
-          <TabsContent value="subscriptions">
-            <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
-          </TabsContent>
-
-          <TabsContent value="active">
+          <TabsContent value="notifications">
             <ActiveNotificationsPanel 
               userId={user.id} 
               currentCounters={counters ? {
@@ -230,6 +208,10 @@ const Dashboard = () => {
               } : undefined}
               onNotificationCompleted={fetchActiveNotificationsForAlerts}
             />
+          </TabsContent>
+
+          <TabsContent value="subscriptions">
+            <SubscriptionsPanel userId={user.id} onNotificationChanged={fetchActiveNotificationsForAlerts} />
           </TabsContent>
 
           <TabsContent value="calendar">
