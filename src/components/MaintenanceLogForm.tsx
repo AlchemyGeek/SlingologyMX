@@ -72,10 +72,10 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     recurring_compliance: false,
     is_recurring_task: false,
     interval_type: "None" as Database["public"]["Enums"]["interval_type"],
-    interval_hours: "",
     interval_months: "",
-    next_due_hours: "",
     next_due_date: null as Date | null,
+    recurrence_counter_type: "" as string,
+    recurrence_counter_increment: "",
     performed_by_type: "Owner" as Database["public"]["Enums"]["performed_by_type"],
     performed_by_name: "",
     organization: "",
@@ -115,10 +115,10 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         recurring_compliance: editingLog.recurring_compliance || false,
         is_recurring_task: editingLog.is_recurring_task || false,
         interval_type: editingLog.interval_type || "None",
-        interval_hours: editingLog.interval_hours?.toString() || "",
         interval_months: editingLog.interval_months?.toString() || "",
-        next_due_hours: editingLog.next_due_hours?.toString() || "",
         next_due_date: editingLog.next_due_date ? parseLocalDate(editingLog.next_due_date) : null,
+        recurrence_counter_type: editingLog.recurrence_counter_type || "",
+        recurrence_counter_increment: editingLog.recurrence_counter_increment?.toString() || "",
         performed_by_type: editingLog.performed_by_type || "Owner",
         performed_by_name: editingLog.performed_by_name || "",
         organization: editingLog.organization || "",
@@ -198,10 +198,10 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       recurring_compliance: formData.recurring_compliance,
       is_recurring_task: formData.is_recurring_task,
       interval_type: formData.interval_type,
-      interval_hours: formData.interval_hours ? parseInt(formData.interval_hours) : null,
       interval_months: formData.interval_months ? parseInt(formData.interval_months) : null,
-      next_due_hours: formData.next_due_hours ? parseFloat(formData.next_due_hours) : null,
       next_due_date: formData.next_due_date ? format(formData.next_due_date, "yyyy-MM-dd") : null,
+      recurrence_counter_type: formData.recurrence_counter_type || null,
+      recurrence_counter_increment: formData.recurrence_counter_increment ? parseInt(formData.recurrence_counter_increment) : null,
       performed_by_type: formData.performed_by_type,
       performed_by_name: formData.performed_by_name,
       organization: formData.organization || null,
@@ -227,6 +227,104 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           .from("maintenance_logs")
           .insert([logData]);
         if (error) throw error;
+      }
+
+      // Create notifications for recurring tasks (only for new logs, not edits)
+      if (!editingLog && formData.is_recurring_task && formData.interval_type !== "None") {
+        const notificationDescription = `Recurring: ${formData.entry_title}`;
+        
+        // Map maintenance category to component type
+        const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
+          "Airframe": "Airframe",
+          "Propeller": "Propeller",
+          "Avionics": "Avionics",
+          "Engine": "Other",
+          "Electrical": "Other",
+          "Interior": "Other",
+          "Exterior": "Other",
+          "Accessories": "Other",
+          "Other": "Other"
+        };
+        const component = categoryToComponent[formData.category] || "Other";
+        
+        // Create date-based notification for Calendar or Mixed type
+        if ((formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && formData.next_due_date) {
+          const recurrenceMap: Record<string, Database["public"]["Enums"]["recurrence_type"]> = {
+            "1": "Monthly",
+            "6": "Semi-Annual", 
+            "12": "Yearly"
+          };
+          
+          const { error: dateNotifError } = await supabase
+            .from("notifications")
+            .insert([{
+              user_id: userId,
+              description: notificationDescription,
+              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+              component: component,
+              initial_date: format(formData.next_due_date, "yyyy-MM-dd"),
+              recurrence: recurrenceMap[formData.interval_months] || "None",
+              notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
+              notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              alert_days: 7
+            }]);
+          
+          if (dateNotifError) {
+            console.error("Error creating date-based notification:", dateNotifError);
+          } else {
+            toast.success("Date-based notification created");
+          }
+        }
+        
+        // Create counter-based notification for Hours or Mixed type
+        if ((formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
+            formData.recurrence_counter_type && formData.recurrence_counter_increment) {
+          
+          // Map counter type to the correct enum value
+          const counterTypeMap: Record<string, Database["public"]["Enums"]["counter_type"]> = {
+            "Hobbs": "Hobbs",
+            "Tach": "Tach",
+            "Airframe TT": "Airframe TT",
+            "Engine TT": "Engine TT",
+            "Prop TT": "Prop TT"
+          };
+          
+          // Get current counter value based on the selected counter type
+          const currentCounterValues: Record<string, number> = {
+            "Hobbs": parseFloat(formData.hobbs_at_event) || 0,
+            "Tach": parseFloat(formData.tach_at_event) || 0,
+            "Airframe TT": parseFloat(formData.airframe_total_time) || 0,
+            "Engine TT": parseFloat(formData.engine_total_time) || 0,
+            "Prop TT": parseFloat(formData.prop_total_time) || 0
+          };
+          
+          const currentValue = currentCounterValues[formData.recurrence_counter_type] || 0;
+          const increment = parseInt(formData.recurrence_counter_increment) || 0;
+          const nextDueValue = currentValue + increment;
+          
+          const { error: counterNotifError } = await supabase
+            .from("notifications")
+            .insert([{
+              user_id: userId,
+              description: notificationDescription,
+              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+              component: component,
+              initial_date: format(new Date(), "yyyy-MM-dd"),
+              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
+              notification_basis: "Counter" as Database["public"]["Enums"]["notification_basis"],
+              counter_type: counterTypeMap[formData.recurrence_counter_type],
+              initial_counter_value: nextDueValue,
+              counter_step: increment,
+              notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              alert_hours: 10
+            }]);
+          
+          if (counterNotifError) {
+            console.error("Error creating counter-based notification:", counterNotifError);
+          } else {
+            toast.success("Counter-based notification created");
+          }
+        }
       }
       
       // Check if any counter values are higher than global counters
@@ -515,55 +613,37 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           {formData.is_recurring_task && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="interval_type">Interval Type</Label>
+                <Label htmlFor="interval_type">Recurrence Type</Label>
                 <Select value={formData.interval_type} onValueChange={(value) => setFormData({ ...formData, interval_type: value as Database["public"]["Enums"]["interval_type"] })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Hours">Hours</SelectItem>
-                    <SelectItem value="Calendar">Calendar</SelectItem>
-                    <SelectItem value="Mixed">Mixed</SelectItem>
+                    <SelectItem value="Calendar">Interval (Date-Based)</SelectItem>
+                    <SelectItem value="Hours">Counter (Usage-Based)</SelectItem>
+                    <SelectItem value="Mixed">Mixed (Whichever First)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {(formData.interval_type === "Hours" || formData.interval_type === "Mixed") && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="interval_hours">Interval Hours</Label>
-                    <Input
-                      id="interval_hours"
-                      type="number"
-                      max="2000"
-                      value={formData.interval_hours}
-                      onChange={(e) => setFormData({ ...formData, interval_hours: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="next_due_hours">Next Due Hours</Label>
-                    <Input
-                      id="next_due_hours"
-                      type="number"
-                      step="0.1"
-                      max="19999.9"
-                      value={formData.next_due_hours}
-                      onChange={(e) => setFormData({ ...formData, next_due_hours: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
+              
+              {/* Interval (Date-Based) Options */}
               {(formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="interval_months">Interval Months</Label>
-                    <Input
-                      id="interval_months"
-                      type="number"
-                      max="240"
-                      value={formData.interval_months}
-                      onChange={(e) => setFormData({ ...formData, interval_months: e.target.value })}
-                    />
+                    <Label htmlFor="interval_months">Interval Period</Label>
+                    <Select 
+                      value={formData.interval_months} 
+                      onValueChange={(value) => setFormData({ ...formData, interval_months: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select interval" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Monthly</SelectItem>
+                        <SelectItem value="6">Semi-Annual</SelectItem>
+                        <SelectItem value="12">Annual</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Next Due Date</Label>
@@ -571,6 +651,44 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                       value={formData.next_due_date}
                       onChange={(date) => setFormData({ ...formData, next_due_date: date })}
                     />
+                  </div>
+                </>
+              )}
+              
+              {/* Counter (Usage-Based) Options */}
+              {(formData.interval_type === "Hours" || formData.interval_type === "Mixed") && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="recurrence_counter_type">Counter Type</Label>
+                    <Select 
+                      value={formData.recurrence_counter_type} 
+                      onValueChange={(value) => setFormData({ ...formData, recurrence_counter_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select counter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hobbs">Hobbs</SelectItem>
+                        <SelectItem value="Tach">Tach</SelectItem>
+                        <SelectItem value="Airframe TT">Airframe TT</SelectItem>
+                        <SelectItem value="Engine TT">Engine TT</SelectItem>
+                        <SelectItem value="Prop TT">Prop TT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recurrence_counter_increment">Counter Increment</Label>
+                    <Input
+                      id="recurrence_counter_increment"
+                      type="number"
+                      step="1"
+                      min="1"
+                      max="2000"
+                      placeholder="e.g., 100 hours"
+                      value={formData.recurrence_counter_increment}
+                      onChange={(e) => setFormData({ ...formData, recurrence_counter_increment: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">Hours until next recurrence</p>
                   </div>
                 </>
               )}

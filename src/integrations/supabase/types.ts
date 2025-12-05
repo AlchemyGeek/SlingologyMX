@@ -471,6 +471,8 @@ export type Database = {
           performed_by_name: string
           performed_by_type: Database["public"]["Enums"]["performed_by_type"]
           prop_total_time: number | null
+          recurrence_counter_increment: number | null
+          recurrence_counter_type: string | null
           recurring_compliance: boolean | null
           subcategory: Database["public"]["Enums"]["maintenance_subcategory"]
           tach_at_event: number | null
@@ -510,6 +512,8 @@ export type Database = {
           performed_by_name: string
           performed_by_type: Database["public"]["Enums"]["performed_by_type"]
           prop_total_time?: number | null
+          recurrence_counter_increment?: number | null
+          recurrence_counter_type?: string | null
           recurring_compliance?: boolean | null
           subcategory: Database["public"]["Enums"]["maintenance_subcategory"]
           tach_at_event?: number | null
@@ -549,6 +553,8 @@ export type Database = {
           performed_by_name?: string
           performed_by_type?: Database["public"]["Enums"]["performed_by_type"]
           prop_total_time?: number | null
+          recurrence_counter_increment?: number | null
+          recurrence_counter_type?: string | null
           recurring_compliance?: boolean | null
           subcategory?: Database["public"]["Enums"]["maintenance_subcategory"]
           tach_at_event?: number | null
