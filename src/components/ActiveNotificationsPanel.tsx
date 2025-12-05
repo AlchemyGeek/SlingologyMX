@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import NotificationForm from "./NotificationForm";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
@@ -35,6 +37,9 @@ type AlertStatus = "normal" | "reminder" | "due";
 const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompleted }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingNotification, setEditingNotification] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"date" | "counter">("date");
 
   const fetchActiveNotifications = async () => {
     try {
@@ -48,7 +53,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
       if (error) throw error;
       setNotifications(data || []);
     } catch (error: any) {
-      toast.error("Failed to load active notifications");
+      toast.error("Failed to load notifications");
     } finally {
       setLoading(false);
     }
@@ -61,9 +66,13 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
   const dateNotifications = notifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
   const counterNotifications = notifications.filter(n => n.notification_basis === "Counter");
 
-  const getAlertStatus = (notification: any): AlertStatus => {
+  const hasActiveAlerts = notifications.some(notification => {
+    const status = getAlertStatus(notification);
+    return status === "reminder" || status === "due";
+  });
+
+  function getAlertStatus(notification: any): AlertStatus {
     if (notification.notification_basis === "Counter" || notification.counter_type) {
-      // Counter-based
       if (!currentCounters || !notification.counter_type) return "normal";
       const field = counterTypeToFieldMap[notification.counter_type];
       const currentValue = currentCounters[field as keyof typeof currentCounters] || 0;
@@ -75,7 +84,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
       if (remaining <= alertHours) return "reminder";
       return "normal";
     } else {
-      // Date-based
       const dueDate = parseLocalDate(notification.initial_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -88,19 +96,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
       if (diffDays <= alertDays) return "reminder";
       return "normal";
     }
-  };
-
-  const getDueInfo = (notification: any) => {
-    if (notification.notification_basis === "Counter" || notification.counter_type) {
-      if (!currentCounters || !notification.counter_type) return notification.initial_counter_value?.toFixed(1) || "-";
-      const field = counterTypeToFieldMap[notification.counter_type];
-      const currentValue = currentCounters[field as keyof typeof currentCounters] || 0;
-      const targetValue = notification.initial_counter_value || 0;
-      const remaining = targetValue - currentValue;
-      return `${notification.counter_type}: ${targetValue.toFixed(1)} (${remaining.toFixed(1)} hrs remaining)`;
-    }
-    return parseLocalDate(notification.initial_date).toLocaleDateString();
-  };
+  }
 
   const calculateNextDate = (currentDate: string, recurrence: string): string => {
     const date = new Date(currentDate);
@@ -125,7 +121,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
   const handleMarkCompleted = async (id: string) => {
     try {
-      // First, get the notification details
       const { data: notification, error: fetchError } = await supabase
         .from("notifications")
         .select("*")
@@ -134,7 +129,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
       if (fetchError) throw fetchError;
 
-      // Mark current notification as completed
       const { error: updateError } = await supabase
         .from("notifications")
         .update({ is_completed: true, completed_at: new Date().toISOString() })
@@ -142,7 +136,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
       if (updateError) throw updateError;
 
-      // If it's a recurring notification, create the next instance
       if (notification.recurrence && notification.recurrence !== "None") {
         const nextDate = calculateNextDate(notification.initial_date, notification.recurrence);
         
@@ -170,12 +163,10 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
         if (createError) throw createError;
         
-        // Refresh the list to show the new notification
         await fetchActiveNotifications();
         onNotificationCompleted?.();
         toast.success("Notification completed and next instance created");
       } else if (notification.counter_step) {
-        // Counter-based recurring notification
         const { error: createError } = await supabase
           .from("notifications")
           .insert({
@@ -202,18 +193,56 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
         onNotificationCompleted?.();
         toast.success("Notification completed and next instance created");
       } else {
-        // Refresh the list
         await fetchActiveNotifications();
         onNotificationCompleted?.();
         toast.success("Notification marked as completed");
       }
     } catch (error: any) {
       toast.error("Failed to update notification");
-      // Refresh anyway to ensure UI is in sync
       await fetchActiveNotifications();
       onNotificationCompleted?.();
     }
   };
+
+  const handleEdit = (notification: any) => {
+    setEditingNotification(notification);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string, subscriptionId: string | null) => {
+    if (subscriptionId) {
+      toast.error("Cannot delete notifications linked to subscriptions. Delete the subscription instead.");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Notification deleted");
+      await fetchActiveNotifications();
+      onNotificationCompleted?.();
+    } catch (error: any) {
+      toast.error("Failed to delete notification");
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingNotification(null);
+    fetchActiveNotifications();
+    onNotificationCompleted?.();
+  };
+
+  const handleNewNotification = () => {
+    setEditingNotification(null);
+    setShowForm(true);
+  };
+
+  const isLinkedToSubscription = (notification: any) => !!notification.subscription_id;
 
   if (loading) {
     return <p className="text-muted-foreground">Loading...</p>;
@@ -232,7 +261,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               <TableHead>Component</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Recurrence</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="w-[180px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -242,6 +271,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                 alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
                 alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
               );
+              const linked = isLinkedToSubscription(notification);
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
@@ -253,13 +283,57 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                   <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                   <TableCell>{notification.recurrence}</TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      onClick={() => handleMarkCompleted(notification.id)}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Complete
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkCompleted(notification.id)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Complete
+                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(notification)}
+                                disabled={linked}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {linked && (
+                            <TooltipContent>
+                              <p>Linked to subscription - edit from Subscriptions tab</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(notification.id, notification.subscription_id)}
+                                disabled={linked}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {linked && (
+                            <TooltipContent>
+                              <p>Linked to subscription - delete from Subscriptions tab</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -285,7 +359,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               <TableHead>Due At</TableHead>
               <TableHead>Remaining</TableHead>
               <TableHead>Recurrence</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="w-[180px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -300,6 +374,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
               const targetValue = notification.initial_counter_value || 0;
               const remaining = targetValue - currentValue;
+              const linked = isLinkedToSubscription(notification);
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
@@ -319,13 +394,57 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                     {notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      onClick={() => handleMarkCompleted(notification.id)}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Complete
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkCompleted(notification.id)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Complete
+                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(notification)}
+                                disabled={linked}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {linked && (
+                            <TooltipContent>
+                              <p>Linked to subscription - edit from Subscriptions tab</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(notification.id, notification.subscription_id)}
+                                disabled={linked}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {linked && (
+                            <TooltipContent>
+                              <p>Linked to subscription - delete from Subscriptions tab</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -339,14 +458,38 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Active Notifications</CardTitle>
-        <CardDescription>Maintenance tasks that need attention</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Notifications
+              {hasActiveAlerts && (
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              )}
+            </CardTitle>
+            <CardDescription>Manage and track your maintenance notifications</CardDescription>
+          </div>
+          <Button onClick={handleNewNotification}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Notification
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        {notifications.length === 0 ? (
-          <p className="text-muted-foreground">No active notifications. Great job staying on top of maintenance!</p>
+      <CardContent className="space-y-4">
+        {showForm && (
+          <NotificationForm
+            userId={userId}
+            onSuccess={handleFormSuccess}
+            onCancel={() => { setShowForm(false); setEditingNotification(null); }}
+            editingNotification={editingNotification}
+            currentCounters={currentCounters}
+            notificationBasis={activeTab === "counter" ? "Counter" : "Date"}
+          />
+        )}
+
+        {notifications.length === 0 && !showForm ? (
+          <p className="text-muted-foreground">No active notifications. Click "New Notification" to create one.</p>
         ) : (
-          <Tabs defaultValue="date">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "date" | "counter")}>
             <TabsList>
               <TabsTrigger value="date">Date Based ({dateNotifications.length})</TabsTrigger>
               <TabsTrigger value="counter">Counter Based ({counterNotifications.length})</TabsTrigger>
