@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Link, FileText, ClipboardList } from "lucide-react";
+import { Trash2, Pencil, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -44,11 +44,8 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
     }
   };
 
-  const isLinkedToSubscription = (notification: any) => !!notification.subscription_id;
-  const isLinkedToMaintenanceLog = (notification: any) => !!notification.maintenance_log_id;
-  const isLinkedToDirective = (notification: any) => !!notification.directive_id;
   const isLinkedToRecord = (notification: any) => 
-    isLinkedToSubscription(notification) || isLinkedToMaintenanceLog(notification) || isLinkedToDirective(notification);
+    !!notification.subscription_id || !!notification.maintenance_log_id || !!notification.directive_id;
   const isUserModified = (notification: any) => notification.user_modified === true;
 
   if (loading) {
@@ -75,8 +72,8 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
         </TableHeader>
         <TableBody>
           {notifications.map((notification) => {
-            const linkedToSub = isLinkedToSubscription(notification);
             const alertStatus = getDateAlertStatus(notification);
+            const showLinkIcon = isLinkedToRecord(notification) && !isUserModified(notification);
             const rowClassName = cn(
               alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
               alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
@@ -86,32 +83,12 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {notification.description}
-                    {linkedToSub && (
+                    {showLinkIcon && (
                       <Tooltip>
                         <TooltipTrigger>
                           <Link className="h-3 w-3 text-muted-foreground" />
                         </TooltipTrigger>
-                        <TooltipContent>Linked to subscription</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {isLinkedToMaintenanceLog(notification) && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <ClipboardList className={cn("h-3 w-3", isUserModified(notification) ? "text-amber-500" : "text-muted-foreground")} />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isUserModified(notification) ? "Linked to maintenance (modified)" : "Linked to maintenance record"}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                    {isLinkedToDirective(notification) && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <FileText className={cn("h-3 w-3", isUserModified(notification) ? "text-amber-500" : "text-muted-foreground")} />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isUserModified(notification) ? "Linked to directive (modified)" : "Linked to directive"}
-                        </TooltipContent>
+                        <TooltipContent>System-managed notification</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
