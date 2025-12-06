@@ -22,6 +22,7 @@ interface NotificationsPanelProps {
 }
 
 const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps) => {
+  console.log("=== NOTIFICATIONS PANEL MOUNTED ===");
   const [showForm, setShowForm] = useState(false);
   const [editingNotification, setEditingNotification] = useState<any>(null);
   const [dateNotifications, setDateNotifications] = useState<any[]>([]);
