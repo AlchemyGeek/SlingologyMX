@@ -239,46 +239,79 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           .eq("id", editingLog.id);
         if (error) throw error;
         
-        // Update linked notifications (if not user_modified)
-        if (formData.is_recurring_task && formData.interval_type !== "None") {
-          const notificationDescription = `Recurring: ${formData.entry_title}`;
-          const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
-            "Airplane": "Airframe", "Airframe": "Airframe", "Propeller": "Propeller",
-            "Avionics": "Avionics", "Engine": "Other", "Electrical": "Other",
-            "Interior": "Other", "Exterior": "Other", "Accessories": "Other", "Other": "Other"
-          };
-          const component = categoryToComponent[formData.category] || "Other";
-          
-          // Update date-based notification
-          if ((formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && formData.next_due_date) {
+        // Handle notifications for interval type changes
+        const notificationDescription = `Recurring: ${formData.entry_title}`;
+        const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
+          "Airplane": "Airframe", "Airframe": "Airframe", "Propeller": "Propeller",
+          "Avionics": "Avionics", "Engine": "Other", "Electrical": "Other",
+          "Interior": "Other", "Exterior": "Other", "Accessories": "Other", "Other": "Other"
+        };
+        const component = categoryToComponent[formData.category] || "Other";
+        
+        const needsDateNotification = formData.is_recurring_task && 
+          (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && 
+          formData.next_due_date;
+        const needsCounterNotification = formData.is_recurring_task && 
+          (formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
+          formData.recurrence_counter_type && formData.recurrence_counter_increment;
+        
+        // Check for existing linked notifications
+        const { data: existingNotifs } = await supabase.from("notifications")
+          .select("id, notification_basis, user_modified")
+          .eq("maintenance_log_id", editingLog.id);
+        
+        const existingDateNotif = existingNotifs?.find(n => n.notification_basis === "Date");
+        const existingCounterNotif = existingNotifs?.find(n => n.notification_basis === "Counter");
+        
+        // Handle date-based notification
+        if (needsDateNotification) {
+          if (existingDateNotif && !existingDateNotif.user_modified) {
+            // Update existing
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
                 component: component,
-                initial_date: format(formData.next_due_date, "yyyy-MM-dd"),
+                initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
                 notes: `Auto-created from maintenance record: ${formData.entry_title}`,
               })
-              .eq("maintenance_log_id", editingLog.id)
-              .eq("notification_basis", "Date")
-              .eq("user_modified", false);
+              .eq("id", existingDateNotif.id);
+          } else if (!existingDateNotif) {
+            // Create new
+            await supabase.from("notifications").insert([{
+              user_id: userId,
+              description: notificationDescription,
+              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+              component: component,
+              initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
+              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
+              notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
+              notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              alert_days: 7,
+              maintenance_log_id: editingLog.id,
+            }]);
           }
+        } else if (existingDateNotif && !existingDateNotif.user_modified) {
+          // Delete date notification if no longer needed
+          await supabase.from("notifications").delete().eq("id", existingDateNotif.id);
+        }
+        
+        // Handle counter-based notification
+        if (needsCounterNotification) {
+          const counterTypeMap: Record<string, Database["public"]["Enums"]["counter_type"]> = {
+            "Hobbs": "Hobbs", "Tach": "Tach", "Airframe TT": "Airframe TT",
+            "Engine TT": "Engine TT", "Prop TT": "Prop TT"
+          };
+          const currentCounterValues: Record<string, number> = {
+            "Hobbs": parseFloat(formData.hobbs_at_event) || 0, "Tach": parseFloat(formData.tach_at_event) || 0,
+            "Airframe TT": parseFloat(formData.airframe_total_time) || 0,
+            "Engine TT": parseFloat(formData.engine_total_time) || 0, "Prop TT": parseFloat(formData.prop_total_time) || 0
+          };
+          const currentValue = currentCounterValues[formData.recurrence_counter_type] || 0;
+          const increment = parseInt(formData.recurrence_counter_increment) || 0;
+          const nextDueValue = currentValue + increment;
           
-          // Update counter-based notification
-          if ((formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
-              formData.recurrence_counter_type && formData.recurrence_counter_increment) {
-            const counterTypeMap: Record<string, Database["public"]["Enums"]["counter_type"]> = {
-              "Hobbs": "Hobbs", "Tach": "Tach", "Airframe TT": "Airframe TT",
-              "Engine TT": "Engine TT", "Prop TT": "Prop TT"
-            };
-            const currentCounterValues: Record<string, number> = {
-              "Hobbs": parseFloat(formData.hobbs_at_event) || 0, "Tach": parseFloat(formData.tach_at_event) || 0,
-              "Airframe TT": parseFloat(formData.airframe_total_time) || 0,
-              "Engine TT": parseFloat(formData.engine_total_time) || 0, "Prop TT": parseFloat(formData.prop_total_time) || 0
-            };
-            const currentValue = currentCounterValues[formData.recurrence_counter_type] || 0;
-            const increment = parseInt(formData.recurrence_counter_increment) || 0;
-            const nextDueValue = currentValue + increment;
-            
+          if (existingCounterNotif && !existingCounterNotif.user_modified) {
+            // Update existing
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
@@ -288,10 +321,36 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                 counter_step: increment,
                 notes: `Auto-created from maintenance record: ${formData.entry_title}`,
               })
-              .eq("maintenance_log_id", editingLog.id)
-              .eq("notification_basis", "Counter")
-              .eq("user_modified", false);
+              .eq("id", existingCounterNotif.id);
+          } else if (!existingCounterNotif) {
+            // Create new
+            await supabase.from("notifications").insert([{
+              user_id: userId,
+              description: notificationDescription,
+              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+              component: component,
+              initial_date: format(new Date(), "yyyy-MM-dd"),
+              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
+              notification_basis: "Counter" as Database["public"]["Enums"]["notification_basis"],
+              counter_type: counterTypeMap[formData.recurrence_counter_type],
+              initial_counter_value: nextDueValue,
+              counter_step: increment,
+              notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+              alert_hours: 10,
+              maintenance_log_id: editingLog.id,
+            }]);
           }
+        } else if (existingCounterNotif && !existingCounterNotif.user_modified) {
+          // Delete counter notification if no longer needed
+          await supabase.from("notifications").delete().eq("id", existingCounterNotif.id);
+        }
+        
+        // If recurring is turned off entirely, delete all non-user-modified notifications
+        if (!formData.is_recurring_task || formData.interval_type === "None") {
+          await supabase.from("notifications")
+            .delete()
+            .eq("maintenance_log_id", editingLog.id)
+            .eq("user_modified", false);
         }
       } else {
         const { data: newLog, error } = await supabase
