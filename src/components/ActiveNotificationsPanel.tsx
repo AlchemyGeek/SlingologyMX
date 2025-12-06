@@ -21,6 +21,7 @@ interface ActiveNotificationsPanelProps {
     prop_total_time: number;
   };
   onNotificationCompleted?: () => void;
+  refreshKey?: number;
 }
 
 const counterTypeToFieldMap: Record<string, string> = {
@@ -33,7 +34,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 type AlertStatus = "normal" | "reminder" | "due";
 
-const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompleted }: ActiveNotificationsPanelProps) => {
+const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompleted, refreshKey }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -60,7 +61,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
   useEffect(() => {
     fetchActiveNotifications();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   const dateNotifications = notifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
   const counterNotifications = notifications.filter(n => n.notification_basis === "Counter");

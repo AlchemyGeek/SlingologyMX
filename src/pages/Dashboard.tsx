@@ -267,6 +267,7 @@ const Dashboard = () => {
                           : undefined
                       }
                       onNotificationCompleted={fetchActiveNotificationsForAlerts}
+                      refreshKey={recordsRefreshKey}
                     />
                   </TabsContent>
 
