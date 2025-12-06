@@ -149,13 +149,15 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
             <TabsTrigger value="counter">Counter Based ({counterNotifications.length})</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="date" className="mt-4">
-            <NotificationList 
-              notifications={dateNotifications} 
-              loading={loading} 
-              onUpdate={fetchNotifications}
-              onEdit={handleEdit}
-            />
+          <TabsContent value="date" className="mt-4" forceMount>
+            {activeTab === "date" && (
+              <NotificationList 
+                notifications={dateNotifications} 
+                loading={loading} 
+                onUpdate={fetchNotifications}
+                onEdit={handleEdit}
+              />
+            )}
           </TabsContent>
           
           <TabsContent value="counter" className="mt-4">
