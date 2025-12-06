@@ -73,7 +73,10 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
         <TableBody>
           {notifications.map((notification) => {
             const alertStatus = getDateAlertStatus(notification);
-            const showLinkIcon = isLinkedToRecord(notification) && !isUserModified(notification);
+            const linked = isLinkedToRecord(notification);
+            const modified = isUserModified(notification);
+            const showLinkIcon = linked && !modified;
+            console.log("Notification link debug:", notification.description, { maintenance_log_id: notification.maintenance_log_id, subscription_id: notification.subscription_id, directive_id: notification.directive_id, user_modified: notification.user_modified, showLinkIcon });
             const rowClassName = cn(
               alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
               alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
