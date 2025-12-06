@@ -111,8 +111,8 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
                     {notification.description}
                     {showLinkIcon && (
                       <Tooltip>
-                        <TooltipTrigger>
-                          <Link className="h-3 w-3 text-muted-foreground" />
+                        <TooltipTrigger asChild>
+                          <Link className="h-4 w-4 text-primary flex-shrink-0" />
                         </TooltipTrigger>
                         <TooltipContent>System-managed notification</TooltipContent>
                       </Tooltip>
