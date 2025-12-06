@@ -209,21 +209,24 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
     const maintenance: Date[] = [];
     const directiveDates: Date[] = [];
 
-    notifications.forEach((notification) => {
-      const initialDate = parseLocalDate(notification.initial_date);
-      
-      // Calculate status for the initial date specifically
-      const initialStatus = getDateAlertStatus(initialDate, notification);
-      const initialTargetArray = initialStatus === "due" ? due : initialStatus === "alert" ? alert : normal;
-      initialTargetArray.push(initialDate);
+    // Only include date-based notifications in calendar (exclude counter-based)
+    notifications
+      .filter((notification) => notification.notification_basis !== "Counter" && !notification.counter_type)
+      .forEach((notification) => {
+        const initialDate = parseLocalDate(notification.initial_date);
+        
+        // Calculate status for the initial date specifically
+        const initialStatus = getDateAlertStatus(initialDate, notification);
+        const initialTargetArray = initialStatus === "due" ? due : initialStatus === "alert" ? alert : normal;
+        initialTargetArray.push(initialDate);
 
-      // For recurring notifications, calculate status for each occurrence date
-      for (let i = 1; i <= 10; i++) {
-        const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
-        const nextStatus = getDateAlertStatus(nextDate, notification);
-        const nextTargetArray = nextStatus === "due" ? due : nextStatus === "alert" ? alert : normal;
-        nextTargetArray.push(nextDate);
-      }
+        // For recurring notifications, calculate status for each occurrence date
+        for (let i = 1; i <= 10; i++) {
+          const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
+          const nextStatus = getDateAlertStatus(nextDate, notification);
+          const nextTargetArray = nextStatus === "due" ? due : nextStatus === "alert" ? alert : normal;
+          nextTargetArray.push(nextDate);
+        }
     });
 
     maintenanceLogs.forEach((log) => {
