@@ -182,6 +182,26 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
     ? getDirectiveHistoryForDate(selectedDate)
     : [];
 
+  // Helper to get alert status for a specific date relative to today
+  const getDateAlertStatus = (targetDate: Date, notification: any): AlertStatus => {
+    if (notification.notification_basis === "Counter" || notification.counter_type) {
+      // Counter-based notifications use the notification's alert status (not date-based)
+      return getNotificationAlertStatus(notification);
+    } else {
+      // Date-based: calculate status based on whether this specific date is due/alert relative to today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkDate = new Date(targetDate);
+      checkDate.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((checkDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const alertDays = notification.alert_days ?? 7;
+      
+      if (diffDays <= 0) return "due";
+      if (diffDays <= alertDays) return "alert";
+      return "normal";
+    }
+  };
+
   const { datesNormal, datesAlert, datesDue, datesWithMaintenanceLogs, datesWithDirectives } = useMemo(() => {
     const normal: Date[] = [];
     const alert: Date[] = [];
@@ -190,15 +210,19 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
     const directiveDates: Date[] = [];
 
     notifications.forEach((notification) => {
-      const status = getNotificationAlertStatus(notification);
       const initialDate = parseLocalDate(notification.initial_date);
       
-      const targetArray = status === "due" ? due : status === "alert" ? alert : normal;
-      targetArray.push(initialDate);
+      // Calculate status for the initial date specifically
+      const initialStatus = getDateAlertStatus(initialDate, notification);
+      const initialTargetArray = initialStatus === "due" ? due : initialStatus === "alert" ? alert : normal;
+      initialTargetArray.push(initialDate);
 
+      // For recurring notifications, calculate status for each occurrence date
       for (let i = 1; i <= 10; i++) {
         const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
-        targetArray.push(nextDate);
+        const nextStatus = getDateAlertStatus(nextDate, notification);
+        const nextTargetArray = nextStatus === "due" ? due : nextStatus === "alert" ? alert : normal;
+        nextTargetArray.push(nextDate);
       }
     });
 
