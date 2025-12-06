@@ -354,41 +354,86 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           .eq("id", editingDirective.id);
         if (error) throw error;
         
-        // Update linked notifications (if not user_modified)
+        // Handle notification type switching similar to maintenance records
         const notificationDescription = `Directive Compliance: ${formData.directive_code} - ${formData.title}`;
         const componentMap = formData.category === "Engine" ? "Propeller" : formData.category === "Propeller" ? "Propeller" : formData.category === "Avionics" ? "Avionics" : "Airframe";
+        const today = new Date();
         
-        if (formData.initial_due_type === "Before Next Flight" || formData.initial_due_type === "At Next Inspection") {
-          await supabase.from("notifications")
-            .update({
+        // Fetch existing linked notifications
+        const { data: existingNotifications } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("directive_id", editingDirective.id)
+          .eq("user_modified", false);
+        
+        const existingDateNotification = existingNotifications?.find(n => n.notification_basis === "Date");
+        const existingCounterNotification = existingNotifications?.find(n => n.notification_basis === "Counter");
+        
+        // Determine if new type is date-based or counter-based
+        const isNewDateBased = ["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type);
+        const isNewCounterBased = formData.initial_due_type === "By Total Time (Hours)";
+        const isNewOther = formData.initial_due_type === "Other" || !formData.initial_due_type;
+        
+        // Handle "Other" or empty - delete all non-user-modified notifications
+        if (isNewOther) {
+          if (existingDateNotification) {
+            await supabase.from("notifications").delete().eq("id", existingDateNotification.id);
+          }
+          if (existingCounterNotification) {
+            await supabase.from("notifications").delete().eq("id", existingCounterNotification.id);
+          }
+        }
+        // Handle date-based types
+        else if (isNewDateBased) {
+          // Delete counter notification if exists
+          if (existingCounterNotification) {
+            await supabase.from("notifications").delete().eq("id", existingCounterNotification.id);
+          }
+          
+          // Prepare date notification data
+          let initialDate = format(today, "yyyy-MM-dd");
+          let notes = `Initial Due: ${formData.initial_due_type}`;
+          
+          if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
+            initialDate = format(formData.initial_due_date, "yyyy-MM-dd");
+            notes = `Directive compliance due by date`;
+          } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
+            initialDate = format(formData.initial_due_date, "yyyy-MM-dd");
+            notes = `Directive compliance due in ${formData.initial_due_months} months`;
+          }
+          
+          if (existingDateNotification) {
+            // Update existing date notification
+            await supabase.from("notifications")
+              .update({
+                description: notificationDescription,
+                component: componentMap,
+                initial_date: initialDate,
+                notes: notes,
+              })
+              .eq("id", existingDateNotification.id);
+          } else {
+            // Create new date notification
+            await supabase.from("notifications").insert({
+              user_id: userId,
               description: notificationDescription,
+              type: "Maintenance",
               component: componentMap,
-              initial_date: format(new Date(), "yyyy-MM-dd"),
-              notes: `Initial Due: ${formData.initial_due_type}`,
-            })
-            .eq("directive_id", editingDirective.id)
-            .eq("user_modified", false);
-        } else if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
-          await supabase.from("notifications")
-            .update({
-              description: notificationDescription,
-              component: componentMap,
-              initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
-              notes: `Directive compliance due by date`,
-            })
-            .eq("directive_id", editingDirective.id)
-            .eq("user_modified", false);
-        } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
-          await supabase.from("notifications")
-            .update({
-              description: notificationDescription,
-              component: componentMap,
-              initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
-              notes: `Directive compliance due in ${formData.initial_due_months} months`,
-            })
-            .eq("directive_id", editingDirective.id)
-            .eq("user_modified", false);
-        } else if (formData.initial_due_type === "By Total Time (Hours)") {
+              initial_date: initialDate,
+              recurrence: "None",
+              notification_basis: "Date",
+              notes: notes,
+              directive_id: editingDirective.id,
+            });
+          }
+        }
+        // Handle counter-based type
+        else if (isNewCounterBased) {
+          // Delete date notification if exists
+          if (existingDateNotification) {
+            await supabase.from("notifications").delete().eq("id", existingDateNotification.id);
+          }
+          
           const counterKey = getCounterKey(formData.counter_type);
           const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
           let counterValue: number;
@@ -397,16 +442,34 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           } else {
             counterValue = currentCounterValue + (parseFloat(formData.counter_increment_value) || 0);
           }
-          await supabase.from("notifications")
-            .update({
+          
+          if (existingCounterNotification) {
+            // Update existing counter notification
+            await supabase.from("notifications")
+              .update({
+                description: notificationDescription,
+                component: componentMap,
+                counter_type: formData.counter_type as any,
+                initial_counter_value: counterValue,
+                notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
+              })
+              .eq("id", existingCounterNotification.id);
+          } else {
+            // Create new counter notification
+            await supabase.from("notifications").insert({
+              user_id: userId,
               description: notificationDescription,
+              type: "Maintenance",
               component: componentMap,
+              initial_date: format(today, "yyyy-MM-dd"),
+              recurrence: "None",
+              notification_basis: "Counter",
               counter_type: formData.counter_type as any,
               initial_counter_value: counterValue,
               notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
-            })
-            .eq("directive_id", editingDirective.id)
-            .eq("user_modified", false);
+              directive_id: editingDirective.id,
+            });
+          }
         }
       } else {
         const { data: newDirective, error } = await supabase
