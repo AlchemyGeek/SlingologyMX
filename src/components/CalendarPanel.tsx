@@ -120,25 +120,27 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
   };
 
   const getNotificationsForDate = (date: Date) => {
-    return notifications.filter((notification) => {
-      const initialDate = parseLocalDate(notification.initial_date);
-      
-      if (isSameDay(initialDate, date)) {
-        return true;
-      }
-
-      for (let i = 1; i <= 10; i++) {
-        const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
-        if (isSameDay(nextDate, date)) {
+    return notifications
+      .filter((notification) => notification.notification_basis !== "Counter" && !notification.counter_type)
+      .filter((notification) => {
+        const initialDate = parseLocalDate(notification.initial_date);
+        
+        if (isSameDay(initialDate, date)) {
           return true;
         }
-        if (nextDate > date) {
-          break;
-        }
-      }
 
-      return false;
-    });
+        for (let i = 1; i <= 10; i++) {
+          const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
+          if (isSameDay(nextDate, date)) {
+            return true;
+          }
+          if (nextDate > date) {
+            break;
+          }
+        }
+
+        return false;
+      });
   };
 
   const getMaintenanceLogsForDate = (date: Date) => {
