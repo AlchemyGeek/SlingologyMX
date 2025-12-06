@@ -33,6 +33,8 @@ const getDateAlertStatus = (notification: any): AlertStatus => {
 };
 
 const NotificationList = ({ notifications, loading, onUpdate, onEdit }: NotificationListProps) => {
+  console.log("NotificationList rendered with", notifications.length, "notifications:", notifications.map(n => ({ desc: n.description, maint_log_id: n.maintenance_log_id, user_modified: n.user_modified })));
+  
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from("notifications").delete().eq("id", id);
