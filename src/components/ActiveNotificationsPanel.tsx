@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { CheckCircle, Plus, Pencil, Trash2, AlertCircle, Link } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
@@ -266,7 +266,14 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
-                  <TableCell className="font-medium">{notification.description}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1">
+                      {notification.description}
+                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                        <Link className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
@@ -340,7 +347,14 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               
               return (
                 <TableRow key={notification.id} className={rowClassName}>
-                  <TableCell className="font-medium">{notification.description}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1">
+                      {notification.description}
+                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                        <Link className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
