@@ -43,10 +43,8 @@ interface ComplianceEvent {
   compliance_status: string;
   first_compliance_date: string | null;
   first_compliance_tach: number | null;
-  last_compliance_date: string | null;
-  last_compliance_tach: number | null;
-  next_due_basis: string | null;
   next_due_counter_type: string | null;
+  next_due_basis: string | null;
   next_due_date: string | null;
   next_due_tach: number | null;
   performed_by_name: string | null;
@@ -80,6 +78,7 @@ const getComplianceStatusColor = (status: string) => {
   switch (status) {
     case "Complied Once":
     case "Recurring (Current)":
+    case "Complied":
       return "default";
     case "Not Complied":
     case "Overdue":
@@ -89,6 +88,17 @@ const getComplianceStatusColor = (status: string) => {
     default:
       return "outline";
   }
+};
+
+// Map database status to display status
+const getDisplayStatus = (status: string) => {
+  if (status === "Complied Once" || status === "Recurring (Current)") {
+    return "Complied";
+  }
+  if (status === "Not Complied" || status === "Not Reviewed" || status === "Overdue") {
+    return "Not Complied";
+  }
+  return status;
 };
 
 const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
@@ -472,8 +482,8 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
               <TableHeader>
                 <TableRow>
                   <TableHead>Status</TableHead>
-                  <TableHead>Compliance Date</TableHead>
-                  <TableHead>Next Due</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Counter</TableHead>
                   <TableHead>Performed By</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -484,27 +494,25 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                   <TableRow key={event.id}>
                     <TableCell>
                       <Badge variant={getComplianceStatusColor(event.compliance_status) as any}>
-                        {event.compliance_status}
+                        {getDisplayStatus(event.compliance_status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {event.last_compliance_date 
-                        ? format(parseLocalDate(event.last_compliance_date), "MMM dd, yyyy")
-                        : event.first_compliance_date
+                      {event.first_compliance_date
                         ? format(parseLocalDate(event.first_compliance_date), "MMM dd, yyyy")
                         : "-"}
-                      {(event.last_compliance_tach || event.first_compliance_tach) && (
-                        <span className="text-muted-foreground text-xs block">
-                          @ {event.last_compliance_tach || event.first_compliance_tach} hrs
-                        </span>
-                      )}
                     </TableCell>
                     <TableCell>
-                      {event.next_due_date 
-                        ? format(parseLocalDate(event.next_due_date), "MMM dd, yyyy")
-                        : event.next_due_tach
-                        ? `${event.next_due_tach} hrs`
-                        : "-"}
+                      {event.first_compliance_tach ? (
+                        <span>
+                          {event.first_compliance_tach} hrs
+                          {event.next_due_counter_type && (
+                            <span className="text-muted-foreground text-xs block">
+                              {event.next_due_counter_type}
+                            </span>
+                          )}
+                        </span>
+                      ) : "-"}
                     </TableCell>
                     <TableCell>
                       {event.performed_by_name || "-"}
