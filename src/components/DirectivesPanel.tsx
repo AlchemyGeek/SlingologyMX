@@ -39,6 +39,7 @@ export interface Directive {
   terminating_action_summary: string | null;
   requires_log_entry: boolean;
   source_links: Array<{ description: string; url: string }> | null;
+  counter_type: string | null;
   archived: boolean;
   created_at: string | null;
   updated_at: string | null;

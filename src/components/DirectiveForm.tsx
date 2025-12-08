@@ -149,7 +149,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         terminating_action_summary: editingDirective.terminating_action_summary || "",
         requires_log_entry: editingDirective.requires_log_entry ?? true,
         source_links: editingDirective.source_links || [],
-        counter_type: "Hobbs",
+        counter_type: editingDirective.counter_type || "Hobbs",
         counter_value_mode: "absolute",
         counter_absolute_value: editingDirective.initial_due_hours?.toString() || "",
         counter_increment_value: "",
@@ -367,6 +367,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       terminating_action_summary: formData.terminating_action_summary || null,
       requires_log_entry: formData.requires_log_entry,
       source_links: formData.source_links.length > 0 ? formData.source_links : null,
+      counter_type: formData.initial_due_type === "By Total Time (Hours)" ? formData.counter_type : null,
     };
 
     try {

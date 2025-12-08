@@ -267,6 +267,7 @@ export type Database = {
           archived: boolean
           category: Database["public"]["Enums"]["directive_category"]
           compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          counter_type: string | null
           created_at: string | null
           directive_code: string
           directive_status: Database["public"]["Enums"]["directive_status"]
@@ -304,6 +305,7 @@ export type Database = {
           archived?: boolean
           category: Database["public"]["Enums"]["directive_category"]
           compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          counter_type?: string | null
           created_at?: string | null
           directive_code: string
           directive_status?: Database["public"]["Enums"]["directive_status"]
@@ -341,6 +343,7 @@ export type Database = {
           archived?: boolean
           category?: Database["public"]["Enums"]["directive_category"]
           compliance_scope?: Database["public"]["Enums"]["compliance_scope"]
+          counter_type?: string | null
           created_at?: string | null
           directive_code?: string
           directive_status?: Database["public"]["Enums"]["directive_status"]
