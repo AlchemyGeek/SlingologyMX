@@ -283,6 +283,19 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       return;
     }
 
+    // Check for duplicate directive code (excluding current directive when editing)
+    const { data: existingDirective } = await supabase
+      .from("directives")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("directive_code", formData.directive_code.trim())
+      .maybeSingle();
+
+    if (existingDirective && (!editingDirective || existingDirective.id !== editingDirective.id)) {
+      toast.error("A directive with this code already exists");
+      return;
+    }
+
     if (!formData.title.trim()) {
       toast.error("Title is required");
       return;
