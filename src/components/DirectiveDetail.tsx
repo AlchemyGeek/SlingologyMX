@@ -329,9 +329,14 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
       {/* Analysis Summary Card */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Compliance Analysis
+          <CardTitle className="text-lg flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Compliance Analysis
+            </span>
+            <Badge variant={directive.directive_status === "Active" ? "default" : "secondary"}>
+              {directive.directive_status}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
