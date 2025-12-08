@@ -246,44 +246,6 @@ const DirectiveComplianceForm = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Applicability */}
-          <div className="space-y-4 border-b pb-4">
-            <h3 className="text-lg font-medium">Applicability</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Applies to My Aircraft? *</Label>
-                <Select
-                  value={formData.applicability_status}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, applicability_status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {APPLICABILITY_STATUSES.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="applicability_reason">Reason / Explanation</Label>
-                <Input
-                  id="applicability_reason"
-                  value={formData.applicability_reason}
-                  onChange={(e) =>
-                    setFormData({ ...formData, applicability_reason: e.target.value })
-                  }
-                  placeholder="e.g., Serial number not in affected range"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Compliance Status */}
           <div className="space-y-4 border-b pb-4">
             <h3 className="text-lg font-medium">Compliance Status</h3>

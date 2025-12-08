@@ -45,6 +45,7 @@ const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
 const DIRECTIVE_STATUSES = ["Active", "Superseded", "Cancelled", "Proposed"];
 const CATEGORIES = ["Airframe", "Engine", "Propeller", "Avionics", "System", "Appliance", "Other"];
 const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "Conditional", "Informational Only"];
+const APPLICABILITY_STATUSES = ["Applies", "Does Not Apply", "Unsure"];
 const INITIAL_DUE_TYPES = [
   "Before Next Flight",
   "By Date",
@@ -340,6 +341,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       engine_model_filter: formData.engine_model_filter || null,
       prop_model_filter: formData.prop_model_filter || null,
       applicable_serial_range: formData.applicable_serial_range || null,
+      applicability_status: formData.applicability_status || null,
+      applicability_reason: formData.applicability_reason || null,
       applicability_notes: formData.applicability_notes || null,
       compliance_scope: formData.compliance_scope as Database["public"]["Enums"]["compliance_scope"],
       action_types: formData.action_types.length > 0 ? formData.action_types : null,
@@ -688,6 +691,33 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                   value={formData.applicable_serial_range}
                   onChange={(e) => setFormData({ ...formData, applicable_serial_range: e.target.value })}
                   placeholder="e.g., S/N 001-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Applies to My Aircraft?</Label>
+                <Select
+                  value={formData.applicability_status}
+                  onValueChange={(value) => setFormData({ ...formData, applicability_status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {APPLICABILITY_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="applicability_reason">Reason / Explanation</Label>
+                <Input
+                  id="applicability_reason"
+                  value={formData.applicability_reason}
+                  onChange={(e) => setFormData({ ...formData, applicability_reason: e.target.value })}
+                  placeholder="e.g., Serial number not in affected range"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
