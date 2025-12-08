@@ -631,11 +631,22 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">My Aircraft Compliance Status</CardTitle>
-            <Button variant="outline" size="sm" onClick={handleAddEvent}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleAddEvent}
+              disabled={directive.directive_status === "Completed"}
+              title={directive.directive_status === "Completed" ? "Cannot add compliance events to completed directives" : undefined}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Compliance Event
             </Button>
           </div>
+          {directive.directive_status === "Completed" && (
+            <p className="text-sm text-muted-foreground mt-2">
+              This directive is marked as completed. Compliance events cannot be added or edited.
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -694,6 +705,8 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleEditEvent(event)}
+                          disabled={directive.directive_status === "Completed"}
+                          title={directive.directive_status === "Completed" ? "Cannot edit compliance events on completed directives" : undefined}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -712,7 +725,9 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             </Table>
           ) : (
             <p className="text-muted-foreground">
-              No compliance events recorded for this directive. Click "Add Compliance Event" to track your compliance.
+              {directive.directive_status === "Completed" 
+                ? "This directive is completed. No compliance events can be added."
+                : "No compliance events recorded for this directive. Click \"Add Compliance Event\" to track your compliance."}
             </p>
           )}
         </CardContent>
