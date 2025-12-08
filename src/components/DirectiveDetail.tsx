@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Trash2, ExternalLink, Plus } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, ExternalLink, Plus, Bell, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Directive } from "./DirectivesPanel";
@@ -57,6 +57,15 @@ interface ComplianceEvent {
   total_cost: number | null;
   maintenance_provider_name: string | null;
   created_at: string | null;
+}
+
+interface PendingNotification {
+  id: string;
+  description: string;
+  initial_date: string;
+  notification_basis: string;
+  counter_type: string | null;
+  initial_counter_value: number | null;
 }
 
 const getSeverityColor = (severity: string) => {
@@ -103,6 +112,7 @@ const getDisplayStatus = (status: string) => {
 
 const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
   const [complianceEvents, setComplianceEvents] = useState<ComplianceEvent[]>([]);
+  const [pendingNotifications, setPendingNotifications] = useState<PendingNotification[]>([]);
   const [showComplianceForm, setShowComplianceForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ComplianceEvent | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -131,9 +141,70 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     }
   };
 
+  const fetchPendingNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, description, initial_date, notification_basis, counter_type, initial_counter_value")
+        .eq("user_id", userId)
+        .eq("directive_id", directive.id)
+        .eq("is_completed", false);
+
+      if (error) throw error;
+      setPendingNotifications(data || []);
+    } catch (error: any) {
+      console.error("Error fetching pending notifications:", error);
+    }
+  };
+
   useEffect(() => {
     fetchComplianceEvents();
+    fetchPendingNotifications();
   }, [directive.id, userId]);
+
+  // Calculate analysis summary data
+  const complianceAnalysis = (() => {
+    const compliedEvents = complianceEvents.filter(
+      e => e.compliance_status === "Complied Once" || 
+           e.compliance_status === "Recurring (Current)" ||
+           e.compliance_status === "Complied"
+    );
+    
+    if (compliedEvents.length === 0) {
+      return null;
+    }
+
+    const eventDates = compliedEvents
+      .map(e => e.first_compliance_date)
+      .filter((d): d is string => d !== null)
+      .sort();
+
+    const firstComplianceDate = eventDates.length > 0 ? eventDates[0] : null;
+    const lastComplianceDate = eventDates.length > 0 ? eventDates[eventDates.length - 1] : null;
+
+    // Get counter info from the most recent complied event
+    const isCounterBased = directive.initial_due_type === "By Total Time (Hours)";
+    let lastCounterType: string | null = null;
+    let lastCounterValue: number | null = null;
+
+    if (isCounterBased && compliedEvents.length > 0) {
+      // Find most recent event with counter data
+      const eventWithCounter = compliedEvents.find(e => e.first_compliance_tach !== null);
+      if (eventWithCounter) {
+        lastCounterType = eventWithCounter.next_due_counter_type;
+        lastCounterValue = eventWithCounter.first_compliance_tach;
+      }
+    }
+
+    return {
+      firstComplianceDate,
+      lastComplianceDate,
+      isCounterBased,
+      lastCounterType,
+      lastCounterValue,
+      totalCompliedEvents: compliedEvents.length
+    };
+  })();
 
   const handleComplianceUpdated = () => {
     setShowComplianceForm(false);
@@ -254,6 +325,97 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Analysis Summary Card */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            Compliance Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Compliance Dates */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">First Compliance</p>
+              <p className="font-medium">
+                {complianceAnalysis?.firstComplianceDate
+                  ? format(parseLocalDate(complianceAnalysis.firstComplianceDate), "MMM dd, yyyy")
+                  : "Not yet complied"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Last Compliance</p>
+              <p className="font-medium">
+                {complianceAnalysis?.lastComplianceDate
+                  ? format(parseLocalDate(complianceAnalysis.lastComplianceDate), "MMM dd, yyyy")
+                  : "Not yet complied"}
+              </p>
+            </div>
+            {complianceAnalysis?.isCounterBased && (
+              <>
+                <div>
+                  <p className="text-sm text-muted-foreground">Counter Type</p>
+                  <p className="font-medium">
+                    {complianceAnalysis.lastCounterType || directive.initial_due_type === "By Total Time (Hours)" ? "Hours-based" : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Last Counter Value</p>
+                  <p className="font-medium">
+                    {complianceAnalysis.lastCounterValue !== null
+                      ? `${complianceAnalysis.lastCounterValue} hrs`
+                      : "Not recorded"}
+                  </p>
+                </div>
+              </>
+            )}
+            {complianceAnalysis && (
+              <div>
+                <p className="text-sm text-muted-foreground">Total Compliance Events</p>
+                <p className="font-medium">{complianceAnalysis.totalCompliedEvents}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Pending Notifications */}
+          <Separator />
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium">Pending Notifications</p>
+            </div>
+            {pendingNotifications.length > 0 ? (
+              <div className="space-y-2">
+                {pendingNotifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className="flex items-center justify-between p-2 rounded-md bg-background border text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{notification.description}</span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      {notification.notification_basis === "Date" ? (
+                        <span>Due: {format(parseLocalDate(notification.initial_date), "MMM dd, yyyy")}</span>
+                      ) : (
+                        <span>
+                          Due at {notification.initial_counter_value} hrs
+                          {notification.counter_type && ` (${notification.counter_type})`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No pending notifications for this directive.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Directive Info Card */}
       <Card>
