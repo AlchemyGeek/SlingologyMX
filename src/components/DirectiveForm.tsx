@@ -202,7 +202,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       await supabase.from("notifications").insert({
         user_id: userId,
         description: notificationDescription,
-        type: "Maintenance",
+        type: "Directives",
         component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
@@ -215,7 +215,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       await supabase.from("notifications").insert({
         user_id: userId,
         description: notificationDescription,
-        type: "Maintenance",
+        type: "Directives",
         component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
@@ -228,7 +228,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       await supabase.from("notifications").insert({
         user_id: userId,
         description: notificationDescription,
-        type: "Maintenance",
+        type: "Directives",
         component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
@@ -252,7 +252,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       const { error } = await supabase.from("notifications").insert({
         user_id: userId,
         description: notificationDescription,
-        type: "Maintenance",
+        type: "Directives",
         component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
