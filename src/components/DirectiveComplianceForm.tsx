@@ -241,7 +241,7 @@ const DirectiveComplianceForm = ({
     <Card>
       <CardHeader>
         <CardTitle>
-          {existingStatus ? "Update" : "Set"} Compliance Status for {directive.directive_code}
+          {existingStatus ? "Edit" : "Add"} Compliance Event for {directive.directive_code}
         </CardTitle>
       </CardHeader>
       <CardContent>
