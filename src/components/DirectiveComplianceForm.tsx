@@ -267,13 +267,20 @@ const DirectiveComplianceForm = ({
     }
   };
 
-  // Helper to update directive status to Completed
+  // Helper to update directive status to Completed and delete linked notifications
   const updateDirectiveStatusToCompleted = async () => {
     try {
+      // Update directive status
       await supabase
         .from("directives")
         .update({ directive_status: "Completed" })
         .eq("id", directive.id);
+
+      // Delete all linked notifications for this directive
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("directive_id", directive.id);
     } catch (error) {
       console.error("Error updating directive status:", error);
     }
