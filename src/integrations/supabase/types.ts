@@ -832,7 +832,12 @@ export type Database = {
         | "Mandatory"
         | "Recommended"
         | "Informational"
-      directive_status: "Active" | "Superseded" | "Cancelled" | "Proposed"
+      directive_status:
+        | "Active"
+        | "Superseded"
+        | "Cancelled"
+        | "Proposed"
+        | "Completed"
       directive_type:
         | "FAA Airworthiness Directive"
         | "Manufacturer Alert"
@@ -1070,7 +1075,13 @@ export const Constants = {
         "Recommended",
         "Informational",
       ],
-      directive_status: ["Active", "Superseded", "Cancelled", "Proposed"],
+      directive_status: [
+        "Active",
+        "Superseded",
+        "Cancelled",
+        "Proposed",
+        "Completed",
+      ],
       directive_type: [
         "FAA Airworthiness Directive",
         "Manufacturer Alert",
