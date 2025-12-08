@@ -694,15 +694,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="applicable_serial_range">Applicable Serial Range</Label>
-                <Input
-                  id="applicable_serial_range"
-                  value={formData.applicable_serial_range}
-                  onChange={(e) => setFormData({ ...formData, applicable_serial_range: e.target.value })}
-                  placeholder="e.g., S/N 001-500"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label>Applies to My Aircraft?</Label>
                 <Select
                   value={formData.applicability_status}
@@ -727,6 +718,15 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                   value={formData.applicability_reason}
                   onChange={(e) => setFormData({ ...formData, applicability_reason: e.target.value })}
                   placeholder="e.g., Serial number not in affected range"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="applicable_serial_range">Applicable Serial Range</Label>
+                <Input
+                  id="applicable_serial_range"
+                  value={formData.applicable_serial_range}
+                  onChange={(e) => setFormData({ ...formData, applicable_serial_range: e.target.value })}
+                  placeholder="e.g., S/N 001-500"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
