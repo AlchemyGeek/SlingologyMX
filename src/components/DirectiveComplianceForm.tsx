@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 
+import { useAircraftCounters, AircraftCounters } from "@/hooks/useAircraftCounters";
+
 interface DirectiveComplianceFormProps {
   directive: Directive;
   userId: string;
@@ -28,15 +30,7 @@ interface DirectiveComplianceFormProps {
   onCancel: () => void;
 }
 
-const APPLICABILITY_STATUSES = ["Applies", "Does Not Apply", "Unsure"];
-const COMPLIANCE_STATUSES = [
-  "Not Reviewed",
-  "Not Complied",
-  "Complied Once",
-  "Recurring (Current)",
-  "Overdue",
-  "Not Applicable",
-];
+const COMPLIANCE_STATUSES = ["Not Complied", "Complied"];
 const PERFORMED_BY_ROLES = [
   "Owner/Builder",
   "Owner/Pilot",
@@ -47,6 +41,33 @@ const PERFORMED_BY_ROLES = [
   "Other",
 ];
 
+const COUNTER_TYPES = ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"];
+
+// Map directive initial_due_type to counter type
+const getDirectiveCounterType = (directive: Directive): string | null => {
+  if (directive.initial_due_type === "By Total Time (Hours)") {
+    // Check if there's a specific counter type in the directive
+    // For now, default to Hobbs if counter-based
+    return "Hobbs";
+  }
+  return null;
+};
+
+const isCounterBasedDirective = (directive: Directive): boolean => {
+  return directive.initial_due_type === "By Total Time (Hours)";
+};
+
+const getCounterValue = (counters: AircraftCounters, counterType: string): number => {
+  switch (counterType) {
+    case "Hobbs": return counters.hobbs;
+    case "Tach": return counters.tach;
+    case "Airframe TT": return counters.airframe_total_time;
+    case "Engine TT": return counters.engine_total_time;
+    case "Prop TT": return counters.prop_total_time;
+    default: return 0;
+  }
+};
+
 const DirectiveComplianceForm = ({
   directive,
   userId,
@@ -54,14 +75,15 @@ const DirectiveComplianceForm = ({
   onSuccess,
   onCancel,
 }: DirectiveComplianceFormProps) => {
+  const { counters } = useAircraftCounters(userId);
+  const isCounterBased = isCounterBasedDirective(directive);
+  const defaultCounterType = getDirectiveCounterType(directive) || "Hobbs";
+
   const [formData, setFormData] = useState({
-    applicability_status: "Unsure" as string,
-    applicability_reason: "",
-    compliance_status: "Not Reviewed" as string,
-    first_compliance_date: null as Date | null,
-    first_compliance_tach: "",
-    last_compliance_date: null as Date | null,
-    last_compliance_tach: "",
+    compliance_status: "Not Complied" as string,
+    compliance_date: new Date() as Date | null,
+    counter_type: defaultCounterType,
+    counter_value: "",
     next_due_basis: "" as string,
     next_due_counter_type: "" as string,
     next_due_date: null as Date | null,
@@ -77,25 +99,37 @@ const DirectiveComplianceForm = ({
     maintenance_provider_name: "",
   });
 
-  const COUNTER_TYPES = ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"];
-
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
 
+  // Set default counter value when counters load
+  useEffect(() => {
+    if (!existingStatus && isCounterBased && counters) {
+      const currentValue = getCounterValue(counters, formData.counter_type);
+      setFormData(prev => ({
+        ...prev,
+        counter_value: currentValue.toString()
+      }));
+    }
+  }, [counters, existingStatus, isCounterBased, formData.counter_type]);
+
   useEffect(() => {
     if (existingStatus) {
+      // Map old status values to new simplified ones
+      let mappedStatus = existingStatus.compliance_status;
+      if (mappedStatus === "Complied Once" || mappedStatus === "Recurring (Current)") {
+        mappedStatus = "Complied";
+      } else if (mappedStatus !== "Not Complied" && mappedStatus !== "Complied") {
+        mappedStatus = "Not Complied";
+      }
+
       setFormData({
-        applicability_status: existingStatus.applicability_status || "Unsure",
-        applicability_reason: existingStatus.applicability_reason || "",
-        compliance_status: existingStatus.compliance_status || "Not Reviewed",
-        first_compliance_date: existingStatus.first_compliance_date
+        compliance_status: mappedStatus,
+        compliance_date: existingStatus.first_compliance_date
           ? parseLocalDate(existingStatus.first_compliance_date)
-          : null,
-        first_compliance_tach: existingStatus.first_compliance_tach?.toString() || "",
-        last_compliance_date: existingStatus.last_compliance_date
-          ? parseLocalDate(existingStatus.last_compliance_date)
-          : null,
-        last_compliance_tach: existingStatus.last_compliance_tach?.toString() || "",
+          : new Date(),
+        counter_type: existingStatus.next_due_counter_type || defaultCounterType,
+        counter_value: existingStatus.first_compliance_tach?.toString() || "",
         next_due_basis: existingStatus.next_due_basis || "",
         next_due_counter_type: existingStatus.next_due_counter_type || "",
         next_due_date: existingStatus.next_due_date ? parseLocalDate(existingStatus.next_due_date) : null,
@@ -111,7 +145,7 @@ const DirectiveComplianceForm = ({
         maintenance_provider_name: existingStatus.maintenance_provider_name || "",
       });
     }
-  }, [existingStatus]);
+  }, [existingStatus, defaultCounterType]);
 
   const handleAddLink = () => {
     if (linkDescInput.trim() && linkUrlInput.trim()) {
@@ -137,26 +171,27 @@ const DirectiveComplianceForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Map simplified status to database enum
+    const dbComplianceStatus = formData.compliance_status === "Complied" 
+      ? "Complied Once" as Database["public"]["Enums"]["db_compliance_status"]
+      : "Not Complied" as Database["public"]["Enums"]["db_compliance_status"];
+
     const statusData = {
       user_id: userId,
       directive_id: directive.id,
-      applicability_status: formData.applicability_status as Database["public"]["Enums"]["applicability_status"],
-      applicability_reason: formData.applicability_reason || null,
-      compliance_status: formData.compliance_status as Database["public"]["Enums"]["db_compliance_status"],
-      first_compliance_date: formData.first_compliance_date
-        ? format(formData.first_compliance_date, "yyyy-MM-dd")
+      applicability_status: "Applies" as Database["public"]["Enums"]["applicability_status"],
+      applicability_reason: null,
+      compliance_status: dbComplianceStatus,
+      first_compliance_date: formData.compliance_date
+        ? format(formData.compliance_date, "yyyy-MM-dd")
         : null,
-      first_compliance_tach: formData.first_compliance_tach
-        ? parseFloat(formData.first_compliance_tach)
+      first_compliance_tach: isCounterBased && formData.counter_value
+        ? parseFloat(formData.counter_value)
         : null,
-      last_compliance_date: formData.last_compliance_date
-        ? format(formData.last_compliance_date, "yyyy-MM-dd")
-        : null,
-      last_compliance_tach: formData.last_compliance_tach
-        ? parseFloat(formData.last_compliance_tach)
-        : null,
+      last_compliance_date: null,
+      last_compliance_tach: null,
       next_due_basis: formData.next_due_basis || null,
-      next_due_counter_type: formData.next_due_counter_type || null,
+      next_due_counter_type: isCounterBased ? formData.counter_type : (formData.next_due_counter_type || null),
       next_due_date: formData.next_due_basis === "Date" && formData.next_due_date 
         ? format(formData.next_due_date, "yyyy-MM-dd") 
         : null,
@@ -177,18 +212,13 @@ const DirectiveComplianceForm = ({
     };
 
     try {
-      // Check if first or last compliance date changed
-      const firstDateChanged = existingStatus && 
+      // Check if compliance date changed
+      const dateChanged = existingStatus && 
         (existingStatus.first_compliance_date !== statusData.first_compliance_date);
-      const lastDateChanged = existingStatus && 
-        (existingStatus.last_compliance_date !== statusData.last_compliance_date);
-      const isNewCompliance = !existingStatus && 
-        (statusData.first_compliance_date || statusData.last_compliance_date);
+      const isNewCompliance = !existingStatus && statusData.first_compliance_date;
       
-      // Only log compliance if status is "Complied Once" or "Recurring (Current)"
-      const isComplianceLoggableStatus = 
-        statusData.compliance_status === "Complied Once" || 
-        statusData.compliance_status === "Recurring (Current)";
+      // Only log compliance if status is "Complied Once" (which maps from "Complied")
+      const isComplianceLoggableStatus = statusData.compliance_status === "Complied Once";
       
       if (existingStatus) {
         const { error } = await supabase
@@ -197,8 +227,8 @@ const DirectiveComplianceForm = ({
           .eq("id", existingStatus.id);
         if (error) throw error;
         
-        // Log Compliance action if dates changed AND status is compliant
-        if ((firstDateChanged || lastDateChanged) && isComplianceLoggableStatus) {
+        // Log Compliance action if date changed AND status is compliant
+        if (dateChanged && isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             directive_id: directive.id,
@@ -207,7 +237,7 @@ const DirectiveComplianceForm = ({
             action_type: "Compliance",
             compliance_status: statusData.compliance_status,
             first_compliance_date: statusData.first_compliance_date,
-            last_compliance_date: statusData.last_compliance_date,
+            last_compliance_date: null,
           });
         }
         toast.success("Compliance status updated");
@@ -215,7 +245,7 @@ const DirectiveComplianceForm = ({
         const { error } = await supabase.from("aircraft_directive_status").insert([statusData]);
         if (error) throw error;
         
-        // Log Compliance action if dates are set on new record AND status is compliant
+        // Log Compliance action if date is set on new record AND status is compliant
         if (isNewCompliance && isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
@@ -225,7 +255,7 @@ const DirectiveComplianceForm = ({
             action_type: "Compliance",
             compliance_status: statusData.compliance_status,
             first_compliance_date: statusData.first_compliance_date,
-            last_compliance_date: statusData.last_compliance_date,
+            last_compliance_date: null,
           });
         }
         toast.success("Compliance status created");
@@ -271,127 +301,58 @@ const DirectiveComplianceForm = ({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>First Compliance Date</Label>
+                <Label>Date *</Label>
                 <DateInput
-                  value={formData.first_compliance_date}
+                  value={formData.compliance_date}
                   onChange={(date) =>
-                    setFormData({ ...formData, first_compliance_date: date })
+                    setFormData({ ...formData, compliance_date: date })
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="first_compliance_tach">First Compliance Tach/Hobbs</Label>
-                <Input
-                  id="first_compliance_tach"
-                  type="number"
-                  step="0.1"
-                  value={formData.first_compliance_tach}
-                  onChange={(e) =>
-                    setFormData({ ...formData, first_compliance_tach: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Last Compliance Date</Label>
-                <DateInput
-                  value={formData.last_compliance_date}
-                  onChange={(date) =>
-                    setFormData({ ...formData, last_compliance_date: date })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_compliance_tach">Last Compliance Tach/Hobbs</Label>
-                <Input
-                  id="last_compliance_tach"
-                  type="number"
-                  step="0.1"
-                  value={formData.last_compliance_tach}
-                  onChange={(e) =>
-                    setFormData({ ...formData, last_compliance_tach: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Next Due Section - Only for Recurring (Current) */}
-            {formData.compliance_status === "Recurring (Current)" && (
-              <div className="space-y-4 mt-4 p-4 border rounded-md bg-muted/30">
-                <h4 className="font-medium">Next Due Compliance</h4>
-                <div className="space-y-2">
-                  <Label>Next Due Basis *</Label>
-                  <Select
-                    value={formData.next_due_basis}
-                    onValueChange={(value) =>
-                      setFormData({ 
-                        ...formData, 
-                        next_due_basis: value,
-                        // Clear the other field when switching
-                        next_due_date: value === "Counter" ? null : formData.next_due_date,
-                        next_due_tach: value === "Date" ? "" : formData.next_due_tach,
-                        next_due_counter_type: value === "Date" ? "" : formData.next_due_counter_type,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select basis" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Date">Date Based</SelectItem>
-                      <SelectItem value="Counter">Counter Based</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.next_due_basis === "Date" && (
+              {isCounterBased && (
+                <>
                   <div className="space-y-2">
-                    <Label>Next Due Date</Label>
-                    <DateInput
-                      value={formData.next_due_date}
-                      onChange={(date) =>
-                        setFormData({ ...formData, next_due_date: date })
+                    <Label>Counter Type</Label>
+                    <Select
+                      value={formData.counter_type}
+                      onValueChange={(value) => {
+                        const currentValue = getCounterValue(counters, value);
+                        setFormData({ 
+                          ...formData, 
+                          counter_type: value,
+                          counter_value: currentValue.toString()
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTER_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="counter_value">Counter Value</Label>
+                    <Input
+                      id="counter_value"
+                      type="number"
+                      step="0.1"
+                      value={formData.counter_value}
+                      onChange={(e) =>
+                        setFormData({ ...formData, counter_value: e.target.value })
                       }
+                      placeholder={`Current: ${getCounterValue(counters, formData.counter_type)}`}
                     />
                   </div>
-                )}
+                </>
+              )}
+            </div>
 
-                {formData.next_due_basis === "Counter" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Counter Type *</Label>
-                      <Select
-                        value={formData.next_due_counter_type}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, next_due_counter_type: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select counter" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COUNTER_TYPES.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="next_due_tach">Next Due Value</Label>
-                      <Input
-                        id="next_due_tach"
-                        type="number"
-                        step="0.1"
-                        value={formData.next_due_tach}
-                        onChange={(e) => setFormData({ ...formData, next_due_tach: e.target.value })}
-                        placeholder="Enter counter value"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Performer Info */}
