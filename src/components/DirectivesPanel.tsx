@@ -21,9 +21,8 @@ export interface Directive {
   issue_date: string | null;
   effective_date: string | null;
   revision: string | null;
-  aircraft_make_model_filter: string | null;
-  engine_model_filter: string | null;
-  prop_model_filter: string | null;
+  applicability_category: string | null;
+  applicability_model: string | null;
   applicable_serial_range: string | null;
   applicability_status: string | null;
   applicability_reason: string | null;

@@ -90,9 +90,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     issue_date: null as Date | null,
     effective_date: null as Date | null,
     revision: "",
-    aircraft_make_model_filter: "",
-    engine_model_filter: "",
-    prop_model_filter: "",
+    applicability_category: "",
+    applicability_model: "",
     applicable_serial_range: "",
     applicability_status: "Unsure" as string,
     applicability_reason: "",
@@ -132,9 +131,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         issue_date: editingDirective.issue_date ? parseLocalDate(editingDirective.issue_date) : null,
         effective_date: editingDirective.effective_date ? parseLocalDate(editingDirective.effective_date) : null,
         revision: editingDirective.revision || "",
-        aircraft_make_model_filter: editingDirective.aircraft_make_model_filter || "",
-        engine_model_filter: editingDirective.engine_model_filter || "",
-        prop_model_filter: editingDirective.prop_model_filter || "",
+        applicability_category: (editingDirective as any).applicability_category || "",
+        applicability_model: (editingDirective as any).applicability_model || "",
         applicable_serial_range: editingDirective.applicable_serial_range || "",
         applicability_status: (editingDirective as any).applicability_status || "Unsure",
         applicability_reason: (editingDirective as any).applicability_reason || "",
@@ -351,9 +349,8 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       issue_date: formData.issue_date ? format(formData.issue_date, "yyyy-MM-dd") : null,
       effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
       revision: formData.revision || null,
-      aircraft_make_model_filter: formData.aircraft_make_model_filter || null,
-      engine_model_filter: formData.engine_model_filter || null,
-      prop_model_filter: formData.prop_model_filter || null,
+      applicability_category: formData.applicability_category || null,
+      applicability_model: formData.applicability_model || null,
       applicable_serial_range: formData.applicable_serial_range || null,
       applicability_status: formData.applicability_status || null,
       applicability_reason: formData.applicability_reason || null,
@@ -669,33 +666,31 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             <h3 className="text-lg font-medium">Applicability</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="aircraft_make_model_filter">Aircraft Models</Label>
-                <Input
-                  id="aircraft_make_model_filter"
-                  value={formData.aircraft_make_model_filter}
-                  onChange={(e) => setFormData({ ...formData, aircraft_make_model_filter: e.target.value })}
-                  maxLength={200}
-                  placeholder="e.g., Sling TSi, Sling 4"
-                />
+                <Label>Applicability Category</Label>
+                <Select
+                  value={formData.applicability_category}
+                  onValueChange={(value) => setFormData({ ...formData, applicability_category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="engine_model_filter">Engine Models</Label>
+                <Label htmlFor="applicability_model">Model</Label>
                 <Input
-                  id="engine_model_filter"
-                  value={formData.engine_model_filter}
-                  onChange={(e) => setFormData({ ...formData, engine_model_filter: e.target.value })}
+                  id="applicability_model"
+                  value={formData.applicability_model}
+                  onChange={(e) => setFormData({ ...formData, applicability_model: e.target.value })}
                   maxLength={200}
-                  placeholder="e.g., Rotax 915iS"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="prop_model_filter">Propeller Models</Label>
-                <Input
-                  id="prop_model_filter"
-                  value={formData.prop_model_filter}
-                  onChange={(e) => setFormData({ ...formData, prop_model_filter: e.target.value })}
-                  maxLength={200}
-                  placeholder="e.g., Airmaster AP332"
+                  placeholder="e.g., Rotax 916is"
                 />
               </div>
               <div className="space-y-2">

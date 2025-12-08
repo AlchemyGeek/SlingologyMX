@@ -258,7 +258,8 @@ export type Database = {
       directives: {
         Row: {
           action_types: string[] | null
-          aircraft_make_model_filter: string | null
+          applicability_category: string | null
+          applicability_model: string | null
           applicability_notes: string | null
           applicability_reason: string | null
           applicability_status: string | null
@@ -271,7 +272,6 @@ export type Database = {
           directive_status: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date: string | null
-          engine_model_filter: string | null
           id: string
           initial_due_date: string | null
           initial_due_hours: number | null
@@ -281,7 +281,6 @@ export type Database = {
             | null
           issue_date: string | null
           issuing_authority: string | null
-          prop_model_filter: string | null
           repeat_hours: number | null
           repeat_months: number | null
           requires_log_entry: boolean
@@ -296,7 +295,8 @@ export type Database = {
         }
         Insert: {
           action_types?: string[] | null
-          aircraft_make_model_filter?: string | null
+          applicability_category?: string | null
+          applicability_model?: string | null
           applicability_notes?: string | null
           applicability_reason?: string | null
           applicability_status?: string | null
@@ -309,7 +309,6 @@ export type Database = {
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
-          engine_model_filter?: string | null
           id?: string
           initial_due_date?: string | null
           initial_due_hours?: number | null
@@ -319,7 +318,6 @@ export type Database = {
             | null
           issue_date?: string | null
           issuing_authority?: string | null
-          prop_model_filter?: string | null
           repeat_hours?: number | null
           repeat_months?: number | null
           requires_log_entry?: boolean
@@ -334,7 +332,8 @@ export type Database = {
         }
         Update: {
           action_types?: string[] | null
-          aircraft_make_model_filter?: string | null
+          applicability_category?: string | null
+          applicability_model?: string | null
           applicability_notes?: string | null
           applicability_reason?: string | null
           applicability_status?: string | null
@@ -347,7 +346,6 @@ export type Database = {
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type?: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
-          engine_model_filter?: string | null
           id?: string
           initial_due_date?: string | null
           initial_due_hours?: number | null
@@ -357,7 +355,6 @@ export type Database = {
             | null
           issue_date?: string | null
           issuing_authority?: string | null
-          prop_model_filter?: string | null
           repeat_hours?: number | null
           repeat_months?: number | null
           requires_log_entry?: boolean
