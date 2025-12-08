@@ -305,7 +305,7 @@ const Dashboard = () => {
                     <TabsTrigger value="directives">Directives & Bulletins</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="subscriptions" className="max-h-[500px] overflow-y-auto">
+                  <TabsContent value="subscriptions" className="max-h-[750px] overflow-y-auto">
                     <SubscriptionsPanel 
                       userId={user.id} 
                       onNotificationChanged={fetchActiveNotificationsForAlerts}
@@ -313,7 +313,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="maintenance" className="max-h-[500px] overflow-y-auto">
+                  <TabsContent value="maintenance" className="max-h-[750px] overflow-y-auto">
                     <MaintenanceLogsPanel
                       userId={user.id}
                       counters={counters}
@@ -322,7 +322,7 @@ const Dashboard = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="directives" className="max-h-[500px] overflow-y-auto">
+                  <TabsContent value="directives" className="max-h-[750px] overflow-y-auto">
                     <DirectivesPanel 
                       userId={user.id} 
                       onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
