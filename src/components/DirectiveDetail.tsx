@@ -15,7 +15,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, ExternalLink } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ArrowLeft, Edit, Trash2, ExternalLink, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Directive } from "./DirectivesPanel";
@@ -30,15 +38,15 @@ interface DirectiveDetailProps {
   onUpdate: () => void;
 }
 
-interface ComplianceStatus {
+interface ComplianceEvent {
   id: string;
-  applicability_status: string;
-  applicability_reason: string | null;
   compliance_status: string;
   first_compliance_date: string | null;
   first_compliance_tach: number | null;
   last_compliance_date: string | null;
   last_compliance_tach: number | null;
+  next_due_basis: string | null;
+  next_due_counter_type: string | null;
   next_due_date: string | null;
   next_due_tach: number | null;
   performed_by_name: string | null;
@@ -50,6 +58,7 @@ interface ComplianceStatus {
   parts_cost: number | null;
   total_cost: number | null;
   maintenance_provider_name: string | null;
+  created_at: string | null;
 }
 
 const getSeverityColor = (severity: string) => {
@@ -67,60 +76,97 @@ const getSeverityColor = (severity: string) => {
   }
 };
 
+const getComplianceStatusColor = (status: string) => {
+  switch (status) {
+    case "Complied Once":
+    case "Recurring (Current)":
+      return "default";
+    case "Not Complied":
+    case "Overdue":
+      return "destructive";
+    case "Not Applicable":
+      return "secondary";
+    default:
+      return "outline";
+  }
+};
+
 const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
-  const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | null>(null);
+  const [complianceEvents, setComplianceEvents] = useState<ComplianceEvent[]>([]);
   const [showComplianceForm, setShowComplianceForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<ComplianceEvent | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteEventDialog, setShowDeleteEventDialog] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchComplianceStatus = async () => {
+  const fetchComplianceEvents = async () => {
     try {
       const { data, error } = await supabase
         .from("aircraft_directive_status")
         .select("*")
         .eq("user_id", userId)
         .eq("directive_id", directive.id)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) {
-        setComplianceStatus({
-          ...data,
-          compliance_links: data.compliance_links as Array<{ description: string; url: string }> | null
-        } as ComplianceStatus);
-      } else {
-        setComplianceStatus(null);
-      }
+      setComplianceEvents((data || []).map(item => ({
+        ...item,
+        compliance_links: item.compliance_links as Array<{ description: string; url: string }> | null
+      })) as ComplianceEvent[]);
     } catch (error: any) {
-      console.error("Error fetching compliance status:", error);
+      console.error("Error fetching compliance events:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchComplianceStatus();
+    fetchComplianceEvents();
   }, [directive.id, userId]);
 
   const handleComplianceUpdated = () => {
     setShowComplianceForm(false);
-    fetchComplianceStatus();
+    setEditingEvent(null);
+    fetchComplianceEvents();
     onUpdate();
   };
 
-  const getComplianceStatusColor = (status: string) => {
-    switch (status) {
-      case "Complied Once":
-      case "Recurring (Current)":
-        return "default";
-      case "Not Complied":
-      case "Overdue":
-        return "destructive";
-      case "Not Applicable":
-        return "secondary";
-      default:
-        return "outline";
+  const handleAddEvent = () => {
+    setEditingEvent(null);
+    setShowComplianceForm(true);
+  };
+
+  const handleEditEvent = (event: ComplianceEvent) => {
+    setEditingEvent(event);
+    setShowComplianceForm(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from("aircraft_directive_status")
+        .delete()
+        .eq("id", eventToDelete);
+
+      if (error) throw error;
+      
+      toast.success("Compliance event deleted");
+      setShowDeleteEventDialog(false);
+      setEventToDelete(null);
+      fetchComplianceEvents();
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error deleting compliance event:", error);
+      toast.error("Failed to delete compliance event");
     }
+  };
+
+  const confirmDeleteEvent = (eventId: string) => {
+    setEventToDelete(eventId);
+    setShowDeleteEventDialog(true);
   };
 
   if (showComplianceForm) {
@@ -128,9 +174,12 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
       <DirectiveComplianceForm
         directive={directive}
         userId={userId}
-        existingStatus={complianceStatus}
+        existingStatus={editingEvent}
         onSuccess={handleComplianceUpdated}
-        onCancel={() => setShowComplianceForm(false)}
+        onCancel={() => {
+          setShowComplianceForm(false);
+          setEditingEvent(null);
+        }}
       />
     );
   }
@@ -154,6 +203,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         </div>
       </div>
 
+      {/* Delete Directive Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -174,6 +224,28 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete Compliance Event Dialog */}
+      <AlertDialog open={showDeleteEventDialog} onOpenChange={setShowDeleteEventDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Compliance Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this compliance event? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteEvent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Directive Info Card */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -235,12 +307,26 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           </div>
 
           {/* Applicability */}
-          {(directive.aircraft_make_model_filter || directive.engine_model_filter || directive.prop_model_filter || directive.applicable_serial_range) && (
+          {(directive.aircraft_make_model_filter || directive.engine_model_filter || directive.prop_model_filter || directive.applicable_serial_range || directive.applicability_status) && (
             <>
               <Separator />
               <div>
                 <h4 className="font-medium mb-3">Applicability</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {directive.applicability_status && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Applies to My Aircraft</p>
+                      <Badge variant={directive.applicability_status === "Applies" ? "default" : "secondary"}>
+                        {directive.applicability_status}
+                      </Badge>
+                    </div>
+                  )}
+                  {directive.applicability_reason && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Reason</p>
+                      <p className="font-medium">{directive.applicability_reason}</p>
+                    </div>
+                  )}
                   {directive.aircraft_make_model_filter && (
                     <div>
                       <p className="text-sm text-muted-foreground">Aircraft Models</p>
@@ -367,76 +453,96 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         </CardContent>
       </Card>
 
-      {/* Compliance Status Card */}
+      {/* Compliance Events Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">My Aircraft Compliance Status</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setShowComplianceForm(true)}>
-              {complianceStatus ? "Update Status" : "Set Status"}
+            <Button variant="outline" size="sm" onClick={handleAddEvent}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Compliance Event
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-muted-foreground">Loading...</p>
-          ) : complianceStatus ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Applicability</p>
-                  <Badge variant={complianceStatus.applicability_status === "Applies" ? "default" : "secondary"}>
-                    {complianceStatus.applicability_status}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Compliance Status</p>
-                  <Badge variant={getComplianceStatusColor(complianceStatus.compliance_status) as any}>
-                    {complianceStatus.compliance_status}
-                  </Badge>
-                </div>
-                {complianceStatus.last_compliance_date && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Last Complied</p>
-                    <p className="font-medium">{format(parseLocalDate(complianceStatus.last_compliance_date), "MMM dd, yyyy")}</p>
-                  </div>
-                )}
-                {complianceStatus.next_due_date && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Next Due</p>
-                    <p className="font-medium">{format(parseLocalDate(complianceStatus.next_due_date), "MMM dd, yyyy")}</p>
-                  </div>
-                )}
-              </div>
-              {complianceStatus.owner_notes && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Notes</p>
-                  <p className="text-sm">{complianceStatus.owner_notes}</p>
-                </div>
-              )}
-              {complianceStatus.compliance_links && complianceStatus.compliance_links.length > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Evidence</p>
-                  <ul className="space-y-1">
-                    {complianceStatus.compliance_links.map((link, index) => (
-                      <li key={index}>
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline text-sm flex items-center gap-1"
+          ) : complianceEvents.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Compliance Date</TableHead>
+                  <TableHead>Next Due</TableHead>
+                  <TableHead>Performed By</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {complianceEvents.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell>
+                      <Badge variant={getComplianceStatusColor(event.compliance_status) as any}>
+                        {event.compliance_status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {event.last_compliance_date 
+                        ? format(parseLocalDate(event.last_compliance_date), "MMM dd, yyyy")
+                        : event.first_compliance_date
+                        ? format(parseLocalDate(event.first_compliance_date), "MMM dd, yyyy")
+                        : "-"}
+                      {(event.last_compliance_tach || event.first_compliance_tach) && (
+                        <span className="text-muted-foreground text-xs block">
+                          @ {event.last_compliance_tach || event.first_compliance_tach} hrs
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {event.next_due_date 
+                        ? format(parseLocalDate(event.next_due_date), "MMM dd, yyyy")
+                        : event.next_due_tach
+                        ? `${event.next_due_tach} hrs`
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {event.performed_by_name || "-"}
+                      {event.performed_by_role && (
+                        <span className="text-muted-foreground text-xs block">
+                          {event.performed_by_role}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {event.owner_notes || "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEditEvent(event)}
                         >
-                          <ExternalLink className="h-3 w-3" />
-                          {link.description || link.url}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => confirmDeleteEvent(event.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
-            <p className="text-muted-foreground">No compliance status set for this directive. Click "Set Status" to track your compliance.</p>
+            <p className="text-muted-foreground">
+              No compliance events recorded for this directive. Click "Add Compliance Event" to track your compliance.
+            </p>
           )}
         </CardContent>
       </Card>
