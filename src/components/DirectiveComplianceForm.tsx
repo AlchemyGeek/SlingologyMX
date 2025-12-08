@@ -17,6 +17,16 @@ import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -104,6 +114,8 @@ const DirectiveComplianceForm = ({
 
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
 
   // Set default counter value when counters load (for new compliance events)
   useEffect(() => {
@@ -255,9 +267,20 @@ const DirectiveComplianceForm = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Helper to update directive status to Completed
+  const updateDirectiveStatusToCompleted = async () => {
+    try {
+      await supabase
+        .from("directives")
+        .update({ directive_status: "Completed" })
+        .eq("id", directive.id);
+    } catch (error) {
+      console.error("Error updating directive status:", error);
+    }
+  };
 
+  // Core save logic extracted for reuse
+  const performSave = async (markAsCompleted: boolean) => {
     // Map simplified status to database enum
     const dbComplianceStatus = formData.compliance_status === "Complied" 
       ? "Complied Once" as Database["public"]["Enums"]["db_compliance_status"]
@@ -353,11 +376,45 @@ const DirectiveComplianceForm = ({
         await handleNotificationCompletionAndRecurrence();
       }
 
+      // Update directive status to Completed if requested
+      if (markAsCompleted) {
+        await updateDirectiveStatusToCompleted();
+        toast.info("Directive has been marked as Completed");
+      }
+
       onSuccess();
     } catch (error: any) {
       console.error("Error saving compliance status:", error);
       toast.error("Failed to save compliance status");
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Only apply directive completion logic if directive status is NOT already "Completed"
+    const shouldCheckCompletion = directive.directive_status !== "Completed" && formData.compliance_status === "Complied";
+
+    if (shouldCheckCompletion) {
+      if (directive.compliance_scope === "One-Time") {
+        // Auto-mark as completed for One-Time directives
+        await performSave(true);
+      } else if (directive.compliance_scope === "Recurring" || directive.compliance_scope === "Conditional") {
+        // Show dialog for Recurring/Conditional directives
+        setShowCompletionDialog(true);
+      } else {
+        // Other compliance scopes - just save
+        await performSave(false);
+      }
+    } else {
+      // Either already completed or not complied - just save
+      await performSave(false);
+    }
+  };
+
+  const handleDialogResponse = async (markAsCompleted: boolean) => {
+    setShowCompletionDialog(false);
+    await performSave(markAsCompleted);
   };
 
   return (
@@ -619,6 +676,26 @@ const DirectiveComplianceForm = ({
           </div>
         </form>
       </CardContent>
+
+      {/* Dialog for Recurring/Conditional completion confirmation */}
+      <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Directive as Completed?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This is a {directive.compliance_scope.toLowerCase()} directive. Would you like to mark this directive as completed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => handleDialogResponse(false)}>
+              No, Keep Active
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleDialogResponse(true)}>
+              Yes, Mark Completed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
