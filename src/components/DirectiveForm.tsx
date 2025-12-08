@@ -283,6 +283,11 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       return;
     }
 
+    if (!formData.initial_due_type) {
+      toast.error("Initial Due Type is required");
+      return;
+    }
+
     // Validation for By Total Time (Hours)
     if (formData.initial_due_type === "By Total Time (Hours)") {
       const counterKey = getCounterKey(formData.counter_type);
@@ -711,7 +716,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Initial Due Type</Label>
+                <Label>Initial Due Type *</Label>
                 <Select 
                   value={formData.initial_due_type} 
                   onValueChange={(value) => setFormData({ 
@@ -723,6 +728,9 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                     initial_due_date: null,
                     counter_absolute_value: "",
                     counter_increment_value: "",
+                    // Reset repeat fields when changing due type
+                    repeat_hours: "",
+                    repeat_months: "",
                   })}
                 >
                   <SelectTrigger>
@@ -858,27 +866,40 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               </div>
             )}
 
-            {formData.compliance_scope === "Recurring" && (
+            {/* Repeat fields - shown only for Recurring scope based on Initial Due Type */}
+            {formData.compliance_scope === "Recurring" && 
+             formData.initial_due_type && 
+             formData.initial_due_type !== "Other" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="repeat_hours">Repeat Every (Hours)</Label>
-                  <Input
-                    id="repeat_hours"
-                    type="number"
-                    step="0.1"
-                    value={formData.repeat_hours}
-                    onChange={(e) => setFormData({ ...formData, repeat_hours: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="repeat_months">Repeat Every (Months)</Label>
-                  <Input
-                    id="repeat_months"
-                    type="number"
-                    value={formData.repeat_months}
-                    onChange={(e) => setFormData({ ...formData, repeat_months: e.target.value })}
-                  />
-                </div>
+                {/* Date-based repeat: show months field */}
+                {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="repeat_months">Repeat Every (Months)</Label>
+                    <Input
+                      id="repeat_months"
+                      type="number"
+                      min="1"
+                      value={formData.repeat_months}
+                      onChange={(e) => setFormData({ ...formData, repeat_months: e.target.value })}
+                      placeholder="Enter number of months"
+                    />
+                  </div>
+                )}
+                {/* Counter-based repeat: show hours field */}
+                {formData.initial_due_type === "By Total Time (Hours)" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="repeat_hours">Repeat Every (Hours)</Label>
+                    <Input
+                      id="repeat_hours"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={formData.repeat_hours}
+                      onChange={(e) => setFormData({ ...formData, repeat_hours: e.target.value })}
+                      placeholder="Enter hours interval"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
