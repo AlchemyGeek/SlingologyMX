@@ -288,8 +288,9 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       return;
     }
 
-    if (!formData.initial_due_type) {
-      toast.error("Initial Due Type is required");
+    // Only require initial_due_type if applicability_status is "Applies"
+    if (formData.applicability_status === "Applies" && !formData.initial_due_type) {
+      toast.error("Initial Due Type is required when directive applies to your aircraft");
       return;
     }
 
@@ -737,7 +738,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             <h3 className="text-lg font-medium">Compliance Requirements</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Compliance Scope *</Label>
+                <Label>Compliance Scope {formData.applicability_status === "Applies" ? "*" : ""}</Label>
                 <Select value={formData.compliance_scope} onValueChange={(value) => setFormData({ ...formData, compliance_scope: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -750,7 +751,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Initial Due Type *</Label>
+                <Label>Initial Due Type {formData.applicability_status === "Applies" ? "*" : ""}</Label>
                 <Select 
                   value={formData.initial_due_type} 
                   onValueChange={(value) => setFormData({ 
