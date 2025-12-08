@@ -424,9 +424,9 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         </CardContent>
       </Card>
 
-      {/* Directive Info Card */}
+      {/* Directive Info Card - Condensed View */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-mono text-muted-foreground">{directive.directive_code}</p>
@@ -438,190 +438,159 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Core Info */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CardContent className="space-y-4">
+          {/* Core Info Row */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-2 text-sm">
             <div>
-              <p className="text-sm text-muted-foreground">Type</p>
-              <p className="font-medium">{directive.directive_type}</p>
+              <span className="text-muted-foreground">Type:</span>{" "}
+              <span className="font-medium">{directive.directive_type}</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Category</p>
-              <p className="font-medium">{directive.category}</p>
+              <span className="text-muted-foreground">Category:</span>{" "}
+              <span className="font-medium">{directive.category}</span>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Compliance Scope</p>
-              <p className="font-medium">{directive.compliance_scope}</p>
+              <span className="text-muted-foreground">Scope:</span>{" "}
+              <span className="font-medium">{directive.compliance_scope}</span>
             </div>
             {directive.issuing_authority && (
               <div>
-                <p className="text-sm text-muted-foreground">Issuing Authority</p>
-                <p className="font-medium">{directive.issuing_authority}</p>
+                <span className="text-muted-foreground">Authority:</span>{" "}
+                <span className="font-medium">{directive.issuing_authority}</span>
               </div>
             )}
-          </div>
-
-          <Separator />
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {directive.issue_date && (
               <div>
-                <p className="text-sm text-muted-foreground">Issue Date</p>
-                <p className="font-medium">{format(parseLocalDate(directive.issue_date), "MMM dd, yyyy")}</p>
+                <span className="text-muted-foreground">Issued:</span>{" "}
+                <span className="font-medium">{format(parseLocalDate(directive.issue_date), "MMM dd, yyyy")}</span>
               </div>
             )}
             {directive.effective_date && (
               <div>
-                <p className="text-sm text-muted-foreground">Effective Date</p>
-                <p className="font-medium">{format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")}</p>
+                <span className="text-muted-foreground">Effective:</span>{" "}
+                <span className="font-medium">{format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")}</span>
               </div>
             )}
             {directive.revision && (
               <div>
-                <p className="text-sm text-muted-foreground">Revision</p>
-                <p className="font-medium">{directive.revision}</p>
+                <span className="text-muted-foreground">Revision:</span>{" "}
+                <span className="font-medium">{directive.revision}</span>
               </div>
             )}
           </div>
 
-          {/* Applicability */}
+          {/* Applicability Row - inline */}
           {((directive as any).applicability_category || (directive as any).applicability_model || directive.applicable_serial_range || directive.applicability_status) && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="font-medium mb-3">Applicability</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {directive.applicability_status && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Applies to My Aircraft</p>
-                      <Badge variant={directive.applicability_status === "Applies" ? "default" : "secondary"}>
-                        {directive.applicability_status}
-                      </Badge>
-                    </div>
-                  )}
-                  {directive.applicability_reason && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Reason</p>
-                      <p className="font-medium">{directive.applicability_reason}</p>
-                    </div>
-                  )}
-                  {(directive as any).applicability_category && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Category</p>
-                      <p className="font-medium">{(directive as any).applicability_category}</p>
-                    </div>
-                  )}
-                  {(directive as any).applicability_model && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Model</p>
-                      <p className="font-medium">{(directive as any).applicability_model}</p>
-                    </div>
-                  )}
-                  {directive.applicable_serial_range && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Serial Range</p>
-                      <p className="font-medium">{directive.applicable_serial_range}</p>
-                    </div>
-                  )}
-                </div>
-                {directive.applicability_notes && (
-                  <p className="text-sm text-muted-foreground mt-2">{directive.applicability_notes}</p>
-                )}
-              </div>
-            </>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
+              <span className="font-medium text-muted-foreground">Applicability:</span>
+              {directive.applicability_status && (
+                <Badge variant={directive.applicability_status === "Applies" ? "default" : "secondary"} className="text-xs">
+                  {directive.applicability_status}
+                </Badge>
+              )}
+              {directive.applicability_reason && (
+                <span className="text-muted-foreground">({directive.applicability_reason})</span>
+              )}
+              {(directive as any).applicability_category && (
+                <span>
+                  <span className="text-muted-foreground">Category:</span> {(directive as any).applicability_category}
+                </span>
+              )}
+              {(directive as any).applicability_model && (
+                <span>
+                  <span className="text-muted-foreground">Model:</span> {(directive as any).applicability_model}
+                </span>
+              )}
+              {directive.applicable_serial_range && (
+                <span>
+                  <span className="text-muted-foreground">S/N:</span> {directive.applicable_serial_range}
+                </span>
+              )}
+              {directive.applicability_notes && (
+                <span className="basis-full text-muted-foreground text-xs mt-1">{directive.applicability_notes}</span>
+              )}
+            </div>
           )}
 
-          {/* Compliance Requirements */}
-          <Separator />
-          <div>
-            <h4 className="font-medium mb-3">Compliance Requirements</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {directive.initial_due_type && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Initial Due</p>
-                  <p className="font-medium">{directive.initial_due_type}</p>
-                </div>
-              )}
-              {directive.initial_due_hours && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Due Hours</p>
-                  <p className="font-medium">{directive.initial_due_hours} hrs</p>
-                </div>
-              )}
-              {directive.initial_due_months && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Due Months</p>
-                  <p className="font-medium">{directive.initial_due_months} months</p>
-                </div>
-              )}
-              {directive.initial_due_date && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Due Date</p>
-                  <p className="font-medium">{format(parseLocalDate(directive.initial_due_date), "MMM dd, yyyy")}</p>
-                </div>
-              )}
-              {directive.repeat_hours && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Repeat Every</p>
-                  <p className="font-medium">{directive.repeat_hours} hrs</p>
-                </div>
-              )}
-              {directive.repeat_months && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Repeat Every</p>
-                  <p className="font-medium">{directive.repeat_months} months</p>
-                </div>
-              )}
-            </div>
-            {directive.action_types && directive.action_types.length > 0 && (
-              <div className="mt-3">
-                <p className="text-sm text-muted-foreground mb-1">Action Types</p>
-                <div className="flex gap-1 flex-wrap">
-                  {directive.action_types.map((action, index) => (
-                    <Badge key={index} variant="secondary">{action}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex gap-4 mt-3 text-sm">
-              <span className={directive.requires_log_entry ? "text-primary" : "text-muted-foreground"}>
-                {directive.requires_log_entry ? "✓" : "✗"} Logbook Entry Required
+          {/* Compliance Requirements Row - inline */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
+            <span className="font-medium text-muted-foreground">Compliance:</span>
+            {directive.initial_due_type && (
+              <span>
+                <span className="text-muted-foreground">Initial:</span>{" "}
+                <span className="font-medium">{directive.initial_due_type}</span>
               </span>
-              <span className={directive.terminating_action_exists ? "text-primary" : "text-muted-foreground"}>
-                {directive.terminating_action_exists ? "✓" : "✗"} Terminating Action Available
-              </span>
-            </div>
-            {directive.terminating_action_summary && (
-              <p className="text-sm text-muted-foreground mt-2">
-                <strong>Terminating Action:</strong> {directive.terminating_action_summary}
-              </p>
             )}
+            {directive.initial_due_hours && (
+              <span>
+                <span className="text-muted-foreground">Due:</span>{" "}
+                <span className="font-medium">{directive.initial_due_hours} hrs</span>
+              </span>
+            )}
+            {directive.initial_due_months && (
+              <span>
+                <span className="text-muted-foreground">Due:</span>{" "}
+                <span className="font-medium">{directive.initial_due_months} mo</span>
+              </span>
+            )}
+            {directive.initial_due_date && (
+              <span>
+                <span className="text-muted-foreground">Due:</span>{" "}
+                <span className="font-medium">{format(parseLocalDate(directive.initial_due_date), "MMM dd, yyyy")}</span>
+              </span>
+            )}
+            {(directive.repeat_hours || directive.repeat_months) && (
+              <span>
+                <span className="text-muted-foreground">Repeat:</span>{" "}
+                <span className="font-medium">
+                  {directive.repeat_hours ? `${directive.repeat_hours} hrs` : `${directive.repeat_months} mo`}
+                </span>
+              </span>
+            )}
+            <span className={directive.requires_log_entry ? "text-primary" : "text-muted-foreground"}>
+              {directive.requires_log_entry ? "✓" : "✗"} Logbook
+            </span>
+            <span className={directive.terminating_action_exists ? "text-primary" : "text-muted-foreground"}>
+              {directive.terminating_action_exists ? "✓" : "✗"} Terminating
+            </span>
           </div>
 
-          {/* Source Links */}
-          {directive.source_links && directive.source_links.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="font-medium mb-3">Source Documents</h4>
-                <ul className="space-y-2">
-                  {directive.source_links.map((link, index) => (
-                    <li key={index}>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        {link.description || link.url}
-                      </a>
-                    </li>
+          {/* Action Types & Terminating Summary - only if present */}
+          {(directive.action_types?.length > 0 || directive.terminating_action_summary) && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              {directive.action_types && directive.action_types.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Actions:</span>
+                  {directive.action_types.map((action, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">{action}</Badge>
                   ))}
-                </ul>
-              </div>
-            </>
+                </div>
+              )}
+              {directive.terminating_action_summary && (
+                <span className="text-muted-foreground">
+                  <strong>Terminating:</strong> {directive.terminating_action_summary}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Source Links - compact */}
+          {directive.source_links && directive.source_links.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm border-t pt-3">
+              <span className="text-muted-foreground">Sources:</span>
+              {directive.source_links.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {link.description || "Link"}
+                </a>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
