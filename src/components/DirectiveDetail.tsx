@@ -210,6 +210,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     setShowComplianceForm(false);
     setEditingEvent(null);
     fetchComplianceEvents();
+    fetchPendingNotifications();
     onUpdate();
   };
 
@@ -238,6 +239,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
       setShowDeleteEventDialog(false);
       setEventToDelete(null);
       fetchComplianceEvents();
+      fetchPendingNotifications();
       onUpdate();
     } catch (error: any) {
       console.error("Error deleting compliance event:", error);
