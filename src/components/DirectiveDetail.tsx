@@ -479,7 +479,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           </div>
 
           {/* Applicability */}
-          {(directive.aircraft_make_model_filter || directive.engine_model_filter || directive.prop_model_filter || directive.applicable_serial_range || directive.applicability_status) && (
+          {((directive as any).applicability_category || (directive as any).applicability_model || directive.applicable_serial_range || directive.applicability_status) && (
             <>
               <Separator />
               <div>
@@ -499,22 +499,16 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                       <p className="font-medium">{directive.applicability_reason}</p>
                     </div>
                   )}
-                  {directive.aircraft_make_model_filter && (
+                  {(directive as any).applicability_category && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Aircraft Models</p>
-                      <p className="font-medium">{directive.aircraft_make_model_filter}</p>
+                      <p className="text-sm text-muted-foreground">Category</p>
+                      <p className="font-medium">{(directive as any).applicability_category}</p>
                     </div>
                   )}
-                  {directive.engine_model_filter && (
+                  {(directive as any).applicability_model && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Engine Models</p>
-                      <p className="font-medium">{directive.engine_model_filter}</p>
-                    </div>
-                  )}
-                  {directive.prop_model_filter && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Propeller Models</p>
-                      <p className="font-medium">{directive.prop_model_filter}</p>
+                      <p className="text-sm text-muted-foreground">Model</p>
+                      <p className="font-medium">{(directive as any).applicability_model}</p>
                     </div>
                   )}
                   {directive.applicable_serial_range && (
