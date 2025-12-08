@@ -260,6 +260,8 @@ export type Database = {
           action_types: string[] | null
           aircraft_make_model_filter: string | null
           applicability_notes: string | null
+          applicability_reason: string | null
+          applicability_status: string | null
           applicable_serial_range: string | null
           archived: boolean
           category: Database["public"]["Enums"]["directive_category"]
@@ -296,6 +298,8 @@ export type Database = {
           action_types?: string[] | null
           aircraft_make_model_filter?: string | null
           applicability_notes?: string | null
+          applicability_reason?: string | null
+          applicability_status?: string | null
           applicable_serial_range?: string | null
           archived?: boolean
           category: Database["public"]["Enums"]["directive_category"]
@@ -332,6 +336,8 @@ export type Database = {
           action_types?: string[] | null
           aircraft_make_model_filter?: string | null
           applicability_notes?: string | null
+          applicability_reason?: string | null
+          applicability_status?: string | null
           applicable_serial_range?: string | null
           archived?: boolean
           category?: Database["public"]["Enums"]["directive_category"]

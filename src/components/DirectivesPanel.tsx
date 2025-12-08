@@ -25,6 +25,8 @@ export interface Directive {
   engine_model_filter: string | null;
   prop_model_filter: string | null;
   applicable_serial_range: string | null;
+  applicability_status: string | null;
+  applicability_reason: string | null;
   applicability_notes: string | null;
   compliance_scope: string;
   action_types: string[] | null;
