@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { X } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +65,17 @@ const getCounterValue = (counters: AircraftCounters, counterType: string): numbe
     case "Engine TT": return counters.engine_total_time;
     case "Prop TT": return counters.prop_total_time;
     default: return 0;
+  }
+};
+
+const getCounterKey = (counterType: string): string => {
+  switch (counterType) {
+    case "Hobbs": return "hobbs";
+    case "Tach": return "tach";
+    case "Airframe TT": return "airframe_total_time";
+    case "Engine TT": return "engine_total_time";
+    case "Prop TT": return "prop_total_time";
+    default: return "hobbs";
   }
 };
 
@@ -168,6 +179,89 @@ const DirectiveComplianceForm = ({
     });
   };
 
+  // Handle notification completion and create new recurring notification if applicable
+  const handleNotificationCompletionAndRecurrence = async () => {
+    try {
+      // Find linked notification that hasn't been modified by user
+      const { data: linkedNotifications } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("directive_id", directive.id)
+        .eq("user_modified", false)
+        .eq("is_completed", false);
+
+      if (!linkedNotifications || linkedNotifications.length === 0) {
+        return; // No unmodified linked notifications to process
+      }
+
+      const notificationToComplete = linkedNotifications[0];
+
+      // Mark the notification as completed
+      await supabase
+        .from("notifications")
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", notificationToComplete.id);
+
+      // Check if directive is recurring and create new notification
+      if (directive.compliance_scope === "Recurring") {
+        const today = new Date();
+        const componentMap = directive.category === "Engine" ? "Propeller" : directive.category === "Propeller" ? "Propeller" : directive.category === "Avionics" ? "Avionics" : "Airframe";
+        const notificationDescription = `Directive Compliance: ${directive.directive_code} - ${directive.title}`;
+
+        // Determine if date-based or counter-based recurrence
+        const isCounterBasedRecurrence = directive.repeat_hours && directive.repeat_hours > 0;
+        const isDateBasedRecurrence = directive.repeat_months && directive.repeat_months > 0;
+
+        if (isCounterBasedRecurrence && isCounterBased) {
+          // Counter-based recurring notification
+          const counterKey = getCounterKey(formData.counter_type);
+          const currentCounterValue = formData.counter_value 
+            ? parseFloat(formData.counter_value) 
+            : getCounterValue(counters, formData.counter_type);
+          const nextDueValue = currentCounterValue + (directive.repeat_hours || 0);
+
+          await supabase.from("notifications").insert({
+            user_id: userId,
+            description: notificationDescription,
+            type: "Directives",
+            component: componentMap,
+            initial_date: format(today, "yyyy-MM-dd"),
+            recurrence: "None",
+            notification_basis: "Counter",
+            counter_type: formData.counter_type as any,
+            initial_counter_value: nextDueValue,
+            notes: `Recurring directive compliance due at ${nextDueValue} ${formData.counter_type}`,
+            directive_id: directive.id,
+            user_modified: false,
+          });
+        } else if (isDateBasedRecurrence) {
+          // Date-based recurring notification
+          const complianceDate = formData.compliance_date || today;
+          const nextDueDate = addMonths(complianceDate, directive.repeat_months || 0);
+
+          await supabase.from("notifications").insert({
+            user_id: userId,
+            description: notificationDescription,
+            type: "Directives",
+            component: componentMap,
+            initial_date: format(nextDueDate, "yyyy-MM-dd"),
+            recurrence: "None",
+            notification_basis: "Date",
+            notes: `Recurring directive compliance due every ${directive.repeat_months} months`,
+            directive_id: directive.id,
+            user_modified: false,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error handling notification completion/recurrence:", error);
+      // Don't fail the whole operation if notification handling fails
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -260,6 +354,12 @@ const DirectiveComplianceForm = ({
         }
         toast.success("Compliance status created");
       }
+
+      // Handle notification completion and recurrence when status is "Complied"
+      if (formData.compliance_status === "Complied") {
+        await handleNotificationCompletionAndRecurrence();
+      }
+
       onSuccess();
     } catch (error: any) {
       console.error("Error saving compliance status:", error);
