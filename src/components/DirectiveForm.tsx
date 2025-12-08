@@ -93,7 +93,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     applicability_category: "",
     applicability_model: "",
     applicable_serial_range: "",
-    applicability_status: "Unsure" as string,
+    applicability_status: "Applies" as string,
     applicability_reason: "",
     applicability_notes: "",
     compliance_scope: "One-Time" as string,
