@@ -41,17 +41,7 @@ const PERFORMED_BY_ROLES = [
   "Other",
 ];
 
-const COUNTER_TYPES = ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"];
 
-// Map directive initial_due_type to counter type
-const getDirectiveCounterType = (directive: Directive): string | null => {
-  if (directive.initial_due_type === "By Total Time (Hours)") {
-    // Check if there's a specific counter type in the directive
-    // For now, default to Hobbs if counter-based
-    return "Hobbs";
-  }
-  return null;
-};
 
 const isCounterBasedDirective = (directive: Directive): boolean => {
   return directive.initial_due_type === "By Total Time (Hours)";
@@ -88,12 +78,14 @@ const DirectiveComplianceForm = ({
 }: DirectiveComplianceFormProps) => {
   const { counters } = useAircraftCounters(userId);
   const isCounterBased = isCounterBasedDirective(directive);
-  const defaultCounterType = getDirectiveCounterType(directive) || "Hobbs";
+  
+  const [directiveCounterType, setDirectiveCounterType] = useState<string | null>(null);
+  const [isLoadingCounterType, setIsLoadingCounterType] = useState(isCounterBased);
 
   const [formData, setFormData] = useState({
     compliance_status: "Not Complied" as string,
     compliance_date: new Date() as Date | null,
-    counter_type: defaultCounterType,
+    counter_type: "Hobbs",
     counter_value: "",
     next_due_basis: "" as string,
     next_due_counter_type: "" as string,
@@ -113,16 +105,51 @@ const DirectiveComplianceForm = ({
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
 
-  // Set default counter value when counters load
+  // Fetch the counter type from the linked notification
   useEffect(() => {
-    if (!existingStatus && isCounterBased && counters) {
-      const currentValue = getCounterValue(counters, formData.counter_type);
+    const fetchDirectiveCounterType = async () => {
+      if (!isCounterBased) return;
+      
+      setIsLoadingCounterType(true);
+      try {
+        const { data } = await supabase
+          .from("notifications")
+          .select("counter_type")
+          .eq("directive_id", directive.id)
+          .eq("notification_basis", "Counter")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        
+        if (data && data.length > 0 && data[0].counter_type) {
+          const counterType = data[0].counter_type;
+          setDirectiveCounterType(counterType);
+          const currentValue = getCounterValue(counters, counterType);
+          setFormData(prev => ({
+            ...prev,
+            counter_type: counterType,
+            counter_value: currentValue.toString()
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching directive counter type:", error);
+      } finally {
+        setIsLoadingCounterType(false);
+      }
+    };
+
+    fetchDirectiveCounterType();
+  }, [directive.id, isCounterBased, counters]);
+
+  // Update counter value when counters load (for new compliance events)
+  useEffect(() => {
+    if (!existingStatus && isCounterBased && counters && directiveCounterType) {
+      const currentValue = getCounterValue(counters, directiveCounterType);
       setFormData(prev => ({
         ...prev,
         counter_value: currentValue.toString()
       }));
     }
-  }, [counters, existingStatus, isCounterBased, formData.counter_type]);
+  }, [counters, existingStatus, isCounterBased, directiveCounterType]);
 
   useEffect(() => {
     if (existingStatus) {
@@ -139,7 +166,7 @@ const DirectiveComplianceForm = ({
         compliance_date: existingStatus.first_compliance_date
           ? parseLocalDate(existingStatus.first_compliance_date)
           : new Date(),
-        counter_type: existingStatus.next_due_counter_type || defaultCounterType,
+        counter_type: existingStatus.next_due_counter_type || directiveCounterType || "Hobbs",
         counter_value: existingStatus.first_compliance_tach?.toString() || "",
         next_due_basis: existingStatus.next_due_basis || "",
         next_due_counter_type: existingStatus.next_due_counter_type || "",
@@ -156,7 +183,7 @@ const DirectiveComplianceForm = ({
         maintenance_provider_name: existingStatus.maintenance_provider_name || "",
       });
     }
-  }, [existingStatus, defaultCounterType]);
+  }, [existingStatus, directiveCounterType]);
 
   const handleAddLink = () => {
     if (linkDescInput.trim() && linkUrlInput.trim()) {
@@ -409,32 +436,18 @@ const DirectiveComplianceForm = ({
                   }
                 />
               </div>
-              {isCounterBased && (
+              {isCounterBased && directiveCounterType && (
                 <>
                   <div className="space-y-2">
                     <Label>Counter Type</Label>
-                    <Select
-                      value={formData.counter_type}
-                      onValueChange={(value) => {
-                        const currentValue = getCounterValue(counters, value);
-                        setFormData({ 
-                          ...formData, 
-                          counter_type: value,
-                          counter_value: currentValue.toString()
-                        });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COUNTER_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      value={directiveCounterType}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Counter type defined in the directive record
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="counter_value">Counter Value</Label>
@@ -446,10 +459,18 @@ const DirectiveComplianceForm = ({
                       onChange={(e) =>
                         setFormData({ ...formData, counter_value: e.target.value })
                       }
-                      placeholder={`Current: ${getCounterValue(counters, formData.counter_type)}`}
+                      placeholder={`Current: ${getCounterValue(counters, directiveCounterType)}`}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Current {directiveCounterType}: {getCounterValue(counters, directiveCounterType)}
+                    </p>
                   </div>
                 </>
+              )}
+              {isCounterBased && isLoadingCounterType && (
+                <div className="col-span-2 text-sm text-muted-foreground">
+                  Loading counter information...
+                </div>
               )}
             </div>
 
