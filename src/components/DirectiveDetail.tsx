@@ -127,7 +127,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         .select("*")
         .eq("user_id", userId)
         .eq("directive_id", directive.id)
-        .order("created_at", { ascending: false });
+        .order("first_compliance_date", { ascending: false, nullsFirst: false });
 
       if (error) throw error;
       setComplianceEvents((data || []).map(item => ({
