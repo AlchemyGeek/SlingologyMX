@@ -131,7 +131,7 @@ const DirectiveComplianceForm = ({
 
   useEffect(() => {
     if (existingStatus) {
-      // Map old status values to new simplified ones
+      // Map status values for display
       let mappedStatus = existingStatus.compliance_status;
       if (mappedStatus === "Complied Once" || mappedStatus === "Recurring (Current)") {
         mappedStatus = "Complied";
@@ -141,15 +141,15 @@ const DirectiveComplianceForm = ({
 
       setFormData({
         compliance_status: mappedStatus,
-        compliance_date: existingStatus.first_compliance_date
-          ? parseLocalDate(existingStatus.first_compliance_date)
+        compliance_date: existingStatus.compliance_date
+          ? parseLocalDate(existingStatus.compliance_date)
           : new Date(),
-        counter_type: existingStatus.next_due_counter_type || directiveCounterType || "Hobbs",
-        counter_value: existingStatus.first_compliance_tach?.toString() || "",
-        next_due_basis: existingStatus.next_due_basis || "",
-        next_due_counter_type: existingStatus.next_due_counter_type || "",
-        next_due_date: existingStatus.next_due_date ? parseLocalDate(existingStatus.next_due_date) : null,
-        next_due_tach: existingStatus.next_due_tach?.toString() || "",
+        counter_type: existingStatus.counter_type || directiveCounterType || "Hobbs",
+        counter_value: existingStatus.counter_value?.toString() || "",
+        next_due_basis: "",
+        next_due_counter_type: "",
+        next_due_date: null,
+        next_due_tach: "",
         performed_by_name: existingStatus.performed_by_name || "",
         performed_by_role: existingStatus.performed_by_role || "",
         owner_notes: existingStatus.owner_notes || "",
@@ -288,59 +288,48 @@ const DirectiveComplianceForm = ({
 
   // Core save logic extracted for reuse
   const performSave = async (markAsCompleted: boolean) => {
-    // Map simplified status to database enum
-    const dbComplianceStatus = formData.compliance_status === "Complied" 
-      ? "Complied Once" as Database["public"]["Enums"]["db_compliance_status"]
-      : "Not Complied" as Database["public"]["Enums"]["db_compliance_status"];
+    const complianceDate = formData.compliance_date
+      ? format(formData.compliance_date, "yyyy-MM-dd")
+      : format(new Date(), "yyyy-MM-dd");
 
-    const statusData = {
+    // Data for maintenance_directive_compliance (individual event)
+    const complianceEventData = {
       user_id: userId,
       directive_id: directive.id,
-      applicability_status: "Applies" as Database["public"]["Enums"]["applicability_status"],
-      applicability_reason: null,
-      compliance_status: dbComplianceStatus,
-      first_compliance_date: formData.compliance_date
-        ? format(formData.compliance_date, "yyyy-MM-dd")
-        : null,
-      first_compliance_tach: isCounterBased && formData.counter_value
+      maintenance_log_id: null, // Standalone compliance event, not linked to maintenance log
+      compliance_status: formData.compliance_status,
+      compliance_date: complianceDate,
+      counter_type: isCounterBased ? formData.counter_type : null,
+      counter_value: isCounterBased && formData.counter_value
         ? parseFloat(formData.counter_value)
         : null,
-      last_compliance_date: null,
-      last_compliance_tach: null,
-      next_due_basis: formData.next_due_basis || null,
-      next_due_counter_type: isCounterBased ? formData.counter_type : (formData.next_due_counter_type || null),
-      next_due_date: formData.next_due_basis === "Date" && formData.next_due_date 
-        ? format(formData.next_due_date, "yyyy-MM-dd") 
-        : null,
-      next_due_tach: formData.next_due_basis === "Counter" && formData.next_due_tach 
-        ? parseFloat(formData.next_due_tach) 
-        : null,
       performed_by_name: formData.performed_by_name || null,
-      performed_by_role: (formData.performed_by_role || null) as Database["public"]["Enums"]["directive_performed_by_role"] | null,
-      owner_notes: formData.owner_notes || null,
-      compliance_links: formData.compliance_links.length > 0 ? formData.compliance_links : null,
+      performed_by_role: formData.performed_by_role || null,
+      maintenance_provider_name: formData.maintenance_provider_name || null,
       labor_hours_actual: formData.labor_hours_actual
         ? parseFloat(formData.labor_hours_actual)
         : null,
       labor_rate: formData.labor_rate ? parseFloat(formData.labor_rate) : null,
       parts_cost: formData.parts_cost ? parseFloat(formData.parts_cost) : null,
       total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
-      maintenance_provider_name: formData.maintenance_provider_name || null,
+      owner_notes: formData.owner_notes || null,
+      compliance_links: formData.compliance_links.length > 0 ? formData.compliance_links : null,
     };
 
     try {
-      // Check if compliance date changed
+      // Check if this is an update or insert
+      const isNewCompliance = !existingStatus;
       const dateChanged = existingStatus && 
-        (existingStatus.first_compliance_date !== statusData.first_compliance_date);
-      const isNewCompliance = !existingStatus && statusData.first_compliance_date;
+        (existingStatus.compliance_date !== complianceDate);
       
-      // Only log compliance if status is "Complied Once" (which maps from "Complied")
-      const isComplianceLoggableStatus = statusData.compliance_status === "Complied Once";
+      // Only log compliance if status is "Complied"
+      const isComplianceLoggableStatus = formData.compliance_status === "Complied";
       
       if (existingStatus) {
+        // Update existing compliance event in maintenance_directive_compliance
         const { error } = await supabase
-          .from("aircraft_directive_status")
-          .update(statusData)
+          .from("maintenance_directive_compliance")
+          .update(complianceEventData)
           .eq("id", existingStatus.id);
         if (error) throw error;
         
@@ -352,30 +341,38 @@ const DirectiveComplianceForm = ({
             directive_code: directive.directive_code,
             directive_title: directive.title,
             action_type: "Compliance",
-            compliance_status: statusData.compliance_status,
-            first_compliance_date: statusData.first_compliance_date,
+            compliance_status: "Complied Once",
+            first_compliance_date: complianceDate,
             last_compliance_date: null,
           });
         }
-        toast.success("Compliance status updated");
+        toast.success("Compliance event updated");
       } else {
-        const { error } = await supabase.from("aircraft_directive_status").insert([statusData]);
+        // Insert new compliance event
+        const { error } = await supabase
+          .from("maintenance_directive_compliance")
+          .insert([complianceEventData]);
         if (error) throw error;
         
-        // Log Compliance action if date is set on new record AND status is compliant
-        if (isNewCompliance && isComplianceLoggableStatus) {
+        // Log Compliance action if status is compliant
+        if (isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             directive_id: directive.id,
             directive_code: directive.directive_code,
             directive_title: directive.title,
             action_type: "Compliance",
-            compliance_status: statusData.compliance_status,
-            first_compliance_date: statusData.first_compliance_date,
+            compliance_status: "Complied Once",
+            first_compliance_date: complianceDate,
             last_compliance_date: null,
           });
         }
-        toast.success("Compliance status created");
+        toast.success("Compliance event created");
+      }
+
+      // Update aircraft_directive_status summary
+      if (formData.compliance_status === "Complied") {
+        await updateDirectiveStatusSummary(complianceDate);
       }
 
       // Handle notification completion and recurrence when status is "Complied"
@@ -391,8 +388,61 @@ const DirectiveComplianceForm = ({
 
       onSuccess();
     } catch (error: any) {
-      console.error("Error saving compliance status:", error);
-      toast.error("Failed to save compliance status");
+      console.error("Error saving compliance event:", error);
+      toast.error("Failed to save compliance event");
+    }
+  };
+
+  // Update aircraft_directive_status summary from all compliance events
+  const updateDirectiveStatusSummary = async (newComplianceDate: string) => {
+    try {
+      // Fetch all compliance events for this directive
+      const { data: allEvents } = await supabase
+        .from("maintenance_directive_compliance")
+        .select("*")
+        .eq("directive_id", directive.id)
+        .eq("user_id", userId)
+        .eq("compliance_status", "Complied")
+        .order("compliance_date", { ascending: true });
+
+      if (!allEvents || allEvents.length === 0) return;
+
+      const firstEvent = allEvents[0];
+      const lastEvent = allEvents[allEvents.length - 1];
+
+      // Check if aircraft_directive_status exists
+      const { data: existingDirectiveStatus } = await supabase
+        .from("aircraft_directive_status")
+        .select("id")
+        .eq("directive_id", directive.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const summaryData = {
+        user_id: userId,
+        directive_id: directive.id,
+        applicability_status: "Applies" as Database["public"]["Enums"]["applicability_status"],
+        compliance_status: directive.compliance_scope === "Recurring" 
+          ? "Recurring (Current)" as Database["public"]["Enums"]["db_compliance_status"]
+          : "Complied Once" as Database["public"]["Enums"]["db_compliance_status"],
+        first_compliance_date: firstEvent.compliance_date,
+        first_compliance_tach: firstEvent.counter_value,
+        last_compliance_date: lastEvent.compliance_date,
+        last_compliance_tach: lastEvent.counter_value,
+      };
+
+      if (existingDirectiveStatus) {
+        await supabase
+          .from("aircraft_directive_status")
+          .update(summaryData)
+          .eq("id", existingDirectiveStatus.id);
+      } else {
+        await supabase
+          .from("aircraft_directive_status")
+          .insert([summaryData]);
+      }
+    } catch (error) {
+      console.error("Error updating directive status summary:", error);
     }
   };
 
