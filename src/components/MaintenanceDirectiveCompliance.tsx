@@ -50,13 +50,6 @@ interface DirectiveComplianceLink {
   compliance_date: Date | null;
   counter_type: string;
   counter_value: string;
-  performed_by_name: string;
-  performed_by_role: string;
-  maintenance_provider_name: string;
-  labor_hours_actual: string;
-  labor_rate: string;
-  parts_cost: string;
-  total_cost: string;
   owner_notes: string;
   compliance_links: Array<{ description: string; url: string }>;
   isExpanded: boolean;
@@ -80,15 +73,6 @@ interface MaintenanceDirectiveComplianceProps {
 }
 
 const COMPLIANCE_STATUSES = ["Not Complied", "Complied"];
-const PERFORMED_BY_ROLES = [
-  "Owner/Builder",
-  "Owner/Pilot",
-  "A&P",
-  "IA",
-  "Rotax IRMT",
-  "Maintenance Shop",
-  "Other",
-];
 
 const getCounterValue = (counters: any, counterType: string): number => {
   switch (counterType) {
@@ -147,13 +131,6 @@ const MaintenanceDirectiveCompliance = ({
     compliance_date: datePerformed,
     counter_type: "Hobbs",
     counter_value: "",
-    performed_by_name: performedByName,
-    performed_by_role: performedByType === "A&P" ? "A&P" : performedByType === "Owner" ? "Owner/Pilot" : "",
-    maintenance_provider_name: "",
-    labor_hours_actual: "",
-    labor_rate: "",
-    parts_cost: "",
-    total_cost: "",
     owner_notes: "",
     compliance_links: [],
     isExpanded: true,
@@ -354,83 +331,6 @@ const MaintenanceDirectiveCompliance = ({
                       </div>
                     )}
 
-                    {/* Performer Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Performed By</Label>
-                        <Input
-                          value={link.performed_by_name}
-                          onChange={(e) => handleLinkChange(index, "performed_by_name", e.target.value)}
-                          maxLength={100}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Role</Label>
-                        <Select
-                          value={link.performed_by_role}
-                          onValueChange={(value) => handleLinkChange(index, "performed_by_role", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PERFORMED_BY_ROLES.map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {role}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Maintenance Provider</Label>
-                        <Input
-                          value={link.maintenance_provider_name}
-                          onChange={(e) => handleLinkChange(index, "maintenance_provider_name", e.target.value)}
-                          maxLength={120}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Costs */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label>Labor Hours</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={link.labor_hours_actual}
-                          onChange={(e) => handleLinkChange(index, "labor_hours_actual", e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Labor Rate</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={link.labor_rate}
-                          onChange={(e) => handleLinkChange(index, "labor_rate", e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Parts Cost</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={link.parts_cost}
-                          onChange={(e) => handleLinkChange(index, "parts_cost", e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Total Cost</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={link.total_cost}
-                          onChange={(e) => handleLinkChange(index, "total_cost", e.target.value)}
-                        />
-                      </div>
-                    </div>
 
                     {/* Notes */}
                     <div className="space-y-2">

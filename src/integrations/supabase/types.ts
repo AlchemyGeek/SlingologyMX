@@ -117,22 +117,13 @@ export type Database = {
           first_compliance_date: string | null
           first_compliance_tach: number | null
           id: string
-          labor_hours_actual: number | null
-          labor_rate: number | null
           last_compliance_date: string | null
           last_compliance_tach: number | null
-          maintenance_provider_name: string | null
           next_due_basis: string | null
           next_due_counter_type: string | null
           next_due_date: string | null
           next_due_tach: number | null
           owner_notes: string | null
-          parts_cost: number | null
-          performed_by_name: string | null
-          performed_by_role:
-            | Database["public"]["Enums"]["directive_performed_by_role"]
-            | null
-          total_cost: number | null
           updated_at: string | null
           user_id: string
         }
@@ -147,22 +138,13 @@ export type Database = {
           first_compliance_date?: string | null
           first_compliance_tach?: number | null
           id?: string
-          labor_hours_actual?: number | null
-          labor_rate?: number | null
           last_compliance_date?: string | null
           last_compliance_tach?: number | null
-          maintenance_provider_name?: string | null
           next_due_basis?: string | null
           next_due_counter_type?: string | null
           next_due_date?: string | null
           next_due_tach?: number | null
           owner_notes?: string | null
-          parts_cost?: number | null
-          performed_by_name?: string | null
-          performed_by_role?:
-            | Database["public"]["Enums"]["directive_performed_by_role"]
-            | null
-          total_cost?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -177,22 +159,13 @@ export type Database = {
           first_compliance_date?: string | null
           first_compliance_tach?: number | null
           id?: string
-          labor_hours_actual?: number | null
-          labor_rate?: number | null
           last_compliance_date?: string | null
           last_compliance_tach?: number | null
-          maintenance_provider_name?: string | null
           next_due_basis?: string | null
           next_due_counter_type?: string | null
           next_due_date?: string | null
           next_due_tach?: number | null
           owner_notes?: string | null
-          parts_cost?: number | null
-          performed_by_name?: string | null
-          performed_by_role?:
-            | Database["public"]["Enums"]["directive_performed_by_role"]
-            | null
-          total_cost?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -458,15 +431,8 @@ export type Database = {
           created_at: string | null
           directive_id: string
           id: string
-          labor_hours_actual: number | null
-          labor_rate: number | null
           maintenance_log_id: string | null
-          maintenance_provider_name: string | null
           owner_notes: string | null
-          parts_cost: number | null
-          performed_by_name: string | null
-          performed_by_role: string | null
-          total_cost: number | null
           updated_at: string | null
           user_id: string
         }
@@ -479,15 +445,8 @@ export type Database = {
           created_at?: string | null
           directive_id: string
           id?: string
-          labor_hours_actual?: number | null
-          labor_rate?: number | null
           maintenance_log_id?: string | null
-          maintenance_provider_name?: string | null
           owner_notes?: string | null
-          parts_cost?: number | null
-          performed_by_name?: string | null
-          performed_by_role?: string | null
-          total_cost?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -500,15 +459,8 @@ export type Database = {
           created_at?: string | null
           directive_id?: string
           id?: string
-          labor_hours_actual?: number | null
-          labor_rate?: number | null
           maintenance_log_id?: string | null
-          maintenance_provider_name?: string | null
           owner_notes?: string | null
-          parts_cost?: number | null
-          performed_by_name?: string | null
-          performed_by_role?: string | null
-          total_cost?: number | null
           updated_at?: string | null
           user_id?: string
         }

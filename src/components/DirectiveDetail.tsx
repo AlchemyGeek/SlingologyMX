@@ -44,16 +44,9 @@ interface ComplianceEvent {
   compliance_date: string;
   counter_type: string | null;
   counter_value: number | null;
-  performed_by_name: string | null;
-  performed_by_role: string | null;
   owner_notes: string | null;
   compliance_links: Array<{ description: string; url: string }> | null;
-  labor_hours_actual: number | null;
-  labor_rate: number | null;
-  parts_cost: number | null;
-  total_cost: number | null;
-  maintenance_provider_name: string | null;
-  maintenance_log_id: string;
+  maintenance_log_id: string | null;
   created_at: string | null;
 }
 
@@ -669,7 +662,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Counter</TableHead>
-                  <TableHead>Performed By</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -698,14 +690,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                           )}
                         </span>
                       ) : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {event.performed_by_name || "-"}
-                      {event.performed_by_role && (
-                        <span className="text-muted-foreground text-xs block">
-                          {event.performed_by_role}
-                        </span>
-                      )}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {event.owner_notes || "-"}
