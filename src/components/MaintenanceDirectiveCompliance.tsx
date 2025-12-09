@@ -246,8 +246,8 @@ const MaintenanceDirectiveCompliance = ({
             const inputs = linkInputs[index] || { desc: "", url: "" };
 
             return (
-              <Card key={index} className="border">
-                <CardHeader className="py-3 px-4">
+              <Card key={index} className="border overflow-visible">
+                <CardHeader className="py-3 px-4 overflow-visible">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1">
                       <Button
@@ -267,12 +267,22 @@ const MaintenanceDirectiveCompliance = ({
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select directive..." />
                           </SelectTrigger>
-                          <SelectContent className="z-50 max-h-[300px]" position="popper" sideOffset={5}>
-                            {getAvailableDirectivesForLink(link.directive_id).map((d) => (
-                              <SelectItem key={d.id} value={d.id}>
-                                {d.directive_code} - {d.title}
-                              </SelectItem>
-                            ))}
+                          <SelectContent 
+                            className="z-[100] max-h-[300px] overflow-y-auto bg-popover"
+                            position="popper" 
+                            side="bottom"
+                            sideOffset={4}
+                            align="start"
+                          >
+                            {getAvailableDirectivesForLink(link.directive_id).length === 0 ? (
+                              <div className="p-2 text-sm text-muted-foreground">No directives available</div>
+                            ) : (
+                              getAvailableDirectivesForLink(link.directive_id).map((d) => (
+                                <SelectItem key={d.id} value={d.id}>
+                                  {d.directive_code} - {d.title}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
