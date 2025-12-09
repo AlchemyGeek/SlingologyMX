@@ -502,19 +502,19 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             existing => !currentLinkIds.includes(existing.id)
           ) || [];
           
-          // For each deleted compliance link, check if we need to update/delete directive status
+          // For each deleted compliance link, recalculate the directive status from remaining events
           for (const deletedLink of deletedLinks) {
-            // Check if there are any other compliance records for this directive
+            // Check if there are any other compliance records for this directive (excluding the ones being deleted)
             const { data: otherCompliance } = await supabase
               .from("maintenance_directive_compliance")
-              .select("id")
+              .select("*")
               .eq("directive_id", deletedLink.directive_id)
               .eq("user_id", userId)
               .neq("id", deletedLink.id)
-              .limit(1);
+              .order("compliance_date", { ascending: false });
             
             // If no other compliance records exist and this was a "Complied" record, 
-            // update the directive status back to "Not Complied"
+            // reset the directive status
             if (!otherCompliance || otherCompliance.length === 0) {
               if (deletedLink.compliance_status === "Complied") {
                 await supabase
@@ -523,15 +523,43 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                     compliance_status: "Not Complied",
                     first_compliance_date: null,
                     first_compliance_tach: null,
-                    performed_by_name: null,
-                    performed_by_role: null,
-                    maintenance_provider_name: null,
-                    labor_hours_actual: null,
-                    labor_rate: null,
-                    parts_cost: null,
-                    total_cost: null,
-                    owner_notes: null,
-                    compliance_links: null,
+                    last_compliance_date: null,
+                    last_compliance_tach: null,
+                  })
+                  .eq("directive_id", deletedLink.directive_id)
+                  .eq("user_id", userId);
+              }
+            } else {
+              // Recalculate from remaining compliance events
+              const compliedEvents = otherCompliance.filter(c => c.compliance_status === "Complied");
+              if (compliedEvents.length > 0) {
+                // Sort by date to get first and last
+                const sortedByDate = [...compliedEvents].sort((a, b) => 
+                  new Date(a.compliance_date).getTime() - new Date(b.compliance_date).getTime()
+                );
+                const firstEvent = sortedByDate[0];
+                const lastEvent = sortedByDate[sortedByDate.length - 1];
+                
+                await supabase
+                  .from("aircraft_directive_status")
+                  .update({
+                    first_compliance_date: firstEvent.compliance_date,
+                    first_compliance_tach: firstEvent.counter_value,
+                    last_compliance_date: lastEvent.compliance_date,
+                    last_compliance_tach: lastEvent.counter_value,
+                  })
+                  .eq("directive_id", deletedLink.directive_id)
+                  .eq("user_id", userId);
+              } else {
+                // No complied events remain
+                await supabase
+                  .from("aircraft_directive_status")
+                  .update({
+                    compliance_status: "Not Complied",
+                    first_compliance_date: null,
+                    first_compliance_tach: null,
+                    last_compliance_date: null,
+                    last_compliance_tach: null,
                   })
                   .eq("directive_id", deletedLink.directive_id)
                   .eq("user_id", userId);
@@ -651,14 +679,14 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           .eq("maintenance_log_id", editingLog.id);
         
         for (const deletedLink of existingComplianceLinks || []) {
-          // Check if there are any other compliance records for this directive
+          // Check if there are any other compliance records for this directive (from other maintenance logs)
           const { data: otherCompliance } = await supabase
             .from("maintenance_directive_compliance")
-            .select("id")
+            .select("*")
             .eq("directive_id", deletedLink.directive_id)
             .eq("user_id", userId)
-            .neq("id", deletedLink.id)
-            .limit(1);
+            .neq("maintenance_log_id", editingLog.id)
+            .order("compliance_date", { ascending: false });
           
           if (!otherCompliance || otherCompliance.length === 0) {
             if (deletedLink.compliance_status === "Complied") {
@@ -668,15 +696,41 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                   compliance_status: "Not Complied",
                   first_compliance_date: null,
                   first_compliance_tach: null,
-                  performed_by_name: null,
-                  performed_by_role: null,
-                  maintenance_provider_name: null,
-                  labor_hours_actual: null,
-                  labor_rate: null,
-                  parts_cost: null,
-                  total_cost: null,
-                  owner_notes: null,
-                  compliance_links: null,
+                  last_compliance_date: null,
+                  last_compliance_tach: null,
+                })
+                .eq("directive_id", deletedLink.directive_id)
+                .eq("user_id", userId);
+            }
+          } else {
+            // Recalculate from remaining compliance events
+            const compliedEvents = otherCompliance.filter(c => c.compliance_status === "Complied");
+            if (compliedEvents.length > 0) {
+              const sortedByDate = [...compliedEvents].sort((a, b) => 
+                new Date(a.compliance_date).getTime() - new Date(b.compliance_date).getTime()
+              );
+              const firstEvent = sortedByDate[0];
+              const lastEvent = sortedByDate[sortedByDate.length - 1];
+              
+              await supabase
+                .from("aircraft_directive_status")
+                .update({
+                  first_compliance_date: firstEvent.compliance_date,
+                  first_compliance_tach: firstEvent.counter_value,
+                  last_compliance_date: lastEvent.compliance_date,
+                  last_compliance_tach: lastEvent.counter_value,
+                })
+                .eq("directive_id", deletedLink.directive_id)
+                .eq("user_id", userId);
+            } else {
+              await supabase
+                .from("aircraft_directive_status")
+                .update({
+                  compliance_status: "Not Complied",
+                  first_compliance_date: null,
+                  first_compliance_tach: null,
+                  last_compliance_date: null,
+                  last_compliance_tach: null,
                 })
                 .eq("directive_id", deletedLink.directive_id)
                 .eq("user_id", userId);
