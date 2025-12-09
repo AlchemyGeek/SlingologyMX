@@ -267,7 +267,7 @@ const MaintenanceDirectiveCompliance = ({
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select directive..." />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-50 max-h-[300px]" position="popper" sideOffset={5}>
                             {getAvailableDirectivesForLink(link.directive_id).map((d) => (
                               <SelectItem key={d.id} value={d.id}>
                                 {d.directive_code} - {d.title}
