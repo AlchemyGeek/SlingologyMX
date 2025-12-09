@@ -460,7 +460,7 @@ export type Database = {
           id: string
           labor_hours_actual: number | null
           labor_rate: number | null
-          maintenance_log_id: string
+          maintenance_log_id: string | null
           maintenance_provider_name: string | null
           owner_notes: string | null
           parts_cost: number | null
@@ -481,7 +481,7 @@ export type Database = {
           id?: string
           labor_hours_actual?: number | null
           labor_rate?: number | null
-          maintenance_log_id: string
+          maintenance_log_id?: string | null
           maintenance_provider_name?: string | null
           owner_notes?: string | null
           parts_cost?: number | null
@@ -502,7 +502,7 @@ export type Database = {
           id?: string
           labor_hours_actual?: number | null
           labor_rate?: number | null
-          maintenance_log_id?: string
+          maintenance_log_id?: string | null
           maintenance_provider_name?: string | null
           owner_notes?: string | null
           parts_cost?: number | null
