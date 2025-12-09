@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateInput } from "@/components/ui/date-input";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,6 +103,23 @@ const MaintenanceDirectiveCompliance = ({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pendingCompletionIndex, setPendingCompletionIndex] = useState<number | null>(null);
   const [linkInputs, setLinkInputs] = useState<Record<number, { desc: string; url: string }>>({});
+
+  // Sync compliance dates when datePerformed changes
+  useEffect(() => {
+    if (complianceLinks.length > 0) {
+      const updatedLinks = complianceLinks.map(link => ({
+        ...link,
+        compliance_date: datePerformed
+      }));
+      // Only update if dates actually changed
+      const hasChanges = complianceLinks.some((link, i) => 
+        link.compliance_date?.getTime() !== updatedLinks[i].compliance_date?.getTime()
+      );
+      if (hasChanges) {
+        onComplianceLinksChange(updatedLinks);
+      }
+    }
+  }, [datePerformed]);
 
   // Fetch non-completed directives
   useEffect(() => {
@@ -279,32 +296,23 @@ const MaintenanceDirectiveCompliance = ({
                 {link.isExpanded && link.directive_id && (
                   <CardContent className="pt-0 pb-4 px-4 space-y-4">
                     {/* Compliance Status */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Status *</Label>
-                        <Select
-                          value={link.compliance_status}
-                          onValueChange={(value) => handleLinkChange(index, "compliance_status", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {COMPLIANCE_STATUSES.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Compliance Date *</Label>
-                        <DateInput
-                          value={link.compliance_date}
-                          onChange={(date) => handleLinkChange(index, "compliance_date", date)}
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label>Status *</Label>
+                      <Select
+                        value={link.compliance_status}
+                        onValueChange={(value) => handleLinkChange(index, "compliance_status", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COMPLIANCE_STATUSES.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Counter fields for counter-based directives */}
