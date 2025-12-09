@@ -694,11 +694,11 @@ const DirectiveComplianceForm = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => handleDialogResponse(false)}>
-              No, Keep Active
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDialogResponse(true)}>
+            <AlertDialogCancel onClick={() => handleDialogResponse(true)}>
               Yes, Mark Completed
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleDialogResponse(false)}>
+              No, Keep Active
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
