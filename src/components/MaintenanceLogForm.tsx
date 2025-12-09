@@ -488,7 +488,58 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       if (logId && directiveComplianceLinks.length > 0) {
         // For editing, delete existing links that are no longer present
         if (editingLog) {
+          // First, get the links that will be deleted to clean up their directive status
           const currentLinkIds = directiveComplianceLinks.filter(l => l.id).map(l => l.id);
+          
+          // Fetch existing compliance links to identify deleted ones
+          const { data: existingComplianceLinks } = await supabase
+            .from("maintenance_directive_compliance")
+            .select("id, directive_id, compliance_status")
+            .eq("maintenance_log_id", logId);
+          
+          // Find links that are being deleted
+          const deletedLinks = existingComplianceLinks?.filter(
+            existing => !currentLinkIds.includes(existing.id)
+          ) || [];
+          
+          // For each deleted compliance link, check if we need to update/delete directive status
+          for (const deletedLink of deletedLinks) {
+            // Check if there are any other compliance records for this directive
+            const { data: otherCompliance } = await supabase
+              .from("maintenance_directive_compliance")
+              .select("id")
+              .eq("directive_id", deletedLink.directive_id)
+              .eq("user_id", userId)
+              .neq("id", deletedLink.id)
+              .limit(1);
+            
+            // If no other compliance records exist and this was a "Complied" record, 
+            // update the directive status back to "Not Complied"
+            if (!otherCompliance || otherCompliance.length === 0) {
+              if (deletedLink.compliance_status === "Complied") {
+                await supabase
+                  .from("aircraft_directive_status")
+                  .update({
+                    compliance_status: "Not Complied",
+                    first_compliance_date: null,
+                    first_compliance_tach: null,
+                    performed_by_name: null,
+                    performed_by_role: null,
+                    maintenance_provider_name: null,
+                    labor_hours_actual: null,
+                    labor_rate: null,
+                    parts_cost: null,
+                    total_cost: null,
+                    owner_notes: null,
+                    compliance_links: null,
+                  })
+                  .eq("directive_id", deletedLink.directive_id)
+                  .eq("user_id", userId);
+              }
+            }
+          }
+          
+          // Now delete the compliance links
           if (currentLinkIds.length > 0) {
             await supabase
               .from("maintenance_directive_compliance")
@@ -593,7 +644,47 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           }
         }
       } else if (editingLog && directiveComplianceLinks.length === 0) {
-        // All links removed during edit
+        // All links removed during edit - first clean up directive statuses
+        const { data: existingComplianceLinks } = await supabase
+          .from("maintenance_directive_compliance")
+          .select("id, directive_id, compliance_status")
+          .eq("maintenance_log_id", editingLog.id);
+        
+        for (const deletedLink of existingComplianceLinks || []) {
+          // Check if there are any other compliance records for this directive
+          const { data: otherCompliance } = await supabase
+            .from("maintenance_directive_compliance")
+            .select("id")
+            .eq("directive_id", deletedLink.directive_id)
+            .eq("user_id", userId)
+            .neq("id", deletedLink.id)
+            .limit(1);
+          
+          if (!otherCompliance || otherCompliance.length === 0) {
+            if (deletedLink.compliance_status === "Complied") {
+              await supabase
+                .from("aircraft_directive_status")
+                .update({
+                  compliance_status: "Not Complied",
+                  first_compliance_date: null,
+                  first_compliance_tach: null,
+                  performed_by_name: null,
+                  performed_by_role: null,
+                  maintenance_provider_name: null,
+                  labor_hours_actual: null,
+                  labor_rate: null,
+                  parts_cost: null,
+                  total_cost: null,
+                  owner_notes: null,
+                  compliance_links: null,
+                })
+                .eq("directive_id", deletedLink.directive_id)
+                .eq("user_id", userId);
+            }
+          }
+        }
+        
+        // Now delete all compliance links
         await supabase
           .from("maintenance_directive_compliance")
           .delete()
