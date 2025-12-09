@@ -23,11 +23,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Trash2, ExternalLink, Plus, Bell, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, ExternalLink, Bell, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { Directive } from "./DirectivesPanel";
-import DirectiveComplianceForm from "./DirectiveComplianceForm";
 
 interface DirectiveDetailProps {
   directive: Directive;
@@ -104,11 +102,7 @@ const getDisplayStatus = (status: string) => {
 const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
   const [complianceEvents, setComplianceEvents] = useState<ComplianceEvent[]>([]);
   const [pendingNotifications, setPendingNotifications] = useState<PendingNotification[]>([]);
-  const [showComplianceForm, setShowComplianceForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<ComplianceEvent | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showDeleteEventDialog, setShowDeleteEventDialog] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchComplianceEvents = async () => {
@@ -197,110 +191,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     };
   })();
 
-  const handleComplianceUpdated = () => {
-    setShowComplianceForm(false);
-    setEditingEvent(null);
-    fetchComplianceEvents();
-    fetchPendingNotifications();
-    onUpdate();
-  };
-
-  const handleAddEvent = () => {
-    setEditingEvent(null);
-    setShowComplianceForm(true);
-  };
-
-  const handleEditEvent = (event: ComplianceEvent) => {
-    setEditingEvent(event);
-    setShowComplianceForm(true);
-  };
-
-  const handleDeleteEvent = async () => {
-    if (!eventToDelete) return;
-    
-    try {
-      // Get the event being deleted to check its status
-      const eventBeingDeleted = complianceEvents.find(e => e.id === eventToDelete);
-      
-      // Delete from maintenance_directive_compliance
-      const { error } = await supabase
-        .from("maintenance_directive_compliance")
-        .delete()
-        .eq("id", eventToDelete);
-
-      if (error) throw error;
-      
-      // Recalculate aircraft_directive_status from remaining events
-      if (eventBeingDeleted?.compliance_status === "Complied") {
-        const remainingEvents = complianceEvents.filter(
-          e => e.id !== eventToDelete && e.compliance_status === "Complied"
-        );
-        
-        if (remainingEvents.length === 0) {
-          // No complied events remain - reset status
-          await supabase
-            .from("aircraft_directive_status")
-            .update({
-              compliance_status: "Not Complied",
-              first_compliance_date: null,
-              first_compliance_tach: null,
-              last_compliance_date: null,
-              last_compliance_tach: null,
-            })
-            .eq("directive_id", directive.id)
-            .eq("user_id", userId);
-        } else {
-          // Recalculate from remaining events
-          const sortedByDate = [...remainingEvents].sort((a, b) => 
-            new Date(a.compliance_date).getTime() - new Date(b.compliance_date).getTime()
-          );
-          const firstEvent = sortedByDate[0];
-          const lastEvent = sortedByDate[sortedByDate.length - 1];
-          
-          await supabase
-            .from("aircraft_directive_status")
-            .update({
-              first_compliance_date: firstEvent.compliance_date,
-              first_compliance_tach: firstEvent.counter_value,
-              last_compliance_date: lastEvent.compliance_date,
-              last_compliance_tach: lastEvent.counter_value,
-            })
-            .eq("directive_id", directive.id)
-            .eq("user_id", userId);
-        }
-      }
-      
-      toast.success("Compliance event deleted");
-      setShowDeleteEventDialog(false);
-      setEventToDelete(null);
-      fetchComplianceEvents();
-      fetchPendingNotifications();
-      onUpdate();
-    } catch (error: any) {
-      console.error("Error deleting compliance event:", error);
-      toast.error("Failed to delete compliance event");
-    }
-  };
-
-  const confirmDeleteEvent = (eventId: string) => {
-    setEventToDelete(eventId);
-    setShowDeleteEventDialog(true);
-  };
-
-  if (showComplianceForm) {
-    return (
-      <DirectiveComplianceForm
-        directive={directive}
-        userId={userId}
-        existingStatus={editingEvent}
-        onSuccess={handleComplianceUpdated}
-        onCancel={() => {
-          setShowComplianceForm(false);
-          setEditingEvent(null);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -342,26 +232,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Compliance Event Dialog */}
-      <AlertDialog open={showDeleteEventDialog} onOpenChange={setShowDeleteEventDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Compliance Event</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this compliance event? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteEvent}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Analysis Summary Card */}
       <Card className="border-primary/20 bg-primary/5">
@@ -633,24 +503,10 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
       {/* Compliance Events Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">My Aircraft Compliance Status</CardTitle>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleAddEvent}
-              disabled={directive.directive_status === "Completed"}
-              title={directive.directive_status === "Completed" ? "Cannot add compliance events to completed directives" : undefined}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Compliance Event
-            </Button>
-          </div>
-          {directive.directive_status === "Completed" && (
-            <p className="text-sm text-muted-foreground mt-2">
-              This directive is marked as completed. Compliance events cannot be added or edited.
-            </p>
-          )}
+          <CardTitle className="text-lg">My Aircraft Compliance Status</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Compliance events are managed through maintenance records.
+          </p>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -663,7 +519,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                   <TableHead>Date</TableHead>
                   <TableHead>Counter</TableHead>
                   <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -694,35 +549,13 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                     <TableCell className="max-w-[200px] truncate">
                       {event.owner_notes || "-"}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleEditEvent(event)}
-                          disabled={directive.directive_status === "Completed"}
-                          title={directive.directive_status === "Completed" ? "Cannot edit compliance events on completed directives" : undefined}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => confirmDeleteEvent(event.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
             <p className="text-muted-foreground">
-              {directive.directive_status === "Completed" 
-                ? "This directive is completed. No compliance events can be added."
-                : "No compliance events recorded for this directive. Click \"Add Compliance Event\" to track your compliance."}
+              No compliance events recorded. Create a maintenance record and link this directive to record compliance.
             </p>
           )}
         </CardContent>
