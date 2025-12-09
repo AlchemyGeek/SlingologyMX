@@ -28,6 +28,27 @@ import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import MaintenanceDirectiveCompliance from "./MaintenanceDirectiveCompliance";
+
+interface DirectiveComplianceLink {
+  id?: string;
+  directive_id: string;
+  directive?: any;
+  compliance_status: string;
+  compliance_date: Date | null;
+  counter_type: string;
+  counter_value: string;
+  performed_by_name: string;
+  performed_by_role: string;
+  maintenance_provider_name: string;
+  labor_hours_actual: string;
+  labor_rate: string;
+  parts_cost: string;
+  total_cost: string;
+  owner_notes: string;
+  compliance_links: Array<{ description: string; url: string }>;
+  isExpanded: boolean;
+}
 
 interface DefaultCounters {
   hobbs: number;
@@ -66,10 +87,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     airframe_total_time: defaultCounters?.airframe_total_time?.toString() || "",
     engine_total_time: defaultCounters?.engine_total_time?.toString() || "",
     prop_total_time: defaultCounters?.prop_total_time?.toString() || "",
-    has_compliance_item: false,
-    compliance_type: "None" as Database["public"]["Enums"]["compliance_type"],
-    compliance_reference: "",
-    recurring_compliance: false,
     is_recurring_task: false,
     interval_type: "None" as Database["public"]["Enums"]["interval_type"],
     interval_months: "",
@@ -88,6 +105,8 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     attachment_urls: [] as Array<{ url: string; description?: string }>,
     internal_notes: "",
   });
+  
+  const [directiveComplianceLinks, setDirectiveComplianceLinks] = useState<DirectiveComplianceLink[]>([]);
 
   const [tagInput, setTagInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
@@ -109,10 +128,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         airframe_total_time: editingLog.airframe_total_time?.toString() || "",
         engine_total_time: editingLog.engine_total_time?.toString() || "",
         prop_total_time: editingLog.prop_total_time?.toString() || "",
-        has_compliance_item: editingLog.has_compliance_item || false,
-        compliance_type: editingLog.compliance_type || "None",
-        compliance_reference: editingLog.compliance_reference || "",
-        recurring_compliance: editingLog.recurring_compliance || false,
         is_recurring_task: editingLog.is_recurring_task || false,
         interval_type: editingLog.interval_type || "None",
         interval_months: editingLog.interval_months?.toString() || "",
@@ -131,6 +146,37 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         attachment_urls: editingLog.attachment_urls || [],
         internal_notes: editingLog.internal_notes || "",
       });
+      
+      // Fetch existing directive compliance links
+      const fetchComplianceLinks = async () => {
+        const { data, error } = await supabase
+          .from("maintenance_directive_compliance")
+          .select("*, directives(id, directive_code, title, directive_status, compliance_scope, initial_due_type, counter_type, repeat_hours, repeat_months, category)")
+          .eq("maintenance_log_id", editingLog.id);
+        
+        if (!error && data) {
+          setDirectiveComplianceLinks(data.map((link: any) => ({
+            id: link.id,
+            directive_id: link.directive_id,
+            directive: link.directives,
+            compliance_status: link.compliance_status || "Complied",
+            compliance_date: link.compliance_date ? parseLocalDate(link.compliance_date) : new Date(),
+            counter_type: link.counter_type || "Hobbs",
+            counter_value: link.counter_value?.toString() || "",
+            performed_by_name: link.performed_by_name || "",
+            performed_by_role: link.performed_by_role || "",
+            maintenance_provider_name: link.maintenance_provider_name || "",
+            labor_hours_actual: link.labor_hours_actual?.toString() || "",
+            labor_rate: link.labor_rate?.toString() || "",
+            parts_cost: link.parts_cost?.toString() || "",
+            total_cost: link.total_cost?.toString() || "",
+            owner_notes: link.owner_notes || "",
+            compliance_links: link.compliance_links || [],
+            isExpanded: false,
+          })));
+        }
+      };
+      fetchComplianceLinks();
     }
   }, [editingLog]);
 
@@ -206,10 +252,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       airframe_total_time: formData.airframe_total_time ? parseFloat(formData.airframe_total_time) : null,
       engine_total_time: formData.engine_total_time ? parseFloat(formData.engine_total_time) : null,
       prop_total_time: formData.prop_total_time ? parseFloat(formData.prop_total_time) : null,
-      has_compliance_item: formData.has_compliance_item,
-      compliance_type: formData.compliance_type,
-      compliance_reference: formData.compliance_reference || null,
-      recurring_compliance: formData.recurring_compliance,
       is_recurring_task: formData.is_recurring_task,
       interval_type: formData.interval_type,
       interval_months: formData.interval_months ? parseInt(formData.interval_months) : null,
@@ -442,6 +484,122 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         }
       }
       
+      // Save directive compliance links
+      if (logId && directiveComplianceLinks.length > 0) {
+        // For editing, delete existing links that are no longer present
+        if (editingLog) {
+          const currentLinkIds = directiveComplianceLinks.filter(l => l.id).map(l => l.id);
+          if (currentLinkIds.length > 0) {
+            await supabase
+              .from("maintenance_directive_compliance")
+              .delete()
+              .eq("maintenance_log_id", logId)
+              .not("id", "in", `(${currentLinkIds.join(",")})`);
+          } else {
+            await supabase
+              .from("maintenance_directive_compliance")
+              .delete()
+              .eq("maintenance_log_id", logId);
+          }
+        }
+        
+        for (const link of directiveComplianceLinks) {
+          if (!link.directive_id) continue;
+          
+          const complianceData = {
+            maintenance_log_id: logId,
+            directive_id: link.directive_id,
+            user_id: userId,
+            compliance_status: link.compliance_status,
+            compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+            counter_type: link.counter_type || null,
+            counter_value: link.counter_value ? parseFloat(link.counter_value) : null,
+            performed_by_name: link.performed_by_name || null,
+            performed_by_role: link.performed_by_role || null,
+            maintenance_provider_name: link.maintenance_provider_name || null,
+            labor_hours_actual: link.labor_hours_actual ? parseFloat(link.labor_hours_actual) : null,
+            labor_rate: link.labor_rate ? parseFloat(link.labor_rate) : null,
+            parts_cost: link.parts_cost ? parseFloat(link.parts_cost) : null,
+            total_cost: link.total_cost ? parseFloat(link.total_cost) : null,
+            owner_notes: link.owner_notes || null,
+            compliance_links: link.compliance_links.length > 0 ? link.compliance_links : null,
+          };
+          
+          if (link.id) {
+            // Update existing
+            await supabase
+              .from("maintenance_directive_compliance")
+              .update(complianceData)
+              .eq("id", link.id);
+          } else {
+            // Insert new
+            await supabase
+              .from("maintenance_directive_compliance")
+              .insert([complianceData]);
+          }
+          
+          // Also create/update the aircraft_directive_status for this directive
+          if (link.compliance_status === "Complied") {
+            const directive = link.directive;
+            
+            // Check if status already exists
+            const { data: existingStatus } = await supabase
+              .from("aircraft_directive_status")
+              .select("id")
+              .eq("directive_id", link.directive_id)
+              .eq("user_id", userId)
+              .maybeSingle();
+            
+            const statusData = {
+              user_id: userId,
+              directive_id: link.directive_id,
+              compliance_status: "Complied Once" as const,
+              first_compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+              first_compliance_tach: link.counter_value ? parseFloat(link.counter_value) : null,
+              performed_by_name: link.performed_by_name || null,
+              performed_by_role: link.performed_by_role as any || null,
+              maintenance_provider_name: link.maintenance_provider_name || null,
+              labor_hours_actual: link.labor_hours_actual ? parseFloat(link.labor_hours_actual) : null,
+              labor_rate: link.labor_rate ? parseFloat(link.labor_rate) : null,
+              parts_cost: link.parts_cost ? parseFloat(link.parts_cost) : null,
+              total_cost: link.total_cost ? parseFloat(link.total_cost) : null,
+              owner_notes: link.owner_notes || null,
+              compliance_links: link.compliance_links.length > 0 ? link.compliance_links : null,
+            };
+            
+            if (existingStatus) {
+              await supabase
+                .from("aircraft_directive_status")
+                .update(statusData)
+                .eq("id", existingStatus.id);
+            } else {
+              await supabase
+                .from("aircraft_directive_status")
+                .insert([statusData]);
+            }
+            
+            // Log compliance history
+            if (directive) {
+              await supabase.from("directive_history").insert({
+                user_id: userId,
+                directive_id: link.directive_id,
+                directive_code: directive.directive_code,
+                directive_title: directive.title,
+                action_type: "Compliance",
+                compliance_status: "Complied Once",
+                first_compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+              });
+            }
+          }
+        }
+      } else if (editingLog && directiveComplianceLinks.length === 0) {
+        // All links removed during edit
+        await supabase
+          .from("maintenance_directive_compliance")
+          .delete()
+          .eq("maintenance_log_id", editingLog.id);
+      }
+      
       // Check if any counter values are higher than global counters
       if (defaultCounters && onUpdateGlobalCounters) {
         const updates: CounterUpdates = {};
@@ -660,58 +818,18 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         </div>
       </div>
 
-      {/* Compliance Metadata */}
+      {/* Directive Compliance */}
       <div className="space-y-4 border-b pb-4">
-        <h3 className="text-lg font-medium">Compliance Metadata</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="has_compliance_item"
-              checked={formData.has_compliance_item}
-              onCheckedChange={(checked) => setFormData({ ...formData, has_compliance_item: checked })}
-            />
-            <Label htmlFor="has_compliance_item">Has Compliance Item</Label>
-          </div>
-          {formData.has_compliance_item && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="compliance_type">Compliance Type</Label>
-                <Select value={formData.compliance_type} onValueChange={(value) => setFormData({ ...formData, compliance_type: value as Database["public"]["Enums"]["compliance_type"] })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="AD">AD</SelectItem>
-                    <SelectItem value="SB">SB</SelectItem>
-                    <SelectItem value="SL">SL</SelectItem>
-                    <SelectItem value="KAS">KAS</SelectItem>
-                    <SelectItem value="ASB">ASB</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="compliance_reference">Compliance Reference</Label>
-                <Input
-                  id="compliance_reference"
-                  value={formData.compliance_reference}
-                  onChange={(e) => setFormData({ ...formData, compliance_reference: e.target.value })}
-                  maxLength={40}
-                  placeholder="e.g., ASB-915i-006"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="recurring_compliance"
-                  checked={formData.recurring_compliance}
-                  onCheckedChange={(checked) => setFormData({ ...formData, recurring_compliance: checked })}
-                />
-                <Label htmlFor="recurring_compliance">Recurring Compliance</Label>
-              </div>
-            </>
-          )}
-        </div>
+        <MaintenanceDirectiveCompliance
+          userId={userId}
+          maintenanceLogId={editingLog?.id}
+          complianceLinks={directiveComplianceLinks}
+          onComplianceLinksChange={setDirectiveComplianceLinks}
+          defaultCounters={defaultCounters || { hobbs: 0, tach: 0, airframe_total_time: 0, engine_total_time: 0, prop_total_time: 0 }}
+          datePerformed={formData.date_performed}
+          performedByName={formData.performed_by_name}
+          performedByType={formData.performed_by_type}
+        />
       </div>
 
       {/* Next-Due Tracking */}

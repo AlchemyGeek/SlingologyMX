@@ -448,6 +448,94 @@ export type Database = {
           },
         ]
       }
+      maintenance_directive_compliance: {
+        Row: {
+          compliance_date: string
+          compliance_links: Json | null
+          compliance_status: string
+          counter_type: string | null
+          counter_value: number | null
+          created_at: string | null
+          directive_id: string
+          id: string
+          labor_hours_actual: number | null
+          labor_rate: number | null
+          maintenance_log_id: string
+          maintenance_provider_name: string | null
+          owner_notes: string | null
+          parts_cost: number | null
+          performed_by_name: string | null
+          performed_by_role: string | null
+          total_cost: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          compliance_date?: string
+          compliance_links?: Json | null
+          compliance_status?: string
+          counter_type?: string | null
+          counter_value?: number | null
+          created_at?: string | null
+          directive_id: string
+          id?: string
+          labor_hours_actual?: number | null
+          labor_rate?: number | null
+          maintenance_log_id: string
+          maintenance_provider_name?: string | null
+          owner_notes?: string | null
+          parts_cost?: number | null
+          performed_by_name?: string | null
+          performed_by_role?: string | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          compliance_date?: string
+          compliance_links?: Json | null
+          compliance_status?: string
+          counter_type?: string | null
+          counter_value?: number | null
+          created_at?: string | null
+          directive_id?: string
+          id?: string
+          labor_hours_actual?: number | null
+          labor_rate?: number | null
+          maintenance_log_id?: string
+          maintenance_provider_name?: string | null
+          owner_notes?: string | null
+          parts_cost?: number | null
+          performed_by_name?: string | null
+          performed_by_role?: string | null
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_directive_compliance_directive_id_fkey"
+            columns: ["directive_id"]
+            isOneToOne: false
+            referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_directive_compliance_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_directive_compliance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_logs: {
         Row: {
           airframe_total_time: number | null
