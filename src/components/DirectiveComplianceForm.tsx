@@ -41,15 +41,6 @@ interface DirectiveComplianceFormProps {
 }
 
 const COMPLIANCE_STATUSES = ["Not Complied", "Complied"];
-const PERFORMED_BY_ROLES = [
-  "Owner/Builder",
-  "Owner/Pilot",
-  "A&P",
-  "IA",
-  "Rotax IRMT",
-  "Maintenance Shop",
-  "Other",
-];
 
 
 
@@ -101,15 +92,8 @@ const DirectiveComplianceForm = ({
     next_due_counter_type: "" as string,
     next_due_date: null as Date | null,
     next_due_tach: "",
-    performed_by_name: "",
-    performed_by_role: "" as string,
     owner_notes: "",
     compliance_links: [] as Array<{ description: string; url: string }>,
-    labor_hours_actual: "",
-    labor_rate: "",
-    parts_cost: "",
-    total_cost: "",
-    maintenance_provider_name: "",
   });
 
   const [linkDescInput, setLinkDescInput] = useState("");
@@ -150,15 +134,8 @@ const DirectiveComplianceForm = ({
         next_due_counter_type: "",
         next_due_date: null,
         next_due_tach: "",
-        performed_by_name: existingStatus.performed_by_name || "",
-        performed_by_role: existingStatus.performed_by_role || "",
         owner_notes: existingStatus.owner_notes || "",
         compliance_links: existingStatus.compliance_links || [],
-        labor_hours_actual: existingStatus.labor_hours_actual?.toString() || "",
-        labor_rate: existingStatus.labor_rate?.toString() || "",
-        parts_cost: existingStatus.parts_cost?.toString() || "",
-        total_cost: existingStatus.total_cost?.toString() || "",
-        maintenance_provider_name: existingStatus.maintenance_provider_name || "",
       });
     }
   }, [existingStatus, directiveCounterType]);
@@ -303,15 +280,6 @@ const DirectiveComplianceForm = ({
       counter_value: isCounterBased && formData.counter_value
         ? parseFloat(formData.counter_value)
         : null,
-      performed_by_name: formData.performed_by_name || null,
-      performed_by_role: formData.performed_by_role || null,
-      maintenance_provider_name: formData.maintenance_provider_name || null,
-      labor_hours_actual: formData.labor_hours_actual
-        ? parseFloat(formData.labor_hours_actual)
-        : null,
-      labor_rate: formData.labor_rate ? parseFloat(formData.labor_rate) : null,
-      parts_cost: formData.parts_cost ? parseFloat(formData.parts_cost) : null,
-      total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
       owner_notes: formData.owner_notes || null,
       compliance_links: formData.compliance_links.length > 0 ? formData.compliance_links : null,
     };
@@ -554,104 +522,6 @@ const DirectiveComplianceForm = ({
               )}
             </div>
 
-          </div>
-
-          {/* Performer Info */}
-          <div className="space-y-4 border-b pb-4">
-            <h3 className="text-lg font-medium">Performer Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="performed_by_name">Performed By</Label>
-                <Input
-                  id="performed_by_name"
-                  value={formData.performed_by_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, performed_by_name: e.target.value })
-                  }
-                  maxLength={100}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select
-                  value={formData.performed_by_role}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, performed_by_role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERFORMED_BY_ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="maintenance_provider_name">Maintenance Provider</Label>
-                <Input
-                  id="maintenance_provider_name"
-                  value={formData.maintenance_provider_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, maintenance_provider_name: e.target.value })
-                  }
-                  maxLength={120}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Costs */}
-          <div className="space-y-4 border-b pb-4">
-            <h3 className="text-lg font-medium">Costs</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="labor_hours_actual">Labor Hours</Label>
-                <Input
-                  id="labor_hours_actual"
-                  type="number"
-                  step="0.1"
-                  value={formData.labor_hours_actual}
-                  onChange={(e) =>
-                    setFormData({ ...formData, labor_hours_actual: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="labor_rate">Labor Rate</Label>
-                <Input
-                  id="labor_rate"
-                  type="number"
-                  step="0.01"
-                  value={formData.labor_rate}
-                  onChange={(e) => setFormData({ ...formData, labor_rate: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="parts_cost">Parts Cost</Label>
-                <Input
-                  id="parts_cost"
-                  type="number"
-                  step="0.01"
-                  value={formData.parts_cost}
-                  onChange={(e) => setFormData({ ...formData, parts_cost: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="total_cost">Total Cost</Label>
-                <Input
-                  id="total_cost"
-                  type="number"
-                  step="0.01"
-                  value={formData.total_cost}
-                  onChange={(e) => setFormData({ ...formData, total_cost: e.target.value })}
-                />
-              </div>
-            </div>
           </div>
 
           {/* Notes */}

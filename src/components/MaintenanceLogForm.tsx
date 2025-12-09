@@ -38,13 +38,6 @@ interface DirectiveComplianceLink {
   compliance_date: Date | null;
   counter_type: string;
   counter_value: string;
-  performed_by_name: string;
-  performed_by_role: string;
-  maintenance_provider_name: string;
-  labor_hours_actual: string;
-  labor_rate: string;
-  parts_cost: string;
-  total_cost: string;
   owner_notes: string;
   compliance_links: Array<{ description: string; url: string }>;
   isExpanded: boolean;
@@ -163,13 +156,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             compliance_date: link.compliance_date ? parseLocalDate(link.compliance_date) : new Date(),
             counter_type: link.counter_type || "Hobbs",
             counter_value: link.counter_value?.toString() || "",
-            performed_by_name: link.performed_by_name || "",
-            performed_by_role: link.performed_by_role || "",
-            maintenance_provider_name: link.maintenance_provider_name || "",
-            labor_hours_actual: link.labor_hours_actual?.toString() || "",
-            labor_rate: link.labor_rate?.toString() || "",
-            parts_cost: link.parts_cost?.toString() || "",
-            total_cost: link.total_cost?.toString() || "",
             owner_notes: link.owner_notes || "",
             compliance_links: link.compliance_links || [],
             isExpanded: false,
@@ -680,13 +666,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
             counter_type: link.counter_type || null,
             counter_value: link.counter_value ? parseFloat(link.counter_value) : null,
-            performed_by_name: link.performed_by_name || null,
-            performed_by_role: link.performed_by_role || null,
-            maintenance_provider_name: link.maintenance_provider_name || null,
-            labor_hours_actual: link.labor_hours_actual ? parseFloat(link.labor_hours_actual) : null,
-            labor_rate: link.labor_rate ? parseFloat(link.labor_rate) : null,
-            parts_cost: link.parts_cost ? parseFloat(link.parts_cost) : null,
-            total_cost: link.total_cost ? parseFloat(link.total_cost) : null,
             owner_notes: link.owner_notes || null,
             compliance_links: link.compliance_links.length > 0 ? link.compliance_links : null,
           };
@@ -722,13 +701,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               compliance_status: "Complied Once" as const,
               first_compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
               first_compliance_tach: link.counter_value ? parseFloat(link.counter_value) : null,
-              performed_by_name: link.performed_by_name || null,
-              performed_by_role: link.performed_by_role as any || null,
-              maintenance_provider_name: link.maintenance_provider_name || null,
-              labor_hours_actual: link.labor_hours_actual ? parseFloat(link.labor_hours_actual) : null,
-              labor_rate: link.labor_rate ? parseFloat(link.labor_rate) : null,
-              parts_cost: link.parts_cost ? parseFloat(link.parts_cost) : null,
-              total_cost: link.total_cost ? parseFloat(link.total_cost) : null,
               owner_notes: link.owner_notes || null,
               compliance_links: link.compliance_links.length > 0 ? link.compliance_links : null,
             };
