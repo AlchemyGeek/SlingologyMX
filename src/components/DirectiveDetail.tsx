@@ -41,12 +41,9 @@ interface DirectiveDetailProps {
 interface ComplianceEvent {
   id: string;
   compliance_status: string;
-  first_compliance_date: string | null;
-  first_compliance_tach: number | null;
-  next_due_counter_type: string | null;
-  next_due_basis: string | null;
-  next_due_date: string | null;
-  next_due_tach: number | null;
+  compliance_date: string;
+  counter_type: string | null;
+  counter_value: number | null;
   performed_by_name: string | null;
   performed_by_role: string | null;
   owner_notes: string | null;
@@ -56,6 +53,7 @@ interface ComplianceEvent {
   parts_cost: number | null;
   total_cost: number | null;
   maintenance_provider_name: string | null;
+  maintenance_log_id: string;
   created_at: string | null;
 }
 
@@ -123,11 +121,11 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
   const fetchComplianceEvents = async () => {
     try {
       const { data, error } = await supabase
-        .from("aircraft_directive_status")
+        .from("maintenance_directive_compliance")
         .select("*")
         .eq("user_id", userId)
         .eq("directive_id", directive.id)
-        .order("first_compliance_date", { ascending: false, nullsFirst: false });
+        .order("compliance_date", { ascending: false });
 
       if (error) throw error;
       setComplianceEvents((data || []).map(item => ({
@@ -175,7 +173,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     }
 
     const eventDates = compliedEvents
-      .map(e => e.first_compliance_date)
+      .map(e => e.compliance_date)
       .filter((d): d is string => d !== null)
       .sort();
 
@@ -189,10 +187,10 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
 
     if (isCounterBased && compliedEvents.length > 0) {
       // Find most recent event with counter data
-      const eventWithCounter = compliedEvents.find(e => e.first_compliance_tach !== null);
+      const eventWithCounter = compliedEvents.find(e => e.counter_value !== null);
       if (eventWithCounter) {
-        lastCounterType = eventWithCounter.next_due_counter_type;
-        lastCounterValue = eventWithCounter.first_compliance_tach;
+        lastCounterType = eventWithCounter.counter_type;
+        lastCounterValue = eventWithCounter.counter_value;
       }
     }
 
@@ -228,12 +226,56 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     if (!eventToDelete) return;
     
     try {
+      // Get the event being deleted to check its status
+      const eventBeingDeleted = complianceEvents.find(e => e.id === eventToDelete);
+      
+      // Delete from maintenance_directive_compliance
       const { error } = await supabase
-        .from("aircraft_directive_status")
+        .from("maintenance_directive_compliance")
         .delete()
         .eq("id", eventToDelete);
 
       if (error) throw error;
+      
+      // Recalculate aircraft_directive_status from remaining events
+      if (eventBeingDeleted?.compliance_status === "Complied") {
+        const remainingEvents = complianceEvents.filter(
+          e => e.id !== eventToDelete && e.compliance_status === "Complied"
+        );
+        
+        if (remainingEvents.length === 0) {
+          // No complied events remain - reset status
+          await supabase
+            .from("aircraft_directive_status")
+            .update({
+              compliance_status: "Not Complied",
+              first_compliance_date: null,
+              first_compliance_tach: null,
+              last_compliance_date: null,
+              last_compliance_tach: null,
+            })
+            .eq("directive_id", directive.id)
+            .eq("user_id", userId);
+        } else {
+          // Recalculate from remaining events
+          const sortedByDate = [...remainingEvents].sort((a, b) => 
+            new Date(a.compliance_date).getTime() - new Date(b.compliance_date).getTime()
+          );
+          const firstEvent = sortedByDate[0];
+          const lastEvent = sortedByDate[sortedByDate.length - 1];
+          
+          await supabase
+            .from("aircraft_directive_status")
+            .update({
+              first_compliance_date: firstEvent.compliance_date,
+              first_compliance_tach: firstEvent.counter_value,
+              last_compliance_date: lastEvent.compliance_date,
+              last_compliance_tach: lastEvent.counter_value,
+            })
+            .eq("directive_id", directive.id)
+            .eq("user_id", userId);
+        }
+      }
       
       toast.success("Compliance event deleted");
       setShowDeleteEventDialog(false);
@@ -641,17 +683,17 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {event.first_compliance_date
-                        ? format(parseLocalDate(event.first_compliance_date), "MMM dd, yyyy")
+                      {event.compliance_date
+                        ? format(parseLocalDate(event.compliance_date), "MMM dd, yyyy")
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      {event.first_compliance_tach ? (
+                      {event.counter_value ? (
                         <span>
-                          {event.first_compliance_tach} hrs
-                          {event.next_due_counter_type && (
+                          {event.counter_value} hrs
+                          {event.counter_type && (
                             <span className="text-muted-foreground text-xs block">
-                              {event.next_due_counter_type}
+                              {event.counter_type}
                             </span>
                           )}
                         </span>
