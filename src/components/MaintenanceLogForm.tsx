@@ -567,18 +567,18 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             }
           }
           
-          // Now delete the compliance links
-          if (currentLinkIds.length > 0) {
-            await supabase
+          // Now delete the compliance links that were removed
+          if (deletedLinks.length > 0) {
+            const deletedIds = deletedLinks.map(l => l.id);
+            console.log("Deleting compliance links:", deletedIds);
+            const { error: deleteError } = await supabase
               .from("maintenance_directive_compliance")
               .delete()
-              .eq("maintenance_log_id", logId)
-              .not("id", "in", `(${currentLinkIds.join(",")})`);
-          } else {
-            await supabase
-              .from("maintenance_directive_compliance")
-              .delete()
-              .eq("maintenance_log_id", logId);
+              .in("id", deletedIds);
+            
+            if (deleteError) {
+              console.error("Error deleting compliance links:", deleteError);
+            }
           }
         }
         
