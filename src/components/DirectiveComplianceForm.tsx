@@ -527,15 +527,12 @@ const DirectiveComplianceForm = ({
           {/* Notes */}
           <div className="space-y-4 border-b pb-4">
             <h3 className="text-lg font-medium">Notes</h3>
-            <div className="space-y-2">
-              <Label htmlFor="owner_notes">Notes</Label>
-              <Textarea
-                id="owner_notes"
-                value={formData.owner_notes}
-                onChange={(e) => setFormData({ ...formData, owner_notes: e.target.value })}
-                placeholder="Any additional notes about compliance..."
-              />
-            </div>
+            <Textarea
+              id="owner_notes"
+              value={formData.owner_notes}
+              onChange={(e) => setFormData({ ...formData, owner_notes: e.target.value })}
+              placeholder="Any additional notes about compliance..."
+            />
           </div>
 
           {/* Evidence Links */}
