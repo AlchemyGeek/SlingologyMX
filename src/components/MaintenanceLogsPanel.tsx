@@ -110,6 +110,12 @@ const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters, onReco
         .eq("maintenance_log_id", logId)
         .eq("user_modified", false);
       
+      // Delete linked compliance records
+      await supabase
+        .from("maintenance_directive_compliance")
+        .delete()
+        .eq("maintenance_log_id", logId);
+      
       const { error } = await supabase
         .from("maintenance_logs")
         .delete()
