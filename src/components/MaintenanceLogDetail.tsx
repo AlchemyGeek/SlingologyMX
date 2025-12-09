@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +13,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, FileCheck } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ComplianceEntry {
+  id: string;
+  directive_id: string;
+  compliance_date: string;
+  compliance_status: string;
+  counter_type: string | null;
+  counter_value: number | null;
+  owner_notes: string | null;
+  directive?: {
+    directive_code: string;
+    title: string;
+  };
+}
 
 interface MaintenanceLogDetailProps {
   log: any;
@@ -25,6 +40,39 @@ interface MaintenanceLogDetailProps {
 
 const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLogDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [complianceEntries, setComplianceEntries] = useState<ComplianceEntry[]>([]);
+
+  useEffect(() => {
+    const fetchComplianceEntries = async () => {
+      const { data, error } = await supabase
+        .from("maintenance_directive_compliance")
+        .select(`
+          id,
+          directive_id,
+          compliance_date,
+          compliance_status,
+          counter_type,
+          counter_value,
+          owner_notes,
+          directives (
+            directive_code,
+            title
+          )
+        `)
+        .eq("maintenance_log_id", log.id);
+
+      if (!error && data) {
+        setComplianceEntries(data.map(entry => ({
+          ...entry,
+          directive: entry.directives as { directive_code: string; title: string } | undefined
+        })));
+      }
+    };
+
+    if (log?.id) {
+      fetchComplianceEntries();
+    }
+  }, [log?.id]);
 
   return (
     <div className="space-y-6 p-6">
@@ -127,6 +175,51 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
                   <p className="font-medium">{log.prop_total_time}</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Linked Compliance Entries */}
+        {complianceEntries.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileCheck className="h-5 w-5" />
+                Linked Directive Compliance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {complianceEntries.map((entry) => (
+                <div key={entry.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{entry.directive?.directive_code}</p>
+                      <p className="text-sm text-muted-foreground">{entry.directive?.title}</p>
+                    </div>
+                    <Badge variant={entry.compliance_status === "Complied" ? "default" : "secondary"}>
+                      {entry.compliance_status}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Compliance Date</p>
+                      <p className="font-medium">{format(parseLocalDate(entry.compliance_date), "MMM dd, yyyy")}</p>
+                    </div>
+                    {entry.counter_type && entry.counter_value && (
+                      <div>
+                        <p className="text-muted-foreground">{entry.counter_type}</p>
+                        <p className="font-medium">{entry.counter_value}</p>
+                      </div>
+                    )}
+                  </div>
+                  {entry.owner_notes && (
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Notes</p>
+                      <p>{entry.owner_notes}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}
