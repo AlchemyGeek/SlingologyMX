@@ -18,13 +18,29 @@ const Auth = () => {
   const [sentEmail, setSentEmail] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // Clear disclaimer acknowledgment so it shows on new login
+    // Set up auth state listener to react to auth changes properly
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only redirect if we have a valid session AND it's not a sign out event
+      if (session && event !== 'SIGNED_OUT') {
         sessionStorage.removeItem("disclaimer_acknowledged");
         navigate("/disclaimer");
       }
     });
+
+    // Check for existing session - but verify it's valid by checking with server
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // Verify the session is still valid
+        supabase.auth.getUser().then(({ data: { user }, error }) => {
+          if (user && !error) {
+            sessionStorage.removeItem("disclaimer_acknowledged");
+            navigate("/disclaimer");
+          }
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
