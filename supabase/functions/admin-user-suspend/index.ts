@@ -82,19 +82,19 @@ serve(async (req: Request) => {
       });
     }
 
-    // If suspending, revoke all user sessions to force logout
-    if (suspend) {
-      console.log(`Revoking sessions for user ${userId}`);
-      
-      // Sign out user from all sessions using admin API
-      const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
-      
-      if (signOutError) {
-        console.error("Error revoking sessions:", signOutError);
-        // Don't fail the request, status was already updated
-      } else {
-        console.log(`Successfully revoked all sessions for user ${userId}`);
-      }
+    // If suspending, ban the user at auth level to invalidate all sessions
+    // If unsuspending, unban the user
+    console.log(`${suspend ? 'Banning' : 'Unbanning'} user ${userId}`);
+    
+    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      ban_duration: suspend ? "876000h" : "none", // ~100 years ban or unban
+    });
+    
+    if (authError) {
+      console.error("Error updating auth ban status:", authError);
+      // Don't fail - profile status was already updated
+    } else {
+      console.log(`Successfully ${suspend ? 'banned' : 'unbanned'} user ${userId}`);
     }
 
     return new Response(JSON.stringify({ success: true, status: newStatus }), {
