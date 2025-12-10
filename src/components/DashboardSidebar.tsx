@@ -38,7 +38,7 @@ const recordsItems = [
 
 export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: DashboardSidebarProps) {
   return (
-    <Sidebar className="top-[65px] h-[calc(100svh-65px)] border-r border-t bg-card">
+    <Sidebar className="top-[65px] h-[calc(100svh-65px)] border-r border-t">
       <SidebarContent className="pt-4">
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground">
