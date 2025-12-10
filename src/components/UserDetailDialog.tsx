@@ -24,8 +24,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Shield, User, Database, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { Shield, User, Database, Trash2, AlertTriangle, Loader2, Key, Copy, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Word lists for password generation
+const WORDS = [
+  "blue", "red", "green", "gold", "silver", "oak", "pine", "maple", "river", "lake",
+  "sun", "moon", "star", "cloud", "rain", "snow", "wind", "fire", "rock", "sand",
+  "bird", "fish", "bear", "wolf", "fox", "deer", "hawk", "owl", "frog", "bee",
+  "apple", "orange", "lemon", "grape", "peach", "rose", "lily", "daisy", "tulip", "mint"
+];
+const SYMBOLS = ["!", "@", "#", "$", "%", "&", "*"];
+
+const generatePassword = (): string => {
+  const word1 = WORDS[Math.floor(Math.random() * WORDS.length)];
+  const word2 = WORDS[Math.floor(Math.random() * WORDS.length)];
+  const number = Math.floor(Math.random() * 100);
+  const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+  return `${word1}-${word2}${number}${symbol}`;
+};
 
 interface UserProfile {
   id: string;
@@ -66,12 +83,17 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
   const [confirmationText, setConfirmationText] = useState("");
   const [processing, setProcessing] = useState(false);
 
+  // Password management state
+  const [generatedPassword, setGeneratedPassword] = useState("");
+  const [settingPassword, setSettingPassword] = useState(false);
+
   const WIPE_CONFIRMATION = "WIPE ALL DATA";
   const DELETE_CONFIRMATION = "DELETE ACCOUNT";
 
   useEffect(() => {
     if (user && open) {
       setIsAdmin(user.isAdmin);
+      setGeneratedPassword("");
       fetchRecordCounts(user.id);
     }
   }, [user, open]);
@@ -149,6 +171,43 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
       toast.error("Failed to update role");
     } finally {
       setUpdatingRole(false);
+    }
+  };
+
+  const handleGeneratePassword = () => {
+    setGeneratedPassword(generatePassword());
+  };
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(generatedPassword);
+    toast.success("Password copied to clipboard");
+  };
+
+  const handleSetPassword = async () => {
+    if (!user || !generatedPassword) return;
+    setSettingPassword(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const response = await supabase.functions.invoke("admin-set-password", {
+        body: { userId: user.id, password: generatedPassword },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast.success("Password updated successfully");
+    } catch (error) {
+      console.error("Error setting password:", error);
+      toast.error("Failed to set password");
+    } finally {
+      setSettingPassword(false);
     }
   };
 
@@ -301,7 +360,55 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
 
             <Separator />
 
-            {/* Danger Zone */}
+            {/* Password Management */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Set Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Generate a temporary password for the user to login with.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={generatedPassword}
+                    readOnly
+                    placeholder="Click Generate to create password"
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleGeneratePassword}
+                    title="Generate new password"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyPassword}
+                    disabled={!generatedPassword}
+                    title="Copy to clipboard"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  onClick={handleSetPassword}
+                  disabled={!generatedPassword || settingPassword}
+                  className="w-full"
+                >
+                  {settingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Set Password
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
             <Card className="border-destructive/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
