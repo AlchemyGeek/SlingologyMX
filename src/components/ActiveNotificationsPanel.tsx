@@ -439,7 +439,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {showForm && (
+        {showForm ? (
           <NotificationForm
             userId={userId}
             onSuccess={handleFormSuccess}
@@ -448,9 +448,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             currentCounters={currentCounters}
             notificationBasis={activeTab === "counter" ? "Counter" : "Date"}
           />
-        )}
-
-        {notifications.length === 0 && !showForm ? (
+        ) : notifications.length === 0 ? (
           <p className="text-muted-foreground">No active notifications. Click "New Notification" to create one.</p>
         ) : (
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "date" | "counter")}>
