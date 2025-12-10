@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, Shield, User } from "lucide-react";
+import { Users, Shield, User, CheckCircle, Clock, Ban } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -12,6 +12,7 @@ interface UserProfile {
   email: string | null;
   created_at: string | null;
   isAdmin: boolean;
+  membership_status: string;
 }
 
 const UserManagement = () => {
@@ -22,10 +23,10 @@ const UserManagement = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        // Fetch all profiles
+        // Fetch all profiles including membership_status
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, name, email, created_at")
+          .select("id, name, email, created_at, membership_status")
           .order("created_at", { ascending: false });
 
         if (profilesError) throw profilesError;
@@ -46,6 +47,7 @@ const UserManagement = () => {
           email: profile.email,
           created_at: profile.created_at,
           isAdmin: adminUserIds.has(profile.id),
+          membership_status: profile.membership_status || "Approved",
         }));
 
         setUsers(usersWithRoles);
@@ -103,13 +105,14 @@ const UserManagement = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Member Since</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -130,6 +133,26 @@ const UserManagement = () => {
                         <Badge variant="secondary">
                           <User className="h-3 w-3 mr-1" />
                           Member
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.membership_status === "Approved" && (
+                        <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Approved
+                        </Badge>
+                      )}
+                      {user.membership_status === "Applied" && (
+                        <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Applied
+                        </Badge>
+                      )}
+                      {user.membership_status === "Suspended" && (
+                        <Badge className="bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30">
+                          <Ban className="h-3 w-3 mr-1" />
+                          Suspended
                         </Badge>
                       )}
                     </TableCell>
