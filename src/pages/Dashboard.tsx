@@ -219,54 +219,54 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          hasActiveAlerts={hasActiveAlerts}
-        />
-
-        <div className="flex-1 flex flex-col">
-          <header className="border-b">
-            <div className="px-4 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="mr-2" />
-                <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
-                <h1 className="text-2xl font-bold">SlingologyMX</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    window.open(
-                      "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
-                      "_blank"
-                    )
-                  }
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Blog
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-                  <UserIcon className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
-                  <Bug className="h-4 w-4 mr-2" />
-                  Bug Reports
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Feature Requests
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-              </div>
+      <div className="min-h-screen flex flex-col w-full bg-background">
+        <header className="border-b z-10">
+          <div className="px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="mr-2" />
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
+              <h1 className="text-2xl font-bold">SlingologyMX</h1>
             </div>
-          </header>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
+                    "_blank"
+                  )
+                }
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Blog
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                <UserIcon className="h-4 w-4 mr-2" />
+                Profile
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
+                <Bug className="h-4 w-4 mr-2" />
+                Bug Reports
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
+                <Lightbulb className="h-4 w-4 mr-2" />
+                Feature Requests
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex flex-1 overflow-hidden">
+          <DashboardSidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            hasActiveAlerts={hasActiveAlerts}
+          />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto">
             <AircraftCountersDisplay
