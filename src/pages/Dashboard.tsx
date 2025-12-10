@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle, ChevronDown, Bug } from "lucide-react";
+import { LogOut, Lightbulb, User as UserIcon, BookOpen, Bug } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import { parseLocalDate } from "@/lib/utils";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { DashboardSidebar, DashboardView } from "@/components/DashboardSidebar";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
@@ -34,8 +33,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
-  const [eventsOpen, setEventsOpen] = useState(true);
-  const [recordsOpen, setRecordsOpen] = useState(true);
+  const [activeView, setActiveView] = useState<DashboardView>("calendar");
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
   const {
     counters,
@@ -140,11 +138,73 @@ const Dashboard = () => {
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/");
   };
+
+  const currentCounters = counters
+    ? {
+        hobbs: counters.hobbs || 0,
+        tach: counters.tach || 0,
+        airframe_total_time: counters.airframe_total_time || 0,
+        engine_total_time: counters.engine_total_time || 0,
+        prop_total_time: counters.prop_total_time || 0,
+      }
+    : undefined;
+
+  const renderContent = () => {
+    switch (activeView) {
+      case "calendar":
+        return (
+          <CalendarPanel
+            userId={user!.id}
+            refreshKey={recordsRefreshKey}
+            currentCounters={currentCounters}
+          />
+        );
+      case "notifications":
+        return (
+          <ActiveNotificationsPanel
+            userId={user!.id}
+            currentCounters={currentCounters}
+            onNotificationCompleted={fetchActiveNotificationsForAlerts}
+            refreshKey={recordsRefreshKey}
+          />
+        );
+      case "history":
+        return <HistoryPanel userId={user!.id} refreshKey={recordsRefreshKey} />;
+      case "subscriptions":
+        return (
+          <SubscriptionsPanel
+            userId={user!.id}
+            onNotificationChanged={fetchActiveNotificationsForAlerts}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
+        );
+      case "maintenance":
+        return (
+          <MaintenanceLogsPanel
+            userId={user!.id}
+            counters={counters}
+            onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
+        );
+      case "directives":
+        return (
+          <DirectivesPanel
+            userId={user!.id}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -152,193 +212,80 @@ const Dashboard = () => {
       </div>
     );
   }
+
   if (!user) {
     return null;
   }
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
-            <h1 className="text-2xl font-bold">SlingologyMX</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                window.open(
-                  "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
-                  "_blank",
-                )
-              }
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Blog
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-              <UserIcon className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
-              <Bug className="h-4 w-4 mr-2" />
-              Bug Reports
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
-              <Lightbulb className="h-4 w-4 mr-2" />
-              Feature Requests
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <AircraftCountersDisplay
-          counters={counters}
-          loading={countersLoading}
-          userId={user.id}
-          onUpdateCounter={updateCounter}
-          onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
-          onRefetch={refetch}
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar
+          activeView={activeView}
+          onViewChange={setActiveView}
+          hasActiveAlerts={hasActiveAlerts}
         />
 
-        {/* Events Section */}
-        <Collapsible open={eventsOpen} onOpenChange={setEventsOpen}>
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      Events
-                      {hasActiveAlerts && <AlertCircle className="h-5 w-5 text-destructive" />}
-                    </CardTitle>
-                    <CardDescription>Track your calendar, notifications, and history</CardDescription>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${eventsOpen ? "rotate-180" : ""}`}
-                  />
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <Tabs defaultValue="calendar" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                    <TabsTrigger value="notifications" className="flex items-center gap-1">
-                      Notifications
-                      {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
-                    </TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
-                  </TabsList>
+        <div className="flex-1 flex flex-col">
+          <header className="border-b">
+            <div className="px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger className="mr-2" />
+                <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
+                <h1 className="text-2xl font-bold">SlingologyMX</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    window.open(
+                      "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
+                      "_blank"
+                    )
+                  }
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Blog
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                  <UserIcon className="h-4 w-4 mr-2" />
+                  Profile
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
+                  <Bug className="h-4 w-4 mr-2" />
+                  Bug Reports
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
+                  <Lightbulb className="h-4 w-4 mr-2" />
+                  Feature Requests
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </header>
 
-                  <TabsContent value="calendar" className="max-h-[500px] overflow-y-auto">
-                    <CalendarPanel
-                      userId={user.id}
-                      refreshKey={recordsRefreshKey}
-                      currentCounters={
-                        counters
-                          ? {
-                              hobbs: counters.hobbs || 0,
-                              tach: counters.tach || 0,
-                              airframe_total_time: counters.airframe_total_time || 0,
-                              engine_total_time: counters.engine_total_time || 0,
-                              prop_total_time: counters.prop_total_time || 0,
-                            }
-                          : undefined
-                      }
-                    />
-                  </TabsContent>
+          <main className="flex-1 p-6 space-y-6 overflow-auto">
+            <AircraftCountersDisplay
+              counters={counters}
+              loading={countersLoading}
+              userId={user.id}
+              onUpdateCounter={updateCounter}
+              onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
+              onRefetch={refetch}
+            />
 
-                  <TabsContent value="notifications" className="max-h-[500px] overflow-y-auto">
-                    <ActiveNotificationsPanel
-                      userId={user.id}
-                      currentCounters={
-                        counters
-                          ? {
-                              hobbs: counters.hobbs || 0,
-                              tach: counters.tach || 0,
-                              airframe_total_time: counters.airframe_total_time || 0,
-                              engine_total_time: counters.engine_total_time || 0,
-                              prop_total_time: counters.prop_total_time || 0,
-                            }
-                          : undefined
-                      }
-                      onNotificationCompleted={fetchActiveNotificationsForAlerts}
-                      refreshKey={recordsRefreshKey}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="history" className="max-h-[500px] overflow-y-auto">
-                    <HistoryPanel userId={user.id} refreshKey={recordsRefreshKey} />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-
-        {/* Records Section */}
-        <Collapsible open={recordsOpen} onOpenChange={setRecordsOpen}>
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Records</CardTitle>
-                    <CardDescription>Manage your subscriptions, maintenance logs, and directives</CardDescription>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${recordsOpen ? "rotate-180" : ""}`}
-                  />
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <Tabs defaultValue="subscriptions" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-                    <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                    <TabsTrigger value="directives">Directives & Bulletins</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="subscriptions" className="max-h-[750px] overflow-y-auto">
-                    <SubscriptionsPanel 
-                      userId={user.id} 
-                      onNotificationChanged={fetchActiveNotificationsForAlerts}
-                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="maintenance" className="max-h-[750px] overflow-y-auto">
-                    <MaintenanceLogsPanel
-                      userId={user.id}
-                      counters={counters}
-                      onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
-                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="directives" className="max-h-[750px] overflow-y-auto">
-                    <DirectivesPanel 
-                      userId={user.id} 
-                      onRecordChanged={() => setRecordsRefreshKey(k => k + 1)}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      </main>
-    </div>
+            <div className="bg-card rounded-lg border p-6">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
+
 export default Dashboard;
