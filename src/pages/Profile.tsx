@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, ArrowLeft, Save, BookOpen, User as UserIcon } from "lucide-react";
+import { LogOut, ArrowLeft, Save, BookOpen, User as UserIcon, Bug, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 
@@ -177,6 +177,14 @@ const Profile = () => {
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Blog
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
+              <Bug className="h-4 w-4 mr-2" />
+              Bug Reports
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Feature Requests
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />

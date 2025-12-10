@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import FeatureRequests from "./pages/FeatureRequests";
+import BugReports from "./pages/BugReports";
 import Profile from "./pages/Profile";
 import Disclaimer from "./pages/Disclaimer";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/feature-requests" element={<FeatureRequests />} />
+          <Route path="/bug-reports" element={<BugReports />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
