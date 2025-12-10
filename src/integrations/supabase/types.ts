@@ -814,6 +814,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          membership_status: Database["public"]["Enums"]["membership_status"]
           name: string | null
           plane_model_make: string | null
           plane_registration: string | null
@@ -825,6 +826,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id: string
+          membership_status?: Database["public"]["Enums"]["membership_status"]
           name?: string | null
           plane_model_make?: string | null
           plane_registration?: string | null
@@ -836,6 +838,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id?: string
+          membership_status?: Database["public"]["Enums"]["membership_status"]
           name?: string | null
           plane_model_make?: string | null
           plane_registration?: string | null
@@ -1026,6 +1029,7 @@ export type Database = {
         | "Troubleshooting"
         | "Scheduled Maintenance"
         | "Other"
+      membership_status: "Applied" | "Approved" | "Suspended"
       notification_basis: "Date" | "Counter"
       notification_type: "Maintenance" | "Subscription" | "Directives" | "Other"
       performed_by_type:
@@ -1303,6 +1307,7 @@ export const Constants = {
         "Scheduled Maintenance",
         "Other",
       ],
+      membership_status: ["Applied", "Approved", "Suspended"],
       notification_basis: ["Date", "Counter"],
       notification_type: ["Maintenance", "Subscription", "Directives", "Other"],
       performed_by_type: ["Owner", "A&P", "LSRM", "Repairman", "Shop", "Other"],
