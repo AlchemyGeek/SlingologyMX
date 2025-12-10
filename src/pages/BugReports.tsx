@@ -3,18 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, User as UserIcon, Bug, BookOpen } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogOut, ArrowLeft, User as UserIcon, Lightbulb, BookOpen, Bug } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
-import FeatureRequestForm from "@/components/FeatureRequestForm";
-import FeatureRequestList from "@/components/FeatureRequestList";
 
-const FeatureRequests = () => {
+const BugReports = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const {
@@ -39,14 +38,29 @@ const FeatureRequests = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  useEffect(() => {
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!data);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/");
-  };
-
-  const handleFeatureSubmitted = () => {
-    setRefreshKey((prev) => prev + 1);
   };
 
   if (loading) {
@@ -72,7 +86,8 @@ const FeatureRequests = () => {
             </Button>
             <div className="flex items-center gap-2">
               <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
-              <h1 className="text-2xl font-bold">Feature Requests</h1>
+              <h1 className="text-2xl font-bold">Bug Reports</h1>
+              {isAdmin && <span className="text-sm text-muted-foreground">(Admin View)</span>}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -93,9 +108,9 @@ const FeatureRequests = () => {
               <UserIcon className="h-4 w-4 mr-2" />
               Profile
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
-              <Bug className="h-4 w-4 mr-2" />
-              Bug Reports
+            <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Feature Requests
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
@@ -106,17 +121,33 @@ const FeatureRequests = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <FeatureRequestForm userId={user.id} onFeatureSubmitted={handleFeatureSubmitted} />
-          </div>
-          <div className="lg:col-span-2">
-            <FeatureRequestList userId={user.id} refreshKey={refreshKey} />
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              Bug Reports
+            </CardTitle>
+            <CardDescription>
+              {isAdmin 
+                ? "View and respond to all user-submitted bug reports" 
+                : "Report bugs and track the status of your submissions"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <Bug className="h-16 w-16 text-muted-foreground/50" />
+              <h3 className="text-lg font-medium text-muted-foreground">Bug Reports Coming Soon</h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                This feature is under development. Soon you'll be able to submit bug reports 
+                and track their status here.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
 };
 
-export default FeatureRequests;
+export default BugReports;

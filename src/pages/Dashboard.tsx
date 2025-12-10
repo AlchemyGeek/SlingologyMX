@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle, ChevronDown } from "lucide-react";
+import { LogOut, Lightbulb, User as UserIcon, BookOpen, AlertCircle, ChevronDown, Bug } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import { parseLocalDate } from "@/lib/utils";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
@@ -180,6 +180,10 @@ const Dashboard = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
               <UserIcon className="h-4 w-4 mr-2" />
               Profile
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
+              <Bug className="h-4 w-4 mr-2" />
+              Bug Reports
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
               <Lightbulb className="h-4 w-4 mr-2" />
