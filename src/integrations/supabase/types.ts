@@ -927,6 +927,15 @@ export type Database = {
         | "Data Export"
         | "Notifications"
         | "Other"
+        | "Authentication"
+        | "Directives"
+        | "Subscriptions"
+        | "Calendar"
+        | "Counters"
+        | "Profile"
+        | "UI/Display"
+        | "Performance"
+        | "Data"
       bug_priority: "Low" | "Medium" | "High" | "Urgent"
       bug_severity: "Minor" | "Moderate" | "Major" | "Critical"
       bug_status:
@@ -1183,6 +1192,15 @@ export const Constants = {
         "Data Export",
         "Notifications",
         "Other",
+        "Authentication",
+        "Directives",
+        "Subscriptions",
+        "Calendar",
+        "Counters",
+        "Profile",
+        "UI/Display",
+        "Performance",
+        "Data",
       ],
       bug_priority: ["Low", "Medium", "High", "Urgent"],
       bug_severity: ["Minor", "Moderate", "Major", "Critical"],
