@@ -1,4 +1,5 @@
-import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle } from "lucide-react";
+import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, BookOpen, Bug, Lightbulb } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -36,7 +37,15 @@ const recordsItems = [
   { id: "directives" as const, title: "Directives & Bulletins", icon: FileText },
 ];
 
+const supportItems = [
+  { id: "blog", title: "Blog", icon: BookOpen, external: "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu" },
+  { id: "bug-reports", title: "Bug Reports", icon: Bug, route: "/bug-reports" },
+  { id: "feature-requests", title: "Feature Requests", icon: Lightbulb, route: "/feature-requests" },
+];
+
 export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: DashboardSidebarProps) {
+  const navigate = useNavigate();
+
   return (
     <Sidebar className="top-[73px] h-[calc(100svh-73px)]">
       <SidebarContent className="pt-6">
@@ -77,6 +86,31 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: 
                   <SidebarMenuButton
                     onClick={() => onViewChange(item.id)}
                     isActive={activeView === item.id}
+                    className="w-full"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">Support</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {supportItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => {
+                      if (item.external) {
+                        window.open(item.external, "_blank");
+                      } else if (item.route) {
+                        navigate(item.route);
+                      }
+                    }}
                     className="w-full"
                   >
                     <item.icon className="h-4 w-4" />
