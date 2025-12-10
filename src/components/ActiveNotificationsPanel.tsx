@@ -136,8 +136,23 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
       if (updateError) throw updateError;
 
-      if (notification.recurrence && notification.recurrence !== "None") {
-        const nextDate = calculateNextDate(notification.initial_date, notification.recurrence);
+      // Check if this is a subscription-linked notification with recurrence=None
+      // If so, fetch the subscription's recurrence to determine if we should create next instance
+      let effectiveRecurrence = notification.recurrence;
+      if (notification.subscription_id && notification.recurrence === "None") {
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select("recurrence")
+          .eq("id", notification.subscription_id)
+          .single();
+        
+        if (subscription && subscription.recurrence !== "None") {
+          effectiveRecurrence = subscription.recurrence;
+        }
+      }
+
+      if (effectiveRecurrence && effectiveRecurrence !== "None") {
+        const nextDate = calculateNextDate(notification.initial_date, effectiveRecurrence);
         
         const { error: createError } = await supabase
           .from("notifications")
@@ -147,7 +162,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             type: notification.type,
             component: notification.component,
             initial_date: nextDate,
-            recurrence: notification.recurrence,
+            recurrence: notification.recurrence, // Keep original recurrence (None for subscription-linked)
             notes: notification.notes,
             is_completed: false,
             subscription_id: notification.subscription_id,
