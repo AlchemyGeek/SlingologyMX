@@ -138,7 +138,8 @@ const BugReportList = ({
           return (
             <div
               key={bug.id}
-              className="border rounded-lg p-4 space-y-2 hover:bg-muted/50 transition-colors"
+              className="border rounded-lg p-4 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedBug(bug)}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -165,14 +166,7 @@ const BugReportList = ({
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedBug(bug)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   {canDelete && (
                     <Button
                       variant="ghost"
