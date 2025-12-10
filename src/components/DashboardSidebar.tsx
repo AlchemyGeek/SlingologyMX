@@ -38,10 +38,10 @@ const recordsItems = [
 
 export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: DashboardSidebarProps) {
   return (
-    <Sidebar className="top-[65px] h-[calc(100svh-65px)] border-r">
+    <Sidebar className="top-[65px] h-[calc(100svh-65px)] border-r border-t bg-card">
       <SidebarContent className="pt-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2">
+          <SidebarGroupLabel className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground">
             Events
             {hasActiveAlerts && <AlertCircle className="h-4 w-4 text-destructive" />}
           </SidebarGroupLabel>
@@ -69,7 +69,7 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: 
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Records</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">Records</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {recordsItems.map((item) => (
