@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogOut, ArrowLeft, User as UserIcon, Lightbulb, BookOpen, Bug } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
+import BugReportForm from "@/components/BugReportForm";
+import BugReportList from "@/components/BugReportList";
 
 const BugReports = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const BugReports = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const {
@@ -61,6 +63,10 @@ const BugReports = () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/");
+  };
+
+  const handleBugChanged = () => {
+    setRefreshKey((prev) => prev + 1);
   };
 
   if (loading) {
@@ -121,30 +127,19 @@ const BugReports = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bug className="h-5 w-5" />
-              Bug Reports
-            </CardTitle>
-            <CardDescription>
-              {isAdmin 
-                ? "View and respond to all user-submitted bug reports" 
-                : "Report bugs and track the status of your submissions"
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-              <Bug className="h-16 w-16 text-muted-foreground/50" />
-              <h3 className="text-lg font-medium text-muted-foreground">Bug Reports Coming Soon</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                This feature is under development. Soon you'll be able to submit bug reports 
-                and track their status here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <BugReportForm userId={user.id} onBugSubmitted={handleBugChanged} />
+          </div>
+          <div className="lg:col-span-2">
+            <BugReportList
+              userId={user.id}
+              isAdmin={isAdmin}
+              refreshKey={refreshKey}
+              onBugChanged={handleBugChanged}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
