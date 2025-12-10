@@ -324,10 +324,10 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="container mx-auto px-4 py-8">
         {isAdmin ? (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserIcon className="h-4 w-4" />
                 My Profile
@@ -337,7 +337,7 @@ const Profile = () => {
                 Users
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="profile">
+            <TabsContent value="profile" className="max-w-2xl">
               <ProfileCard
                 profileData={profileData}
                 setProfileData={setProfileData}
@@ -345,17 +345,19 @@ const Profile = () => {
                 saving={saving}
               />
             </TabsContent>
-            <TabsContent value="users">
+            <TabsContent value="users" className="max-w-4xl">
               <UserManagement />
             </TabsContent>
           </Tabs>
         ) : (
-          <ProfileCard
-            profileData={profileData}
-            setProfileData={setProfileData}
-            handleSave={handleSave}
-            saving={saving}
-          />
+          <div className="max-w-2xl">
+            <ProfileCard
+              profileData={profileData}
+              setProfileData={setProfileData}
+              handleSave={handleSave}
+              saving={saving}
+            />
+          </div>
         )}
       </main>
     </div>
