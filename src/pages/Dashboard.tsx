@@ -140,7 +140,14 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Ignore errors - session might already be invalid
+    }
+    // Clear state immediately to prevent stale data
+    setUser(null);
+    setSession(null);
     toast.success("Logged out successfully");
     navigate("/");
   };
