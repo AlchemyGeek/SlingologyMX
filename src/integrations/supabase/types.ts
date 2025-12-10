@@ -186,6 +186,89 @@ export type Database = {
           },
         ]
       }
+      bug_reports: {
+        Row: {
+          actual_result: string
+          assigned_to: string | null
+          attachment_url: string | null
+          browser: string | null
+          category: Database["public"]["Enums"]["bug_category"]
+          created_at: string
+          description: string
+          device_type: Database["public"]["Enums"]["device_type"] | null
+          expected_result: string | null
+          id: string
+          internal_notes: string | null
+          operating_system: string | null
+          priority: Database["public"]["Enums"]["bug_priority"]
+          resolution_summary: string | null
+          resolved_at: string | null
+          root_cause: string | null
+          severity: Database["public"]["Enums"]["bug_severity"]
+          status: Database["public"]["Enums"]["bug_status"]
+          steps_to_reproduce: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_result: string
+          assigned_to?: string | null
+          attachment_url?: string | null
+          browser?: string | null
+          category: Database["public"]["Enums"]["bug_category"]
+          created_at?: string
+          description: string
+          device_type?: Database["public"]["Enums"]["device_type"] | null
+          expected_result?: string | null
+          id?: string
+          internal_notes?: string | null
+          operating_system?: string | null
+          priority?: Database["public"]["Enums"]["bug_priority"]
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity: Database["public"]["Enums"]["bug_severity"]
+          status?: Database["public"]["Enums"]["bug_status"]
+          steps_to_reproduce?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_result?: string
+          assigned_to?: string | null
+          attachment_url?: string | null
+          browser?: string | null
+          category?: Database["public"]["Enums"]["bug_category"]
+          created_at?: string
+          description?: string
+          device_type?: Database["public"]["Enums"]["device_type"] | null
+          expected_result?: string | null
+          id?: string
+          internal_notes?: string | null
+          operating_system?: string | null
+          priority?: Database["public"]["Enums"]["bug_priority"]
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity?: Database["public"]["Enums"]["bug_severity"]
+          status?: Database["public"]["Enums"]["bug_status"]
+          steps_to_reproduce?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       directive_history: {
         Row: {
           action_type: string
@@ -836,6 +919,23 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       applicability_status: "Applies" | "Does Not Apply" | "Unsure"
+      bug_category:
+        | "Dashboard"
+        | "Maintenance Logs"
+        | "AD / Service Bulletins"
+        | "Profile / Account"
+        | "Data Export"
+        | "Notifications"
+        | "Other"
+      bug_priority: "Low" | "Medium" | "High" | "Urgent"
+      bug_severity: "Minor" | "Moderate" | "Major" | "Critical"
+      bug_status:
+        | "New"
+        | "In Progress"
+        | "Waiting for User"
+        | "Resolved"
+        | "Closed (Won't Fix)"
+        | "Closed (Duplicate)"
       compliance_scope:
         | "One-Time"
         | "Recurring"
@@ -851,6 +951,7 @@ export type Database = {
         | "Recurring (Current)"
         | "Overdue"
         | "Not Applicable"
+      device_type: "Desktop" | "Laptop" | "Tablet" | "Phone" | "Other"
       directive_category:
         | "Airframe"
         | "Engine"
@@ -1074,6 +1175,25 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       applicability_status: ["Applies", "Does Not Apply", "Unsure"],
+      bug_category: [
+        "Dashboard",
+        "Maintenance Logs",
+        "AD / Service Bulletins",
+        "Profile / Account",
+        "Data Export",
+        "Notifications",
+        "Other",
+      ],
+      bug_priority: ["Low", "Medium", "High", "Urgent"],
+      bug_severity: ["Minor", "Moderate", "Major", "Critical"],
+      bug_status: [
+        "New",
+        "In Progress",
+        "Waiting for User",
+        "Resolved",
+        "Closed (Won't Fix)",
+        "Closed (Duplicate)",
+      ],
       compliance_scope: [
         "One-Time",
         "Recurring",
@@ -1091,6 +1211,7 @@ export const Constants = {
         "Overdue",
         "Not Applicable",
       ],
+      device_type: ["Desktop", "Laptop", "Tablet", "Phone", "Other"],
       directive_category: [
         "Airframe",
         "Engine",
