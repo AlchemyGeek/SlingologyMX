@@ -73,24 +73,25 @@ const SubscriptionsPanel = ({ userId, onNotificationChanged, onRecordChanged }: 
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {showForm && (
+        {showForm ? (
           <SubscriptionForm
             userId={userId}
             onSuccess={handleSubscriptionCreated}
             onCancel={handleCancelForm}
             editingSubscription={editingSubscription}
           />
+        ) : (
+          <SubscriptionList
+            subscriptions={subscriptions}
+            loading={loading}
+            onUpdate={() => {
+              fetchSubscriptions();
+              onNotificationChanged?.();
+              onRecordChanged?.();
+            }}
+            onEdit={handleEdit}
+          />
         )}
-        <SubscriptionList
-          subscriptions={subscriptions}
-          loading={loading}
-          onUpdate={() => {
-            fetchSubscriptions();
-            onNotificationChanged?.();
-            onRecordChanged?.();
-          }}
-          onEdit={handleEdit}
-        />
       </CardContent>
     </Card>
   );
