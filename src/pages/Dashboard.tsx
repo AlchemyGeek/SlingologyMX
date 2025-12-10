@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, Lightbulb, User as UserIcon, BookOpen, Bug } from "lucide-react";
+import { LogOut, User as UserIcon } from "lucide-react";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import { parseLocalDate } from "@/lib/utils";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -228,30 +228,9 @@ const Dashboard = () => {
               <h1 className="text-2xl font-bold">SlingologyMX</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  window.open(
-                    "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
-                    "_blank"
-                  )
-                }
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Blog
-              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
                 <UserIcon className="h-4 w-4 mr-2" />
                 Profile
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
-                <Bug className="h-4 w-4 mr-2" />
-                Bug Reports
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
-                <Lightbulb className="h-4 w-4 mr-2" />
-                Feature Requests
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
