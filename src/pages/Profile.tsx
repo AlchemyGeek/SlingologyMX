@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, ArrowLeft, Save, BookOpen, User as UserIcon, Bug, Lightbulb } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogOut, ArrowLeft, Save, BookOpen, User as UserIcon, Bug, Lightbulb, Users } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
+import UserManagement from "@/components/UserManagement";
 
 interface ProfileData {
   name: string;
@@ -19,6 +21,134 @@ interface ProfileData {
   plane_registration: string;
   plane_model_make: string;
 }
+
+interface ProfileCardProps {
+  profileData: ProfileData;
+  setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>;
+  handleSave: () => Promise<void>;
+  saving: boolean;
+}
+
+const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: ProfileCardProps) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>User Profile</CardTitle>
+      <CardDescription>Manage your personal information and aircraft details</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="name">Name</Label>
+        <Input
+          id="name"
+          value={profileData.name}
+          onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+          maxLength={50}
+          placeholder="Enter your name"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" value={profileData.email} disabled className="bg-muted cursor-not-allowed" />
+        <p className="text-xs text-muted-foreground">Email cannot be changed at this time</p>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold">Location</h3>
+        <div className="space-y-2">
+          <Label htmlFor="country">Country</Label>
+          <Input
+            id="country"
+            value={profileData.country}
+            onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
+            maxLength={100}
+            placeholder="Enter country"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="state">State/Prefecture</Label>
+          <Input
+            id="state"
+            value={profileData.state_prefecture}
+            onChange={(e) =>
+              setProfileData({
+                ...profileData,
+                state_prefecture: e.target.value,
+              })
+            }
+            maxLength={100}
+            placeholder="Enter state or prefecture"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            value={profileData.city}
+            onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+            maxLength={100}
+            placeholder="Enter city"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold">Aircraft Information</h3>
+        <div className="space-y-2">
+          <Label htmlFor="registration">Plane Registration Number</Label>
+          <Input
+            id="registration"
+            value={profileData.plane_registration}
+            onChange={(e) =>
+              setProfileData({
+                ...profileData,
+                plane_registration: e.target.value,
+              })
+            }
+            maxLength={8}
+            placeholder="Enter registration number"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="model">Plane Model and Make</Label>
+          <Input
+            id="model"
+            value={profileData.plane_model_make}
+            onChange={(e) =>
+              setProfileData({
+                ...profileData,
+                plane_model_make: e.target.value,
+              })
+            }
+            maxLength={50}
+            placeholder="Enter plane model and make"
+          />
+        </div>
+      </div>
+
+      <Button onClick={handleSave} disabled={saving} className="w-full">
+        <Save className="h-4 w-4 mr-2" />
+        {saving ? "Saving..." : "Save Profile"}
+      </Button>
+
+      <div className="pt-6 border-t space-y-2">
+        <h3 className="font-semibold text-sm">Disclaimer</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          This is a personal project, built and maintained with care. We'll keep improving the features and do our
+          best to safeguard your data. That said, there are no guarantees about uptime, availability, or
+          uninterrupted operation. Your paper logbooks and your own digitized scans should always remain your
+          primary source of truth. Please make sure you keep your own backups—use the Export option in your
+          profile to save your data at any time. If the service ever needs to be discontinued, we'll make every
+          effort to give you enough notice to download your information. By using this site, you acknowledge that
+          you do so at your own risk.
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -195,124 +325,38 @@ const Profile = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>User Profile</CardTitle>
-            <CardDescription>Manage your personal information and aircraft details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={profileData.name}
-                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                maxLength={50}
-                placeholder="Enter your name"
+        {isAdmin ? (
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
+                My Profile
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Users
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="profile">
+              <ProfileCard
+                profileData={profileData}
+                setProfileData={setProfileData}
+                handleSave={handleSave}
+                saving={saving}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" value={profileData.email} disabled className="bg-muted cursor-not-allowed" />
-              <p className="text-xs text-muted-foreground">Email cannot be changed at this time</p>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Location</h3>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
-                  value={profileData.country}
-                  onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
-                  maxLength={100}
-                  placeholder="Enter country"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="state">State/Prefecture</Label>
-                <Input
-                  id="state"
-                  value={profileData.state_prefecture}
-                  onChange={(e) =>
-                    setProfileData({
-                      ...profileData,
-                      state_prefecture: e.target.value,
-                    })
-                  }
-                  maxLength={100}
-                  placeholder="Enter state or prefecture"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={profileData.city}
-                  onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
-                  maxLength={100}
-                  placeholder="Enter city"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Aircraft Information</h3>
-              <div className="space-y-2">
-                <Label htmlFor="registration">Plane Registration Number</Label>
-                <Input
-                  id="registration"
-                  value={profileData.plane_registration}
-                  onChange={(e) =>
-                    setProfileData({
-                      ...profileData,
-                      plane_registration: e.target.value,
-                    })
-                  }
-                  maxLength={8}
-                  placeholder="Enter registration number"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="model">Plane Model and Make</Label>
-                <Input
-                  id="model"
-                  value={profileData.plane_model_make}
-                  onChange={(e) =>
-                    setProfileData({
-                      ...profileData,
-                      plane_model_make: e.target.value,
-                    })
-                  }
-                  maxLength={50}
-                  placeholder="Enter plane model and make"
-                />
-              </div>
-            </div>
-
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? "Saving..." : "Save Profile"}
-            </Button>
-
-            <div className="pt-6 border-t space-y-2">
-              <h3 className="font-semibold text-sm">Disclaimer</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                This is a personal project, built and maintained with care. We'll keep improving the features and do our
-                best to safeguard your data. That said, there are no guarantees about uptime, availability, or
-                uninterrupted operation. Your paper logbooks and your own digitized scans should always remain your
-                primary source of truth. Please make sure you keep your own backups—use the Export option in your
-                profile to save your data at any time. If the service ever needs to be discontinued, we'll make every
-                effort to give you enough notice to download your information. By using this site, you acknowledge that
-                you do so at your own risk.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </TabsContent>
+            <TabsContent value="users">
+              <UserManagement />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <ProfileCard
+            profileData={profileData}
+            setProfileData={setProfileData}
+            handleSave={handleSave}
+            saving={saving}
+          />
+        )}
       </main>
     </div>
   );
