@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Shield, User, Database, Trash2, AlertTriangle, Loader2, Key, Copy, RefreshCw } from "lucide-react";
+import { Shield, User, Database, Trash2, AlertTriangle, Loader2, Key, Copy, RefreshCw, Ban, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Word lists for password generation
@@ -50,7 +50,7 @@ interface UserProfile {
   email: string | null;
   created_at: string | null;
   isAdmin: boolean;
-  membership_status: string;
+  membership_status: "Applied" | "Approved" | "Suspended";
 }
 
 interface RecordCounts {
@@ -77,6 +77,8 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
   const [loadingCounts, setLoadingCounts] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [membershipStatus, setMembershipStatus] = useState<"Applied" | "Approved" | "Suspended">("Approved");
+  const [updatingSuspension, setUpdatingSuspension] = useState(false);
   
   const [wipeDialogOpen, setWipeDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -93,6 +95,7 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
   useEffect(() => {
     if (user && open) {
       setIsAdmin(user.isAdmin);
+      setMembershipStatus(user.membership_status);
       setGeneratedPassword("");
       fetchRecordCounts(user.id);
     }
@@ -171,6 +174,38 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
       toast.error("Failed to update role");
     } finally {
       setUpdatingRole(false);
+    }
+  };
+
+  const handleSuspendToggle = async () => {
+    if (!user) return;
+    const shouldSuspend = membershipStatus !== "Suspended";
+    setUpdatingSuspension(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const response = await supabase.functions.invoke("admin-user-suspend", {
+        body: { userId: user.id, suspend: shouldSuspend },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const newStatus = shouldSuspend ? "Suspended" : "Approved";
+      setMembershipStatus(newStatus as "Applied" | "Approved" | "Suspended");
+      toast.success(shouldSuspend ? "User suspended and logged out" : "User unsuspended");
+      onUserUpdated();
+    } catch (error) {
+      console.error("Error updating suspension status:", error);
+      toast.error("Failed to update suspension status");
+    } finally {
+      setUpdatingSuspension(false);
     }
   };
 
@@ -305,7 +340,11 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
               <div>
                 <span className="text-muted-foreground">Status:</span>
                 <p>
-                  <Badge variant="outline">{user.membership_status}</Badge>
+                  <Badge 
+                    variant={membershipStatus === "Suspended" ? "destructive" : "outline"}
+                  >
+                    {membershipStatus}
+                  </Badge>
                 </p>
               </div>
             </div>
@@ -356,6 +395,36 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
                 onCheckedChange={handleRoleToggle}
                 disabled={updatingRole}
               />
+            </div>
+
+            <Separator />
+
+            {/* Suspension Management */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base flex items-center gap-2">
+                  {membershipStatus === "Suspended" ? (
+                    <Ban className="h-4 w-4 text-destructive" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  )}
+                  Account Status
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {membershipStatus === "Suspended" 
+                    ? "User is suspended and cannot access the system" 
+                    : "User has active access to the system"}
+                </p>
+              </div>
+              <Button
+                variant={membershipStatus === "Suspended" ? "default" : "destructive"}
+                size="sm"
+                onClick={handleSuspendToggle}
+                disabled={updatingSuspension}
+              >
+                {updatingSuspension && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {membershipStatus === "Suspended" ? "Unsuspend" : "Suspend"}
+              </Button>
             </div>
 
             <Separator />

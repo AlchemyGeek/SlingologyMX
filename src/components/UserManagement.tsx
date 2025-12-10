@@ -13,7 +13,7 @@ interface UserProfile {
   email: string | null;
   created_at: string | null;
   isAdmin: boolean;
-  membership_status: string;
+  membership_status: "Applied" | "Approved" | "Suspended";
 }
 
 const UserManagement = () => {
@@ -47,7 +47,7 @@ const UserManagement = () => {
         email: profile.email,
         created_at: profile.created_at,
         isAdmin: adminUserIds.has(profile.id),
-        membership_status: profile.membership_status || "Approved",
+        membership_status: (profile.membership_status || "Approved") as "Applied" | "Approved" | "Suspended",
       }));
 
       setUsers(usersWithRoles);
