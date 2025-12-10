@@ -64,12 +64,17 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories: BugCategory[] = [
-    "Dashboard",
-    "Maintenance Logs",
-    "AD / Service Bulletins",
-    "Profile / Account",
-    "Data Export",
+    "Authentication",
     "Notifications",
+    "Maintenance Logs",
+    "Directives",
+    "Subscriptions",
+    "Calendar",
+    "Counters",
+    "Profile",
+    "UI/Display",
+    "Performance",
+    "Data",
     "Other",
   ];
 
