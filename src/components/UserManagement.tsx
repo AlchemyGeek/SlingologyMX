@@ -51,6 +51,14 @@ const UserManagement = () => {
       }));
 
       setUsers(usersWithRoles);
+      
+      // Update selectedUser with fresh data if dialog is open
+      if (selectedUser) {
+        const updatedSelectedUser = usersWithRoles.find(u => u.id === selectedUser.id);
+        if (updatedSelectedUser) {
+          setSelectedUser(updatedSelectedUser);
+        }
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
