@@ -240,6 +240,7 @@ const BugReportList = ({
         <BugReportDetail
           bug={selectedBug}
           isAdmin={isAdmin}
+          userId={userId}
           isOpen={!!selectedBug}
           onClose={() => setSelectedBug(null)}
           onUpdate={() => {
