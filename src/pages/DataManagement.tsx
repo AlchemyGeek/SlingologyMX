@@ -439,7 +439,8 @@ const DataManagement = () => {
     }
   };
 
-  const getTotalRecords = (counts: RecordCounts) => {
+  const getTotalRecords = (counts: RecordCounts | null) => {
+    if (!counts) return 0;
     return Object.values(counts).reduce((sum, count) => sum + count, 0);
   };
 
@@ -683,7 +684,7 @@ const DataManagement = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Import</AlertDialogTitle>
             <AlertDialogDescription>
-              You are about to import {getTotalRecords(importCounts!)} records. 
+              You are about to import {importCounts ? getTotalRecords(importCounts) : 0} records. 
               Existing records with matching IDs will be skipped. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
