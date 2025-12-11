@@ -1,1 +1,10 @@
 project_id = "vmzxpqztavxabwsiisau"
+
+[functions.admin-delete-user]
+verify_jwt = false
+
+[functions.admin-set-password]
+verify_jwt = false
+
+[functions.admin-user-suspend]
+verify_jwt = false

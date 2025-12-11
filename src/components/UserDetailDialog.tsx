@@ -280,25 +280,21 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
     setProcessing(true);
 
     try {
-      // Wipe data first
-      await supabase.from("maintenance_directive_compliance").delete().eq("user_id", user.id);
-      await supabase.from("aircraft_directive_status").delete().eq("user_id", user.id);
-      await supabase.from("directive_history").delete().eq("user_id", user.id);
-      await supabase.from("notifications").delete().eq("user_id", user.id);
-      await supabase.from("maintenance_logs").delete().eq("user_id", user.id);
-      await supabase.from("directives").delete().eq("user_id", user.id);
-      await supabase.from("subscriptions").delete().eq("user_id", user.id);
-      await supabase.from("aircraft_counter_history").delete().eq("user_id", user.id);
-      await supabase.from("aircraft_counters").delete().eq("user_id", user.id);
-      
-      // Delete user roles
-      await supabase.from("user_roles").delete().eq("user_id", user.id);
-      
-      // Delete profile (this may cascade from auth.users deletion)
-      // Note: Actually deleting the auth.users record requires admin API
-      // For now, we'll delete the profile which effectively disables the account
-      const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        setProcessing(false);
+        return;
+      }
+
+      // Call the edge function to delete the user completely
+      const response = await supabase.functions.invoke("admin-delete-user", {
+        body: { userId: user.id },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
       toast.success("User account deleted successfully");
       setDeleteDialogOpen(false);
