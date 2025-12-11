@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 
-type AuthView = "choice" | "login" | "signup";
+type AuthView = "choice" | "login" | "signup" | "forgot-password" | "reset-password";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -20,6 +20,9 @@ const Auth = () => {
   const [sentEmail, setSentEmail] = useState("");
   const [signupEnabled, setSignupEnabled] = useState(true);
   const [checkingSignup, setCheckingSignup] = useState(true);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Signup profile fields
   const [name, setName] = useState("");
@@ -52,6 +55,11 @@ const Auth = () => {
     checkSignupEnabled();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked the password reset link
+        setView("reset-password");
+        return;
+      }
       if (session && event !== 'SIGNED_OUT') {
         // Check if user status is Applied and needs to be updated to Approved
         handleFirstLoginApproval(session.user.id);
@@ -178,6 +186,58 @@ const Auth = () => {
     setCity("");
     setPlaneRegistration("");
     setPlaneModelMake("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      setSentEmail(email);
+      setResetEmailSent(true);
+      toast.success("Password reset email sent!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+      toast.success("Password updated successfully!");
+      resetForm();
+      setView("login");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Choice view - Sign Up or Log In
@@ -305,18 +365,166 @@ const Auth = () => {
                 {loading ? "Signing in..." : "Log In"}
               </Button>
             </form>
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setView("forgot-password");
+                }}
+                className="text-primary hover:underline text-sm block w-full"
+              >
+                Forgot your password?
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   resetForm();
                   setView("choice");
                 }}
-                className="text-primary hover:underline text-sm"
+                className="text-muted-foreground hover:underline text-sm"
               >
                 ← Back
               </button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Reset password sent confirmation
+  if (resetEmailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+            </div>
+            <CardTitle className="text-2xl">Check Your Email</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-4">
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <p className="text-foreground">
+                  A password reset link has been sent to <strong>{sentEmail}</strong>
+                </p>
+                <p className="text-muted-foreground text-sm mt-2">
+                  Please check your inbox and click the link to reset your password.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setResetEmailSent(false);
+                  resetForm();
+                  setView("login");
+                }}
+                className="mt-4"
+              >
+                Back to Log In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Forgot password view
+  if (view === "forgot-password") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+            </div>
+            <CardTitle className="text-2xl">Reset Password</CardTitle>
+            <CardDescription>
+              Enter your email to receive a password reset link
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setView("login");
+                }}
+                className="text-muted-foreground hover:underline text-sm"
+              >
+                ← Back to Log In
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Reset password view (after clicking email link)
+  if (view === "reset-password") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+            </div>
+            <CardTitle className="text-2xl">Set New Password</CardTitle>
+            <CardDescription>
+              Enter your new password below
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Updating..." : "Update Password"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
