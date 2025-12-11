@@ -1,4 +1,4 @@
-import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, BookOpen, Bug, Lightbulb, Database } from "lucide-react";
+import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, BookOpen, MessageCircle, Bug, Lightbulb, Database } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -39,6 +39,7 @@ const recordsItems = [
 
 const supportItems = [
   { id: "blog", title: "Blog", icon: BookOpen, external: "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu" },
+  { id: "discord", title: "Discord", icon: MessageCircle, external: "https://discord.gg/54wVtxv7" },
   { id: "data-management", title: "Data Management", icon: Database, route: "/data-management" },
   { id: "bug-reports", title: "Bug Reports", icon: Bug, route: "/bug-reports" },
   { id: "feature-requests", title: "Feature Requests", icon: Lightbulb, route: "/feature-requests" },
