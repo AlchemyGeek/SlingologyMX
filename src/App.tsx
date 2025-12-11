@@ -10,6 +10,7 @@ import FeatureRequests from "./pages/FeatureRequests";
 import BugReports from "./pages/BugReports";
 import Profile from "./pages/Profile";
 import Disclaimer from "./pages/Disclaimer";
+import DataManagement from "./pages/DataManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/feature-requests" element={<FeatureRequests />} />
           <Route path="/bug-reports" element={<BugReports />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/data-management" element={<DataManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
