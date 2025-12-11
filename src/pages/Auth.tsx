@@ -23,6 +23,7 @@ const Auth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   // Signup profile fields
   const [name, setName] = useState("");
@@ -56,18 +57,30 @@ const Auth = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // User clicked the password reset link
+        // User clicked the password reset link - set flag and show reset view
+        setIsPasswordRecovery(true);
         setView("reset-password");
         return;
       }
-      if (session && event !== 'SIGNED_OUT') {
+      // Don't redirect if we're in password recovery mode
+      if (session && event !== 'SIGNED_OUT' && !isPasswordRecovery) {
         // Check if user status is Applied and needs to be updated to Approved
         handleFirstLoginApproval(session.user.id);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      // Check URL for recovery token to detect password recovery on initial load
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery') {
+        setIsPasswordRecovery(true);
+        setView("reset-password");
+        return;
+      }
+      
+      if (session && !isPasswordRecovery) {
         supabase.auth.getUser().then(({ data: { user }, error }) => {
           if (user && !error) {
             handleFirstLoginApproval(user.id);
@@ -230,7 +243,10 @@ const Auth = () => {
         password: newPassword,
       });
       if (error) throw error;
-      toast.success("Password updated successfully!");
+      // Sign out after password reset so user can log in with new password
+      await supabase.auth.signOut();
+      setIsPasswordRecovery(false);
+      toast.success("Password updated successfully! Please log in with your new password.");
       resetForm();
       setView("login");
     } catch (error: any) {
