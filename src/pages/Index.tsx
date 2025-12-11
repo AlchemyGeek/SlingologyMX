@@ -10,14 +10,9 @@ const Index = () => {
       <div className="text-center space-y-6 p-8">
         <img src={slingologyIcon} alt="SlingologyMX" className="h-48 w-48 mx-auto" />
         <p className="text-xl text-muted-foreground max-w-md mx-auto">Built by Experimental Owners. Free to use. Your data stays yours. No lock-ins. Paper logs remain the master.</p>
-        <div className="flex gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate("/auth")}>
-            Get Started
-          </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate("/dashboard")}>
-            Dashboard
-          </Button>
-        </div>
+        <Button size="lg" onClick={() => navigate("/auth")}>
+          Get Started
+        </Button>
       </div>
     </div>;
 };
