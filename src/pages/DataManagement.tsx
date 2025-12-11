@@ -330,176 +330,270 @@ const DataManagement = () => {
         }
       }
 
-      // 2. Counter history
+      // 2. Counter history - check by change_date and source
       const counterHistoryData = importPreview.tables.aircraft_counter_history || [];
       for (let i = 0; i < counterHistoryData.length; i++) {
         const record = counterHistoryData[i];
         updateProgress("aircraft_counter_history", i, counterHistoryData.length, 1);
         
-        const newId = generateId();
-        const { id: _oldId, ...recordWithoutId } = record;
-        const { error } = await supabase
+        // Check for duplicate based on change_date and source
+        const { data: existing } = await supabase
           .from("aircraft_counter_history")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.aircraft_counter_history++;
-        } else {
-          console.error("Insert aircraft_counter_history error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("change_date", record.change_date)
+          .eq("source", record.source)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.aircraft_counter_history++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
+          const { error } = await supabase
+            .from("aircraft_counter_history")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.aircraft_counter_history++;
+          } else {
+            console.error("Insert aircraft_counter_history error:", error);
+            skipped.aircraft_counter_history++;
+          }
         }
       }
 
-      // 3. Subscriptions
+      // 3. Subscriptions - check by subscription_name
       const subscriptionsData = importPreview.tables.subscriptions || [];
       for (let i = 0; i < subscriptionsData.length; i++) {
         const record = subscriptionsData[i];
         updateProgress("subscriptions", i, subscriptionsData.length, 2);
         
-        const newId = generateId();
-        const { id: _oldId, ...recordWithoutId } = record;
-        const { error } = await supabase
+        // Check for duplicate based on subscription_name
+        const { data: existing } = await supabase
           .from("subscriptions")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.subscriptions++;
-        } else {
-          console.error("Insert subscriptions error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("subscription_name", record.subscription_name)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.subscriptions++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
+          const { error } = await supabase
+            .from("subscriptions")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.subscriptions++;
+          } else {
+            console.error("Insert subscriptions error:", error);
+            skipped.subscriptions++;
+          }
         }
       }
 
-      // 4. Directives
+      // 4. Directives - check by directive_code (unique per user)
       const directivesData = importPreview.tables.directives || [];
       for (let i = 0; i < directivesData.length; i++) {
         const record = directivesData[i];
         updateProgress("directives", i, directivesData.length, 3);
         
-        const newId = generateId();
-        const { id: _oldId, ...recordWithoutId } = record;
-        const { error } = await supabase
+        // Check for duplicate based on directive_code
+        const { data: existing } = await supabase
           .from("directives")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.directives++;
-        } else {
-          console.error("Insert directives error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("directive_code", record.directive_code)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.directives++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
+          const { error } = await supabase
+            .from("directives")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.directives++;
+          } else {
+            console.error("Insert directives error:", error);
+            skipped.directives++;
+          }
         }
       }
 
-      // 5. Maintenance logs
+      // 5. Maintenance logs - check by entry_title and date_performed
       const maintenanceLogsData = importPreview.tables.maintenance_logs || [];
       for (let i = 0; i < maintenanceLogsData.length; i++) {
         const record = maintenanceLogsData[i];
         updateProgress("maintenance_logs", i, maintenanceLogsData.length, 4);
         
-        const newId = generateId();
-        const { id: _oldId, ...recordWithoutId } = record;
-        const { error } = await supabase
+        // Check for duplicate based on entry_title and date_performed
+        const { data: existing } = await supabase
           .from("maintenance_logs")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.maintenance_logs++;
-        } else {
-          console.error("Insert maintenance_logs error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("entry_title", record.entry_title)
+          .eq("date_performed", record.date_performed)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.maintenance_logs++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
+          const { error } = await supabase
+            .from("maintenance_logs")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.maintenance_logs++;
+          } else {
+            console.error("Insert maintenance_logs error:", error);
+            skipped.maintenance_logs++;
+          }
         }
       }
 
-      // 6. Notifications
+      // 6. Notifications - check by description, initial_date, and type
       const notificationsData = importPreview.tables.notifications || [];
       for (let i = 0; i < notificationsData.length; i++) {
         const record = notificationsData[i];
         updateProgress("notifications", i, notificationsData.length, 5);
         
-        const newId = generateId();
-        const { id: _oldId, subscription_id, directive_id, maintenance_log_id, ...recordWithoutId } = record;
-        
-        const mappedRecord = {
-          ...recordWithoutId,
-          id: newId,
-          user_id: user.id,
-          subscription_id: subscription_id ? (idMap[subscription_id] || null) : null,
-          directive_id: directive_id ? (idMap[directive_id] || null) : null,
-          maintenance_log_id: maintenance_log_id ? (idMap[maintenance_log_id] || null) : null,
-        };
-
-        const { error } = await supabase
+        // Check for duplicate based on description, initial_date, type
+        const { data: existing } = await supabase
           .from("notifications")
-          .insert(mappedRecord);
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.notifications++;
-        } else {
-          console.error("Insert notifications error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("description", record.description)
+          .eq("initial_date", record.initial_date)
+          .eq("type", record.type)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.notifications++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, subscription_id, directive_id, maintenance_log_id, ...recordWithoutId } = record;
+          
+          const mappedRecord = {
+            ...recordWithoutId,
+            id: newId,
+            user_id: user.id,
+            subscription_id: subscription_id ? (idMap[subscription_id] || null) : null,
+            directive_id: directive_id ? (idMap[directive_id] || null) : null,
+            maintenance_log_id: maintenance_log_id ? (idMap[maintenance_log_id] || null) : null,
+          };
+
+          const { error } = await supabase
+            .from("notifications")
+            .insert(mappedRecord);
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.notifications++;
+          } else {
+            console.error("Insert notifications error:", error);
+            skipped.notifications++;
+          }
         }
       }
 
-      // 7. Aircraft directive status
+      // 7. Aircraft directive status - check by directive_id (one per user per directive)
       const directiveStatusData = importPreview.tables.aircraft_directive_status || [];
       for (let i = 0; i < directiveStatusData.length; i++) {
         const record = directiveStatusData[i];
         updateProgress("aircraft_directive_status", i, directiveStatusData.length, 6);
         
-        const newId = generateId();
         const { id: _oldId, directive_id, ...recordWithoutId } = record;
-        
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
+        
         if (!mappedDirectiveId) {
           console.error("Directive not found for aircraft_directive_status:", directive_id);
           skipped.aircraft_directive_status++;
           continue;
         }
 
-        const { error } = await supabase
+        // Check for duplicate based on directive_id
+        const { data: existing } = await supabase
           .from("aircraft_directive_status")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.aircraft_directive_status++;
-        } else {
-          console.error("Insert aircraft_directive_status error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("directive_id", mappedDirectiveId)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.aircraft_directive_status++;
+        } else {
+          const newId = generateId();
+          const { error } = await supabase
+            .from("aircraft_directive_status")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.aircraft_directive_status++;
+          } else {
+            console.error("Insert aircraft_directive_status error:", error);
+            skipped.aircraft_directive_status++;
+          }
         }
       }
 
-      // 8. Directive history
+      // 8. Directive history - check by directive_code, action_type, created_at
       const directiveHistoryData = importPreview.tables.directive_history || [];
       for (let i = 0; i < directiveHistoryData.length; i++) {
         const record = directiveHistoryData[i];
         updateProgress("directive_history", i, directiveHistoryData.length, 7);
         
-        const newId = generateId();
-        const { id: _oldId, directive_id, ...recordWithoutId } = record;
-        
-        const mappedDirectiveId = directive_id ? (idMap[directive_id] || null) : null;
-
-        const { error } = await supabase
+        // Check for duplicate based on directive_code, action_type, created_at
+        const { data: existing } = await supabase
           .from("directive_history")
-          .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.directive_history++;
-        } else {
-          console.error("Insert directive_history error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("directive_code", record.directive_code)
+          .eq("action_type", record.action_type)
+          .eq("created_at", record.created_at)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.directive_history++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, directive_id, ...recordWithoutId } = record;
+          const mappedDirectiveId = directive_id ? (idMap[directive_id] || null) : null;
+
+          const { error } = await supabase
+            .from("directive_history")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.directive_history++;
+          } else {
+            console.error("Insert directive_history error:", error);
+            skipped.directive_history++;
+          }
         }
       }
 
-      // 9. Maintenance directive compliance
+      // 9. Maintenance directive compliance - check by directive_id and compliance_date
       const complianceData = importPreview.tables.maintenance_directive_compliance || [];
       for (let i = 0; i < complianceData.length; i++) {
         const record = complianceData[i];
         updateProgress("maintenance_directive_compliance", i, complianceData.length, 8);
         
-        const newId = generateId();
         const { id: _oldId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
-        
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
         const mappedMaintenanceLogId = maintenance_log_id ? (idMap[maintenance_log_id] || null) : null;
 
@@ -509,21 +603,36 @@ const DataManagement = () => {
           continue;
         }
 
-        const { error } = await supabase
+        // Check for duplicate based on directive_id and compliance_date
+        const { data: existing } = await supabase
           .from("maintenance_directive_compliance")
-          .insert({ 
-            ...recordWithoutId, 
-            id: newId, 
-            user_id: user.id, 
-            directive_id: mappedDirectiveId,
-            maintenance_log_id: mappedMaintenanceLogId 
-          });
-        if (!error) {
-          idMap[record.id] = newId;
-          inserted.maintenance_directive_compliance++;
-        } else {
-          console.error("Insert maintenance_directive_compliance error:", error);
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("directive_id", mappedDirectiveId)
+          .eq("compliance_date", record.compliance_date)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
           skipped.maintenance_directive_compliance++;
+        } else {
+          const newId = generateId();
+          const { error } = await supabase
+            .from("maintenance_directive_compliance")
+            .insert({ 
+              ...recordWithoutId, 
+              id: newId, 
+              user_id: user.id, 
+              directive_id: mappedDirectiveId,
+              maintenance_log_id: mappedMaintenanceLogId 
+            });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.maintenance_directive_compliance++;
+          } else {
+            console.error("Insert maintenance_directive_compliance error:", error);
+            skipped.maintenance_directive_compliance++;
+          }
         }
       }
 
