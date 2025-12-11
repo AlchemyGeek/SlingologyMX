@@ -222,20 +222,85 @@ const DataManagement = () => {
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
       ]);
 
-      // Remove user_id from exported data
-      const sanitizeRecords = (records: any[]) => 
-        records.map(({ user_id, ...rest }) => rest);
+      // Helper to create human-readable ID from UUID and created_at date
+      const createHumanId = (prefix: string, id: string, createdAt: string, index: number): string => {
+        const date = new Date(createdAt);
+        const dateStr = `${String(date.getFullYear()).slice(-2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        return `${prefix}-${dateStr}-${String(index + 1).padStart(3, '0')}`;
+      };
+
+      // Build ID mappings for all tables (UUID -> human-readable)
+      const idMaps: Record<string, Record<string, string>> = {
+        counters: {},
+        counterHistory: {},
+        subscriptions: {},
+        notifications: {},
+        maintenanceLogs: {},
+        directives: {},
+        directiveStatus: {},
+        directiveHistory: {},
+        compliance: {},
+      };
+
+      // Sort records by created_at for consistent numbering and build mappings
+      const sortByCreated = (a: any, b: any) => 
+        new Date(a.created_at || a.change_date || 0).getTime() - new Date(b.created_at || b.change_date || 0).getTime();
+
+      const counters = (countersRes.data || []).sort(sortByCreated);
+      const counterHistory = (counterHistoryRes.data || []).sort(sortByCreated);
+      const subscriptions = (subscriptionsRes.data || []).sort(sortByCreated);
+      const notifications = (notificationsRes.data || []).sort(sortByCreated);
+      const maintenanceLogs = (maintenanceLogsRes.data || []).sort(sortByCreated);
+      const directives = (directivesRes.data || []).sort(sortByCreated);
+      const directiveStatus = (directiveStatusRes.data || []).sort(sortByCreated);
+      const directiveHistory = (directiveHistoryRes.data || []).sort(sortByCreated);
+      const compliance = (complianceRes.data || []).sort(sortByCreated);
+
+      // Build ID maps
+      counters.forEach((r, i) => { idMaps.counters[r.id] = createHumanId("CTR", r.id, r.created_at, i); });
+      counterHistory.forEach((r, i) => { idMaps.counterHistory[r.id] = createHumanId("CHI", r.id, r.change_date || r.created_at, i); });
+      subscriptions.forEach((r, i) => { idMaps.subscriptions[r.id] = createHumanId("SUB", r.id, r.created_at, i); });
+      notifications.forEach((r, i) => { idMaps.notifications[r.id] = createHumanId("NTF", r.id, r.created_at, i); });
+      maintenanceLogs.forEach((r, i) => { idMaps.maintenanceLogs[r.id] = createHumanId("MNT", r.id, r.created_at, i); });
+      directives.forEach((r, i) => { idMaps.directives[r.id] = createHumanId("DIR", r.id, r.created_at, i); });
+      directiveStatus.forEach((r, i) => { idMaps.directiveStatus[r.id] = createHumanId("ADS", r.id, r.created_at, i); });
+      directiveHistory.forEach((r, i) => { idMaps.directiveHistory[r.id] = createHumanId("DHI", r.id, r.created_at, i); });
+      compliance.forEach((r, i) => { idMaps.compliance[r.id] = createHumanId("CMP", r.id, r.created_at, i); });
+
+      // Transform records: replace UUIDs with human-readable IDs
+      const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
+        const { user_id, ...rest } = record;
+        const transformed: any = { ...rest };
+
+        // Replace own ID
+        if (transformed.id && ownIdMap[transformed.id]) {
+          transformed.id = ownIdMap[transformed.id];
+        }
+
+        // Replace foreign key references
+        if (transformed.directive_id && idMaps.directives[transformed.directive_id]) {
+          transformed.directive_id = idMaps.directives[transformed.directive_id];
+        }
+        if (transformed.subscription_id && idMaps.subscriptions[transformed.subscription_id]) {
+          transformed.subscription_id = idMaps.subscriptions[transformed.subscription_id];
+        }
+        if (transformed.maintenance_log_id && idMaps.maintenanceLogs[transformed.maintenance_log_id]) {
+          transformed.maintenance_log_id = idMaps.maintenanceLogs[transformed.maintenance_log_id];
+        }
+
+        return transformed;
+      };
 
       const tables = {
-        "Aircraft Counters": sanitizeRecords(countersRes.data || []),
-        "Counter History": sanitizeRecords(counterHistoryRes.data || []),
-        "Subscriptions": sanitizeRecords(subscriptionsRes.data || []),
-        "Notifications": sanitizeRecords(notificationsRes.data || []),
-        "Maintenance Logs": sanitizeRecords(maintenanceLogsRes.data || []),
-        "Directives": sanitizeRecords(directivesRes.data || []),
-        "Directive Status": sanitizeRecords(directiveStatusRes.data || []),
-        "Directive History": sanitizeRecords(directiveHistoryRes.data || []),
-        "Compliance Records": sanitizeRecords(complianceRes.data || []),
+        "Aircraft Counters": counters.map(r => transformRecord(r, idMaps.counters)),
+        "Counter History": counterHistory.map(r => transformRecord(r, idMaps.counterHistory)),
+        "Subscriptions": subscriptions.map(r => transformRecord(r, idMaps.subscriptions)),
+        "Notifications": notifications.map(r => transformRecord(r, idMaps.notifications)),
+        "Maintenance Logs": maintenanceLogs.map(r => transformRecord(r, idMaps.maintenanceLogs)),
+        "Directives": directives.map(r => transformRecord(r, idMaps.directives)),
+        "Directive Status": directiveStatus.map(r => transformRecord(r, idMaps.directiveStatus)),
+        "Directive History": directiveHistory.map(r => transformRecord(r, idMaps.directiveHistory)),
+        "Compliance Records": compliance.map(r => transformRecord(r, idMaps.compliance)),
       };
 
       // Create workbook with separate worksheets
