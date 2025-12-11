@@ -209,7 +209,7 @@ export type Database = {
           steps_to_reproduce: string | null
           title: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           actual_result: string
@@ -233,7 +233,7 @@ export type Database = {
           steps_to_reproduce?: string | null
           title: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           actual_result?: string
@@ -257,17 +257,9 @@ export type Database = {
           steps_to_reproduce?: string | null
           title?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "bug_reports_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       directive_history: {
         Row: {
@@ -445,7 +437,7 @@ export type Database = {
           status: Database["public"]["Enums"]["feature_status"]
           title: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           vote_count: number | null
         }
         Insert: {
@@ -456,7 +448,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["feature_status"]
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           vote_count?: number | null
         }
         Update: {
@@ -467,7 +459,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["feature_status"]
           title?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           vote_count?: number | null
         }
         Relationships: []
