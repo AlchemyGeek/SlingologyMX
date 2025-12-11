@@ -8,33 +8,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 
+type AuthView = "choice" | "login" | "signup";
+
 const Auth = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<AuthView>("choice");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
 
+  // Signup profile fields
+  const [name, setName] = useState("");
+  const [country, setCountry] = useState("");
+  const [statePrefecture, setStatePrefecture] = useState("");
+  const [city, setCity] = useState("");
+  const [planeRegistration, setPlaneRegistration] = useState("");
+  const [planeModelMake, setPlaneModelMake] = useState("");
+
   useEffect(() => {
-    // Set up auth state listener to react to auth changes properly
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only redirect if we have a valid session AND it's not a sign out event
       if (session && event !== 'SIGNED_OUT') {
-        sessionStorage.removeItem("disclaimer_acknowledged");
-        navigate("/disclaimer");
+        // Check if user status is Applied and needs to be updated to Approved
+        handleFirstLoginApproval(session.user.id);
       }
     });
 
-    // Check for existing session - but verify it's valid by checking with server
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // Verify the session is still valid
         supabase.auth.getUser().then(({ data: { user }, error }) => {
           if (user && !error) {
-            sessionStorage.removeItem("disclaimer_acknowledged");
-            navigate("/disclaimer");
+            handleFirstLoginApproval(user.id);
           }
         });
       }
@@ -43,33 +48,48 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleFirstLoginApproval = async (userId: string) => {
+    try {
+      // Check current membership status
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('membership_status')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      // If status is Applied, update to Approved (email was confirmed by clicking link)
+      if (profile?.membership_status === 'Applied') {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ membership_status: 'Approved' })
+          .eq('id', userId);
+
+        if (updateError) throw updateError;
+        toast.success("Your account has been approved!");
+      }
+
+      sessionStorage.removeItem("disclaimer_acknowledged");
+      navigate("/disclaimer");
+    } catch (error: any) {
+      console.error("Error checking/updating status:", error);
+      sessionStorage.removeItem("disclaimer_acknowledged");
+      navigate("/disclaimer");
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Logged in successfully!");
-        sessionStorage.removeItem("disclaimer_acknowledged");
-        navigate("/disclaimer");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: "https://id-preview--751708b1-7870-443f-af82-ebabf3659c9a.lovable.app/auth",
-          },
-        });
-        if (error) throw error;
-        setSentEmail(email);
-        setEmailSent(true);
-        toast.success("Verification email sent!");
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      toast.success("Logged in successfully!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -77,47 +97,231 @@ const Auth = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-2">
-            <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
-          </div>
-          <CardTitle className="text-2xl">Aircraft Maintenance Tracker</CardTitle>
-          <CardDescription>
-            {isLogin ? "Sign in to your account" : "Create a new account"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {emailSent ? (
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    if (!planeRegistration.trim()) {
+      toast.error("Plane Registration is required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: {
+            name: name.trim(),
+            country: country.trim() || null,
+            state_prefecture: statePrefecture.trim() || null,
+            city: city.trim() || null,
+            plane_registration: planeRegistration.trim(),
+            plane_model_make: planeModelMake.trim() || null,
+          },
+        },
+      });
+      if (error) throw error;
+      setSentEmail(email);
+      setEmailSent(true);
+      toast.success("Verification email sent!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setCountry("");
+    setStatePrefecture("");
+    setCity("");
+    setPlaneRegistration("");
+    setPlaneModelMake("");
+  };
+
+  // Choice view - Sign Up or Log In
+  if (view === "choice" && !emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-20 w-20" />
+            </div>
+            <CardTitle className="text-2xl">SlingologyMX</CardTitle>
+            <CardDescription>
+              Aircraft Maintenance Tracker
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              className="w-full h-12 text-lg" 
+              onClick={() => setView("signup")}
+            >
+              Sign Up
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full h-12 text-lg"
+              onClick={() => setView("login")}
+            >
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Email sent confirmation
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+            </div>
+            <CardTitle className="text-2xl">Check Your Email</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="text-center space-y-4">
               <div className="p-4 bg-primary/10 rounded-lg">
                 <p className="text-foreground">
                   A verification email has been sent to <strong>{sentEmail}</strong>
                 </p>
                 <p className="text-muted-foreground text-sm mt-2">
-                  Please check your inbox and click the link to verify your account.
+                  Please check your inbox and click the link to verify your account and complete registration.
                 </p>
               </div>
+              <p className="text-muted-foreground text-sm">
+                Your account will be activated once you verify your email.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEmailSent(false);
+                  resetForm();
+                  setView("login");
+                }}
+                className="mt-4"
+              >
+                Back to Log In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Login view
+  if (view === "login") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+            </div>
+            <CardTitle className="text-2xl">Log In</CardTitle>
+            <CardDescription>
+              Sign in to your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in..." : "Log In"}
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
               <button
                 type="button"
                 onClick={() => {
-                  setEmailSent(false);
-                  setIsLogin(true);
+                  resetForm();
+                  setView("choice");
                 }}
                 className="text-primary hover:underline text-sm"
               >
-                Back to Sign In
+                ← Back
               </button>
             </div>
-          ) : (
-            <>
-              <form onSubmit={handleAuth} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Signup view with profile fields
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-2">
+            <img src={slingologyIcon} alt="SlingologyMX" className="h-16 w-16" />
+          </div>
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription>
+            Enter your information to create an account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignup} className="space-y-4">
+            {/* Account Information */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Account Information</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>
                   <Input
-                    id="email"
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={50}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="signup-email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
@@ -126,9 +330,9 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signup-password">Password <span className="text-destructive">*</span></Label>
                   <Input
-                    id="password"
+                    id="signup-password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
@@ -137,21 +341,92 @@ const Auth = () => {
                     minLength={6}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
-                </Button>
-              </form>
-              <div className="mt-4 text-center text-sm">
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline"
-                >
-                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-                </button>
               </div>
-            </>
-          )}
+            </div>
+
+            {/* Location */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Location</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    type="text"
+                    placeholder="Country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State / Prefecture</Label>
+                  <Input
+                    id="state"
+                    type="text"
+                    placeholder="State"
+                    value={statePrefecture}
+                    onChange={(e) => setStatePrefecture(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    placeholder="City"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Aircraft Information */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Aircraft Information</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="plane-reg">Plane Registration <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="plane-reg"
+                    type="text"
+                    placeholder="N12345"
+                    value={planeRegistration}
+                    onChange={(e) => setPlaneRegistration(e.target.value)}
+                    maxLength={8}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="plane-model">Plane Model & Make</Label>
+                  <Input
+                    id="plane-model"
+                    type="text"
+                    placeholder="e.g. Sling TSi"
+                    value={planeModelMake}
+                    onChange={(e) => setPlaneModelMake(e.target.value)}
+                    maxLength={50}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating account..." : "Create Account"}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setView("choice");
+              }}
+              className="text-primary hover:underline text-sm"
+            >
+              ← Back
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
