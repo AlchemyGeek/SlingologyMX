@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const Auth = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const isRecoveryModeRef = useRef(false);
 
   // Signup profile fields
   const [name, setName] = useState("");
@@ -37,9 +38,9 @@ const Auth = () => {
     // Check URL hash FIRST, synchronously, before any async operations
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
-    const isRecoveryFromUrl = type === 'recovery';
     
-    if (isRecoveryFromUrl) {
+    if (type === 'recovery') {
+      isRecoveryModeRef.current = true;
       setIsPasswordRecovery(true);
       setView("reset-password");
       // Clear the hash to prevent re-triggering on refresh after password change
@@ -67,11 +68,6 @@ const Auth = () => {
 
     checkSignupEnabled();
 
-    // Skip auth state handling if this is a password recovery
-    if (isRecoveryFromUrl) {
-      return;
-    }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked the password reset link - set flag and show reset view
@@ -80,21 +76,24 @@ const Auth = () => {
         return;
       }
       // Don't redirect if we're in password recovery mode
-      if (session && event !== 'SIGNED_OUT') {
+      if (session && event !== 'SIGNED_OUT' && !isRecoveryModeRef.current) {
         // Check if user status is Applied and needs to be updated to Approved
         handleFirstLoginApproval(session.user.id);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        supabase.auth.getUser().then(({ data: { user }, error }) => {
-          if (user && !error) {
-            handleFirstLoginApproval(user.id);
-          }
-        });
-      }
-    });
+    // Only check existing session if not in recovery mode
+    if (!isRecoveryModeRef.current) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          supabase.auth.getUser().then(({ data: { user }, error }) => {
+            if (user && !error) {
+              handleFirstLoginApproval(user.id);
+            }
+          });
+        }
+      });
+    }
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -252,6 +251,7 @@ const Auth = () => {
       if (error) throw error;
       // Sign out after password reset so user can log in with new password
       await supabase.auth.signOut();
+      isRecoveryModeRef.current = false;
       setIsPasswordRecovery(false);
       toast.success("Password updated successfully! Please log in with your new password.");
       resetForm();
