@@ -5,6 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, Shield, User, CheckCircle, Clock, Ban } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import UserDetailDialog from "./UserDetailDialog";
 
 interface UserProfile {
@@ -21,6 +24,8 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [signupEnabled, setSignupEnabled] = useState(true);
+  const [signupLoading, setSignupLoading] = useState(true);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -66,8 +71,43 @@ const UserManagement = () => {
     }
   };
 
+  const fetchSignupSetting = async () => {
+    setSignupLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "signup_enabled")
+        .single();
+
+      if (error) throw error;
+      setSignupEnabled(data?.setting_value === "true");
+    } catch (error) {
+      console.error("Error fetching signup setting:", error);
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
+  const toggleSignup = async (enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("app_settings")
+        .update({ setting_value: enabled ? "true" : "false", updated_at: new Date().toISOString() })
+        .eq("setting_key", "signup_enabled");
+
+      if (error) throw error;
+      setSignupEnabled(enabled);
+      toast.success(`New user signups ${enabled ? "enabled" : "disabled"}`);
+    } catch (error: any) {
+      console.error("Error updating signup setting:", error);
+      toast.error("Failed to update signup setting");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchSignupSetting();
   }, []);
 
   const formatDate = (dateString: string | null) => {
@@ -104,13 +144,26 @@ const UserManagement = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            User Management
-            <Badge variant="secondary" className="ml-2">
-              {users.length} users
-            </Badge>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Management
+              <Badge variant="secondary" className="ml-2">
+                {users.length} users
+              </Badge>
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="signup-toggle" className="text-sm text-muted-foreground">
+                Allow new signups
+              </Label>
+              <Switch
+                id="signup-toggle"
+                checked={signupEnabled}
+                onCheckedChange={toggleSignup}
+                disabled={signupLoading}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
