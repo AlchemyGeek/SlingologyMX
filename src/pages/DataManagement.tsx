@@ -252,8 +252,14 @@ const DataManagement = () => {
         maintenance_directive_compliance: 0,
       };
 
+      // ID mapping for cross-user imports (old ID -> new ID)
+      const idMap: Record<string, string> = {};
+
+      // Helper to generate new UUID
+      const generateId = () => crypto.randomUUID();
+
       // Import order matters due to foreign key relationships
-      // 1. Aircraft counters (standalone)
+      // 1. Aircraft counters (standalone - one per user)
       for (const record of importPreview.tables.aircraft_counters || []) {
         const { data: existing } = await supabase
           .from("aircraft_counters")
@@ -262,169 +268,195 @@ const DataManagement = () => {
           .maybeSingle();
 
         if (existing) {
-          // Update existing counter record
+          // Update existing counter record with imported values
+          const { id: _oldId, ...recordWithoutId } = record;
           await supabase
             .from("aircraft_counters")
-            .update({ ...record, user_id: user.id })
+            .update({ ...recordWithoutId })
             .eq("id", existing.id);
+          idMap[record.id] = existing.id;
           skipped.aircraft_counters++;
         } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("aircraft_counters")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.aircraft_counters++;
-          else skipped.aircraft_counters++;
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.aircraft_counters++;
+          } else {
+            console.error("Insert aircraft_counters error:", error);
+            skipped.aircraft_counters++;
+          }
         }
       }
 
-      // 2. Counter history (standalone)
+      // 2. Counter history (standalone - generate new IDs)
       for (const record of importPreview.tables.aircraft_counter_history || []) {
-        const { data: existing } = await supabase
+        const newId = generateId();
+        const { id: _oldId, ...recordWithoutId } = record;
+        const { error } = await supabase
           .from("aircraft_counter_history")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error } = await supabase
-            .from("aircraft_counter_history")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.aircraft_counter_history++;
-          else skipped.aircraft_counter_history++;
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.aircraft_counter_history++;
         } else {
+          console.error("Insert aircraft_counter_history error:", error);
           skipped.aircraft_counter_history++;
         }
       }
 
       // 3. Subscriptions (before notifications due to foreign key)
       for (const record of importPreview.tables.subscriptions || []) {
-        const { data: existing } = await supabase
+        const newId = generateId();
+        const { id: _oldId, ...recordWithoutId } = record;
+        const { error } = await supabase
           .from("subscriptions")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error } = await supabase
-            .from("subscriptions")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.subscriptions++;
-          else skipped.subscriptions++;
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.subscriptions++;
         } else {
+          console.error("Insert subscriptions error:", error);
           skipped.subscriptions++;
         }
       }
 
       // 4. Directives (before directive_status and compliance)
       for (const record of importPreview.tables.directives || []) {
-        const { data: existing } = await supabase
+        const newId = generateId();
+        const { id: _oldId, ...recordWithoutId } = record;
+        const { error } = await supabase
           .from("directives")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error } = await supabase
-            .from("directives")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.directives++;
-          else skipped.directives++;
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.directives++;
         } else {
+          console.error("Insert directives error:", error);
           skipped.directives++;
         }
       }
 
       // 5. Maintenance logs (before notifications and compliance)
       for (const record of importPreview.tables.maintenance_logs || []) {
-        const { data: existing } = await supabase
+        const newId = generateId();
+        const { id: _oldId, ...recordWithoutId } = record;
+        const { error } = await supabase
           .from("maintenance_logs")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error } = await supabase
-            .from("maintenance_logs")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.maintenance_logs++;
-          else skipped.maintenance_logs++;
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.maintenance_logs++;
         } else {
+          console.error("Insert maintenance_logs error:", error);
           skipped.maintenance_logs++;
         }
       }
 
       // 6. Notifications (after subscriptions, maintenance_logs, directives)
+      // Must remap foreign key references
       for (const record of importPreview.tables.notifications || []) {
-        const { data: existing } = await supabase
-          .from("notifications")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
+        const newId = generateId();
+        const { id: _oldId, subscription_id, directive_id, maintenance_log_id, ...recordWithoutId } = record;
+        
+        // Map foreign keys to new IDs
+        const mappedRecord = {
+          ...recordWithoutId,
+          id: newId,
+          user_id: user.id,
+          subscription_id: subscription_id ? (idMap[subscription_id] || null) : null,
+          directive_id: directive_id ? (idMap[directive_id] || null) : null,
+          maintenance_log_id: maintenance_log_id ? (idMap[maintenance_log_id] || null) : null,
+        };
 
-        if (!existing) {
-          const { error } = await supabase
-            .from("notifications")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.notifications++;
-          else skipped.notifications++;
+        const { error } = await supabase
+          .from("notifications")
+          .insert(mappedRecord);
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.notifications++;
         } else {
+          console.error("Insert notifications error:", error);
           skipped.notifications++;
         }
       }
 
       // 7. Aircraft directive status (after directives)
+      // Must remap directive_id
       for (const record of importPreview.tables.aircraft_directive_status || []) {
-        const { data: existing } = await supabase
-          .from("aircraft_directive_status")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
+        const newId = generateId();
+        const { id: _oldId, directive_id, ...recordWithoutId } = record;
+        
+        const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
+        if (!mappedDirectiveId) {
+          console.error("Directive not found for aircraft_directive_status:", directive_id);
+          skipped.aircraft_directive_status++;
+          continue;
+        }
 
-        if (!existing) {
-          const { error } = await supabase
-            .from("aircraft_directive_status")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.aircraft_directive_status++;
-          else skipped.aircraft_directive_status++;
+        const { error } = await supabase
+          .from("aircraft_directive_status")
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.aircraft_directive_status++;
         } else {
+          console.error("Insert aircraft_directive_status error:", error);
           skipped.aircraft_directive_status++;
         }
       }
 
       // 8. Directive history (standalone with directive reference)
       for (const record of importPreview.tables.directive_history || []) {
-        const { data: existing } = await supabase
-          .from("directive_history")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
+        const newId = generateId();
+        const { id: _oldId, directive_id, ...recordWithoutId } = record;
+        
+        // directive_id is optional in history
+        const mappedDirectiveId = directive_id ? (idMap[directive_id] || null) : null;
 
-        if (!existing) {
-          const { error } = await supabase
-            .from("directive_history")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.directive_history++;
-          else skipped.directive_history++;
+        const { error } = await supabase
+          .from("directive_history")
+          .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.directive_history++;
         } else {
+          console.error("Insert directive_history error:", error);
           skipped.directive_history++;
         }
       }
 
       // 9. Maintenance directive compliance (after directives and maintenance_logs)
       for (const record of importPreview.tables.maintenance_directive_compliance || []) {
-        const { data: existing } = await supabase
-          .from("maintenance_directive_compliance")
-          .select("id")
-          .eq("id", record.id)
-          .maybeSingle();
+        const newId = generateId();
+        const { id: _oldId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
+        
+        const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
+        const mappedMaintenanceLogId = maintenance_log_id ? (idMap[maintenance_log_id] || null) : null;
 
-        if (!existing) {
-          const { error } = await supabase
-            .from("maintenance_directive_compliance")
-            .insert({ ...record, user_id: user.id });
-          if (!error) inserted.maintenance_directive_compliance++;
-          else skipped.maintenance_directive_compliance++;
+        if (!mappedDirectiveId) {
+          console.error("Directive not found for compliance:", directive_id);
+          skipped.maintenance_directive_compliance++;
+          continue;
+        }
+
+        const { error } = await supabase
+          .from("maintenance_directive_compliance")
+          .insert({ 
+            ...recordWithoutId, 
+            id: newId, 
+            user_id: user.id, 
+            directive_id: mappedDirectiveId,
+            maintenance_log_id: mappedMaintenanceLogId 
+          });
+        if (!error) {
+          idMap[record.id] = newId;
+          inserted.maintenance_directive_compliance++;
         } else {
+          console.error("Insert maintenance_directive_compliance error:", error);
           skipped.maintenance_directive_compliance++;
         }
       }
