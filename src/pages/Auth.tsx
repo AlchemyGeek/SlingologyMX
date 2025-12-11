@@ -18,6 +18,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+  const [signupEnabled, setSignupEnabled] = useState(true);
+  const [checkingSignup, setCheckingSignup] = useState(true);
 
   // Signup profile fields
   const [name, setName] = useState("");
@@ -28,6 +30,27 @@ const Auth = () => {
   const [planeModelMake, setPlaneModelMake] = useState("");
 
   useEffect(() => {
+    // Check if signups are enabled
+    const checkSignupEnabled = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("app_settings")
+          .select("setting_value")
+          .eq("setting_key", "signup_enabled")
+          .single();
+
+        if (!error && data) {
+          setSignupEnabled(data.setting_value === "true");
+        }
+      } catch (error) {
+        console.error("Error checking signup setting:", error);
+      } finally {
+        setCheckingSignup(false);
+      }
+    };
+
+    checkSignupEnabled();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event !== 'SIGNED_OUT') {
         // Check if user status is Applied and needs to be updated to Approved
@@ -175,9 +198,15 @@ const Auth = () => {
             <Button 
               className="w-full h-12 text-lg" 
               onClick={() => setView("signup")}
+              disabled={!signupEnabled || checkingSignup}
             >
               Sign Up
             </Button>
+            {!checkingSignup && !signupEnabled && (
+              <p className="text-sm text-muted-foreground text-center">
+                New user signups are currently unavailable. Please check back later.
+              </p>
+            )}
             <Button 
               variant="outline" 
               className="w-full h-12 text-lg"
