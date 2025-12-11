@@ -5,9 +5,10 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2, FileSpreadsheet } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import * as XLSX from "xlsx";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -74,6 +75,7 @@ const DataManagement = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exportCounts, setExportCounts] = useState<RecordCounts | null>(null);
   const [importCounts, setImportCounts] = useState<RecordCounts | null>(null);
@@ -189,6 +191,70 @@ const DataManagement = () => {
       toast.error("Failed to export data");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!user?.id) return;
+
+    setExportingExcel(true);
+    try {
+      // Fetch all user data from each table
+      const [
+        countersRes,
+        counterHistoryRes,
+        subscriptionsRes,
+        notificationsRes,
+        maintenanceLogsRes,
+        directivesRes,
+        directiveStatusRes,
+        directiveHistoryRes,
+        complianceRes,
+      ] = await Promise.all([
+        supabase.from("aircraft_counters").select("*").eq("user_id", user.id),
+        supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id),
+        supabase.from("notifications").select("*").eq("user_id", user.id),
+        supabase.from("maintenance_logs").select("*").eq("user_id", user.id),
+        supabase.from("directives").select("*").eq("user_id", user.id),
+        supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id),
+        supabase.from("directive_history").select("*").eq("user_id", user.id),
+        supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
+      ]);
+
+      // Remove user_id from exported data
+      const sanitizeRecords = (records: any[]) => 
+        records.map(({ user_id, ...rest }) => rest);
+
+      const tables = {
+        "Aircraft Counters": sanitizeRecords(countersRes.data || []),
+        "Counter History": sanitizeRecords(counterHistoryRes.data || []),
+        "Subscriptions": sanitizeRecords(subscriptionsRes.data || []),
+        "Notifications": sanitizeRecords(notificationsRes.data || []),
+        "Maintenance Logs": sanitizeRecords(maintenanceLogsRes.data || []),
+        "Directives": sanitizeRecords(directivesRes.data || []),
+        "Directive Status": sanitizeRecords(directiveStatusRes.data || []),
+        "Directive History": sanitizeRecords(directiveHistoryRes.data || []),
+        "Compliance Records": sanitizeRecords(complianceRes.data || []),
+      };
+
+      // Create workbook with separate worksheets
+      const workbook = XLSX.utils.book_new();
+      
+      Object.entries(tables).forEach(([sheetName, data]) => {
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      });
+
+      // Download file
+      XLSX.writeFile(workbook, `slingologymx-export-${new Date().toISOString().split("T")[0]}.xlsx`);
+
+      toast.success("Excel file exported successfully!");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("Failed to export Excel file");
+    } finally {
+      setExportingExcel(false);
     }
   };
 
@@ -717,9 +783,16 @@ const DataManagement = () => {
                   </p>
                 </div>
 
-                <Button onClick={handleExport} disabled={exporting} className="w-full">
-                  {exporting ? "Exporting..." : "Export Data as JSON"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleExport} disabled={exporting || exportingExcel} className="flex-1">
+                    <FileJson className="h-4 w-4 mr-2" />
+                    {exporting ? "Exporting..." : "Export as JSON"}
+                  </Button>
+                  <Button onClick={handleExportExcel} disabled={exporting || exportingExcel} variant="outline" className="flex-1">
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    {exportingExcel ? "Exporting..." : "Export as Excel"}
+                  </Button>
+                </div>
 
                 {exportCounts && (
                   <Card className="border-primary/20">
