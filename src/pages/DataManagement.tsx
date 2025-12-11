@@ -237,6 +237,7 @@ const DataManagement = () => {
     setImporting(true);
     setShowImportConfirm(false);
     setImportProgress(null);
+    setImportResult(null);
 
     try {
       const inserted: RecordCounts = {
