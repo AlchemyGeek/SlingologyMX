@@ -5,7 +5,8 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -80,6 +81,15 @@ const DataManagement = () => {
   const [showImportConfirm, setShowImportConfirm] = useState(false);
   const [importResult, setImportResult] = useState<{ inserted: RecordCounts; skipped: RecordCounts } | null>(null);
   const [activeTab, setActiveTab] = useState("export");
+  
+  // Progress tracking
+  const [importProgress, setImportProgress] = useState<{
+    currentTable: string;
+    currentIndex: number;
+    totalInTable: number;
+    tablesCompleted: number;
+    totalTables: number;
+  } | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -226,6 +236,7 @@ const DataManagement = () => {
 
     setImporting(true);
     setShowImportConfirm(false);
+    setImportProgress(null);
 
     try {
       const inserted: RecordCounts = {
@@ -258,9 +269,37 @@ const DataManagement = () => {
       // Helper to generate new UUID
       const generateId = () => crypto.randomUUID();
 
+      // Table import order
+      const tableOrder = [
+        "aircraft_counters",
+        "aircraft_counter_history", 
+        "subscriptions",
+        "directives",
+        "maintenance_logs",
+        "notifications",
+        "aircraft_directive_status",
+        "directive_history",
+        "maintenance_directive_compliance",
+      ] as const;
+
+      // Helper to update progress
+      const updateProgress = (tableName: string, index: number, total: number, tableIndex: number) => {
+        setImportProgress({
+          currentTable: tableDisplayNames[tableName] || tableName,
+          currentIndex: index + 1,
+          totalInTable: total,
+          tablesCompleted: tableIndex,
+          totalTables: tableOrder.length,
+        });
+      };
+
       // Import order matters due to foreign key relationships
       // 1. Aircraft counters (standalone - one per user)
-      for (const record of importPreview.tables.aircraft_counters || []) {
+      const countersData = importPreview.tables.aircraft_counters || [];
+      for (let i = 0; i < countersData.length; i++) {
+        const record = countersData[i];
+        updateProgress("aircraft_counters", i, countersData.length, 0);
+        
         const { data: existing } = await supabase
           .from("aircraft_counters")
           .select("id")
@@ -268,7 +307,6 @@ const DataManagement = () => {
           .maybeSingle();
 
         if (existing) {
-          // Update existing counter record with imported values
           const { id: _oldId, ...recordWithoutId } = record;
           await supabase
             .from("aircraft_counters")
@@ -292,8 +330,12 @@ const DataManagement = () => {
         }
       }
 
-      // 2. Counter history (standalone - generate new IDs)
-      for (const record of importPreview.tables.aircraft_counter_history || []) {
+      // 2. Counter history
+      const counterHistoryData = importPreview.tables.aircraft_counter_history || [];
+      for (let i = 0; i < counterHistoryData.length; i++) {
+        const record = counterHistoryData[i];
+        updateProgress("aircraft_counter_history", i, counterHistoryData.length, 1);
+        
         const newId = generateId();
         const { id: _oldId, ...recordWithoutId } = record;
         const { error } = await supabase
@@ -308,8 +350,12 @@ const DataManagement = () => {
         }
       }
 
-      // 3. Subscriptions (before notifications due to foreign key)
-      for (const record of importPreview.tables.subscriptions || []) {
+      // 3. Subscriptions
+      const subscriptionsData = importPreview.tables.subscriptions || [];
+      for (let i = 0; i < subscriptionsData.length; i++) {
+        const record = subscriptionsData[i];
+        updateProgress("subscriptions", i, subscriptionsData.length, 2);
+        
         const newId = generateId();
         const { id: _oldId, ...recordWithoutId } = record;
         const { error } = await supabase
@@ -324,8 +370,12 @@ const DataManagement = () => {
         }
       }
 
-      // 4. Directives (before directive_status and compliance)
-      for (const record of importPreview.tables.directives || []) {
+      // 4. Directives
+      const directivesData = importPreview.tables.directives || [];
+      for (let i = 0; i < directivesData.length; i++) {
+        const record = directivesData[i];
+        updateProgress("directives", i, directivesData.length, 3);
+        
         const newId = generateId();
         const { id: _oldId, ...recordWithoutId } = record;
         const { error } = await supabase
@@ -340,8 +390,12 @@ const DataManagement = () => {
         }
       }
 
-      // 5. Maintenance logs (before notifications and compliance)
-      for (const record of importPreview.tables.maintenance_logs || []) {
+      // 5. Maintenance logs
+      const maintenanceLogsData = importPreview.tables.maintenance_logs || [];
+      for (let i = 0; i < maintenanceLogsData.length; i++) {
+        const record = maintenanceLogsData[i];
+        updateProgress("maintenance_logs", i, maintenanceLogsData.length, 4);
+        
         const newId = generateId();
         const { id: _oldId, ...recordWithoutId } = record;
         const { error } = await supabase
@@ -356,13 +410,15 @@ const DataManagement = () => {
         }
       }
 
-      // 6. Notifications (after subscriptions, maintenance_logs, directives)
-      // Must remap foreign key references
-      for (const record of importPreview.tables.notifications || []) {
+      // 6. Notifications
+      const notificationsData = importPreview.tables.notifications || [];
+      for (let i = 0; i < notificationsData.length; i++) {
+        const record = notificationsData[i];
+        updateProgress("notifications", i, notificationsData.length, 5);
+        
         const newId = generateId();
         const { id: _oldId, subscription_id, directive_id, maintenance_log_id, ...recordWithoutId } = record;
         
-        // Map foreign keys to new IDs
         const mappedRecord = {
           ...recordWithoutId,
           id: newId,
@@ -384,9 +440,12 @@ const DataManagement = () => {
         }
       }
 
-      // 7. Aircraft directive status (after directives)
-      // Must remap directive_id
-      for (const record of importPreview.tables.aircraft_directive_status || []) {
+      // 7. Aircraft directive status
+      const directiveStatusData = importPreview.tables.aircraft_directive_status || [];
+      for (let i = 0; i < directiveStatusData.length; i++) {
+        const record = directiveStatusData[i];
+        updateProgress("aircraft_directive_status", i, directiveStatusData.length, 6);
+        
         const newId = generateId();
         const { id: _oldId, directive_id, ...recordWithoutId } = record;
         
@@ -409,12 +468,15 @@ const DataManagement = () => {
         }
       }
 
-      // 8. Directive history (standalone with directive reference)
-      for (const record of importPreview.tables.directive_history || []) {
+      // 8. Directive history
+      const directiveHistoryData = importPreview.tables.directive_history || [];
+      for (let i = 0; i < directiveHistoryData.length; i++) {
+        const record = directiveHistoryData[i];
+        updateProgress("directive_history", i, directiveHistoryData.length, 7);
+        
         const newId = generateId();
         const { id: _oldId, directive_id, ...recordWithoutId } = record;
         
-        // directive_id is optional in history
         const mappedDirectiveId = directive_id ? (idMap[directive_id] || null) : null;
 
         const { error } = await supabase
@@ -429,8 +491,12 @@ const DataManagement = () => {
         }
       }
 
-      // 9. Maintenance directive compliance (after directives and maintenance_logs)
-      for (const record of importPreview.tables.maintenance_directive_compliance || []) {
+      // 9. Maintenance directive compliance
+      const complianceData = importPreview.tables.maintenance_directive_compliance || [];
+      for (let i = 0; i < complianceData.length; i++) {
+        const record = complianceData[i];
+        updateProgress("maintenance_directive_compliance", i, complianceData.length, 8);
+        
         const newId = generateId();
         const { id: _oldId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
         
@@ -461,11 +527,13 @@ const DataManagement = () => {
         }
       }
 
+      setImportProgress(null);
       setImportResult({ inserted, skipped });
       toast.success("Data imported successfully!");
     } catch (error) {
       console.error("Import error:", error);
       toast.error("Failed to import data");
+      setImportProgress(null);
     } finally {
       setImporting(false);
     }
@@ -658,6 +726,47 @@ const DataManagement = () => {
                       >
                         {importing ? "Importing..." : "Import Data"}
                       </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {importing && importProgress && (
+                  <Card className="border-primary/20">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Importing Data...
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Overall Progress</span>
+                          <span className="font-mono">
+                            {importProgress.tablesCompleted + 1} / {importProgress.totalTables} tables
+                          </span>
+                        </div>
+                        <Progress 
+                          value={(importProgress.tablesCompleted / importProgress.totalTables) * 100} 
+                          className="h-2"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{importProgress.currentTable}</span>
+                          <span className="font-mono text-muted-foreground">
+                            {importProgress.currentIndex} / {importProgress.totalInTable}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={importProgress.totalInTable > 0 
+                            ? (importProgress.currentIndex / importProgress.totalInTable) * 100 
+                            : 0
+                          } 
+                          className="h-2"
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 )}
