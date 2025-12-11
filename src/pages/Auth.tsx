@@ -34,6 +34,18 @@ const Auth = () => {
   const [planeModelMake, setPlaneModelMake] = useState("");
 
   useEffect(() => {
+    // Check URL hash FIRST, synchronously, before any async operations
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    const isRecoveryFromUrl = type === 'recovery';
+    
+    if (isRecoveryFromUrl) {
+      setIsPasswordRecovery(true);
+      setView("reset-password");
+      // Clear the hash to prevent re-triggering on refresh after password change
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
     // Check if signups are enabled
     const checkSignupEnabled = async () => {
       try {
@@ -55,6 +67,11 @@ const Auth = () => {
 
     checkSignupEnabled();
 
+    // Skip auth state handling if this is a password recovery
+    if (isRecoveryFromUrl) {
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked the password reset link - set flag and show reset view
@@ -63,24 +80,14 @@ const Auth = () => {
         return;
       }
       // Don't redirect if we're in password recovery mode
-      if (session && event !== 'SIGNED_OUT' && !isPasswordRecovery) {
+      if (session && event !== 'SIGNED_OUT') {
         // Check if user status is Applied and needs to be updated to Approved
         handleFirstLoginApproval(session.user.id);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Check URL for recovery token to detect password recovery on initial load
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
-      
-      if (type === 'recovery') {
-        setIsPasswordRecovery(true);
-        setView("reset-password");
-        return;
-      }
-      
-      if (session && !isPasswordRecovery) {
+      if (session) {
         supabase.auth.getUser().then(({ data: { user }, error }) => {
           if (user && !error) {
             handleFirstLoginApproval(user.id);
