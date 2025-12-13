@@ -16,6 +16,7 @@ import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
+import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
 const counterTypeToFieldMap: Record<string, string> = {
@@ -169,6 +170,13 @@ const Dashboard = () => {
           <CalendarPanel
             userId={user!.id}
             refreshKey={recordsRefreshKey}
+            currentCounters={currentCounters}
+          />
+        );
+      case "counters":
+        return (
+          <CountersPanel
+            userId={user!.id}
             currentCounters={currentCounters}
           />
         );

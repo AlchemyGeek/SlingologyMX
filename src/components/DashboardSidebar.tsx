@@ -1,4 +1,4 @@
-import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, HelpCircle, BookOpen, MessageCircle, Bug, Lightbulb, Database } from "lucide-react";
+import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, HelpCircle, BookOpen, MessageCircle, Bug, Lightbulb, Database, Gauge } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -13,6 +13,7 @@ import {
 
 type DashboardView = 
   | "calendar" 
+  | "counters"
   | "notifications" 
   | "history" 
   | "subscriptions" 
@@ -27,6 +28,7 @@ interface DashboardSidebarProps {
 
 const eventsItems = [
   { id: "calendar" as const, title: "Calendar", icon: Calendar },
+  { id: "counters" as const, title: "Counters", icon: Gauge },
   { id: "notifications" as const, title: "Notifications", icon: Bell },
   { id: "history" as const, title: "History", icon: History },
 ];
