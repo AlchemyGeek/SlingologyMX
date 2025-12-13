@@ -858,7 +858,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          cost: number
+          cost: number | null
           created_at: string | null
           id: string
           initial_date: string
@@ -870,7 +870,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          cost: number
+          cost?: number | null
           created_at?: string | null
           id?: string
           initial_date: string
@@ -882,7 +882,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          cost?: number
+          cost?: number | null
           created_at?: string | null
           id?: string
           initial_date?: string
