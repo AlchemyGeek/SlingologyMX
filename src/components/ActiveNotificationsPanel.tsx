@@ -160,7 +160,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             user_id: notification.user_id,
             description: notification.description,
             type: notification.type,
-            component: notification.component,
             initial_date: nextDate,
             recurrence: notification.recurrence, // Keep original recurrence (None for subscription-linked)
             notes: notification.notes,
@@ -188,7 +187,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             user_id: notification.user_id,
             description: notification.description,
             type: notification.type,
-            component: notification.component,
             initial_date: new Date().toISOString().split('T')[0],
             recurrence: "None",
             notes: notification.notes,
@@ -266,7 +264,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             <TableRow>
               <TableHead>Description</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Component</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Recurrence</TableHead>
               <TableHead className="w-[180px]">Actions</TableHead>
@@ -293,7 +290,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
-                  <TableCell>{notification.component}</TableCell>
                   <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                   <TableCell>{notification.recurrence}</TableCell>
                   <TableCell>
@@ -340,7 +336,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             <TableRow>
               <TableHead>Description</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Component</TableHead>
               <TableHead>Counter</TableHead>
               <TableHead>Due At</TableHead>
               <TableHead>Remaining</TableHead>
@@ -374,7 +369,6 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
-                  <TableCell>{notification.component}</TableCell>
                   <TableCell>{notification.counter_type}</TableCell>
                   <TableCell>{targetValue.toFixed(1)}</TableCell>
                   <TableCell>

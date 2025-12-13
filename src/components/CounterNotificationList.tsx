@@ -84,7 +84,6 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
           <TableRow>
             <TableHead>Notification</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Component</TableHead>
             <TableHead>Counter</TableHead>
             <TableHead>Due At</TableHead>
             <TableHead>Remaining</TableHead>
@@ -120,7 +119,6 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
                   </div>
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
-                <TableCell>{notification.component}</TableCell>
                 <TableCell>{notification.counter_type}</TableCell>
                 <TableCell>{notification.initial_counter_value?.toFixed(1)}</TableCell>
                 <TableCell>
