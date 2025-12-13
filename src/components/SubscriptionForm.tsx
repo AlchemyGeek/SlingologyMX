@@ -104,7 +104,6 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
                 description: formData.subscription_name,
                 notes: formData.notes || null,
                 type: "Subscription" as const,
-                component: "Other" as const,
                 initial_date: initialDateStr,
                 recurrence: "None" as const,
               })
@@ -116,7 +115,6 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
               description: formData.subscription_name,
               notes: formData.notes || null,
               type: "Subscription" as const,
-              component: "Other" as const,
               initial_date: initialDateStr,
               recurrence: "None" as const,
               subscription_id: editingSubscription.id,
@@ -152,7 +150,6 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
             description: formData.subscription_name,
             notes: formData.notes || null,
             type: "Subscription" as const,
-            component: "Other" as const,
             initial_date: initialDateStr,
             recurrence: "None" as const,
             subscription_id: newSubscription.id,
