@@ -65,7 +65,6 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
           <TableRow>
             <TableHead>Notification</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Component</TableHead>
             <TableHead>Initial Date</TableHead>
             <TableHead>Recurrence</TableHead>
             <TableHead>Status</TableHead>
@@ -99,7 +98,6 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                   </div>
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
-                <TableCell>{notification.component}</TableCell>
                 <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                 <TableCell>{notification.recurrence}</TableCell>
                 <TableCell>

@@ -41,7 +41,6 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     description: editingNotification?.description || "",
     notes: editingNotification?.notes || "",
     type: editingNotification?.type || "Maintenance",
-    component: editingNotification?.component || "Airframe",
     initial_date: editingNotification?.initial_date ? parseLocalDate(editingNotification.initial_date) : null as Date | null,
     recurrence: editingNotification?.recurrence || "None",
     notification_basis: editingNotification?.notification_basis || notificationBasis,
@@ -113,7 +112,6 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
         description: formData.description,
         notes: formData.notes,
         type: formData.type as "Maintenance" | "Subscription",
-        component: formData.component as "Airframe" | "Propeller" | "Avionics" | "Other",
         notification_basis: formData.notification_basis,
         // For date-based
         initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
@@ -198,23 +196,6 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="component">Component</Label>
-            <Select
-              value={formData.component}
-              onValueChange={(value) => setFormData({ ...formData, component: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Airframe">Airframe</SelectItem>
-                <SelectItem value="Propeller">Propeller</SelectItem>
-                <SelectItem value="Avionics">Avionics</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         {/* Date-based fields */}
