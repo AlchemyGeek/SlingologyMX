@@ -259,7 +259,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             user_id: userId,
             description: notificationDescription,
             type: "Directives",
-            component: component,
             initial_date: format(today, "yyyy-MM-dd"),
             recurrence: "None",
             notification_basis: "Counter",
@@ -278,7 +277,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             user_id: userId,
             description: notificationDescription,
             type: "Directives",
-            component: component,
             initial_date: format(nextDueDate, "yyyy-MM-dd"),
             recurrence: "None",
             notification_basis: "Date",
@@ -385,7 +383,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
-                component: component,
                 initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
                 notes: `Auto-created from maintenance record: ${formData.entry_title}`,
               })
@@ -396,7 +393,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-              component: component,
               initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
               recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
@@ -430,7 +426,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
-                component: component,
                 counter_type: counterTypeMap[formData.recurrence_counter_type],
                 initial_counter_value: nextDueValue,
                 counter_step: increment,
@@ -443,7 +438,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-              component: component,
               initial_date: format(new Date(), "yyyy-MM-dd"),
               recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Counter" as Database["public"]["Enums"]["notification_basis"],

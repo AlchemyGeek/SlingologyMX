@@ -206,7 +206,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Directives",
-        component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
@@ -219,7 +218,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Directives",
-        component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
@@ -232,7 +230,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Directives",
-        component: componentMap,
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Date",
@@ -256,7 +253,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         user_id: userId,
         description: notificationDescription,
         type: "Directives",
-        component: componentMap,
         initial_date: format(today, "yyyy-MM-dd"),
         recurrence: "None",
         notification_basis: "Counter",
@@ -431,7 +427,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
-                component: componentMap,
                 initial_date: initialDate,
                 notes: notes,
               })
@@ -442,7 +437,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance",
-              component: componentMap,
               initial_date: initialDate,
               recurrence: "None",
               notification_basis: "Date",
@@ -472,7 +466,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
-                component: componentMap,
                 counter_type: formData.counter_type as any,
                 initial_counter_value: counterValue,
                 notes: `Directive compliance due at ${counterValue} ${formData.counter_type}`,
@@ -484,7 +477,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance",
-              component: componentMap,
               initial_date: format(today, "yyyy-MM-dd"),
               recurrence: "None",
               notification_basis: "Counter",
