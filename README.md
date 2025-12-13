@@ -4,12 +4,17 @@ Aircraft maintenance tracking and compliance management system for experimental 
 
 ## Overview
 
-SlingologyMX is a web-based application designed to help experimental aircraft owners manage:
+SlingologyMX is a web-based application designed to help aircraft owners manage:
 - **Maintenance Logs** - Track all maintenance activities with detailed records
 - **Directives & Bulletins** - Monitor compliance with ADs, Service Bulletins, and manufacturer alerts
 - **Aircraft Counters** - Track Hobbs, Tach, and component total times
 - **Subscriptions** - Manage aviation-related subscriptions and renewals
 - **Notifications** - Date-based and counter-based maintenance reminders
+
+To learn more about the approach and capabilities refer to the following:
+- [	
+The Hybrid Logbook: A Practical Record-Keeping Model for GA Pilots and Owners][https://slingology.blog/2025/12/02/the-hybrid-logbook-a-practical-record-keeping-model-for-ga-pilots-and-owners/]
+- [SilgologyMX Help Page][https://slingology.blog/slingologymx-help-pages/]
 
 ## Tech Stack
 
