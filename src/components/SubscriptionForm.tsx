@@ -56,8 +56,8 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
       return;
     }
 
-    const costValue = parseInt(formData.cost);
-    if (isNaN(costValue) || costValue <= 0) {
+    const costValue = formData.cost ? parseInt(formData.cost) : null;
+    if (costValue !== null && (isNaN(costValue) || costValue < 0)) {
       toast.error("Cost must be a positive number");
       return;
     }
@@ -224,11 +224,10 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
             <Input
               id="cost"
               type="number"
-              min="1"
+              min="0"
               value={formData.cost}
               onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-              required
-              placeholder="Enter cost..."
+              placeholder="Enter cost (optional)..."
             />
           </div>
 
