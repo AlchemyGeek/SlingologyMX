@@ -13,8 +13,8 @@ SlingologyMX is a web-based application designed to help aircraft owners manage:
 
 To learn more about the approach and capabilities refer to the following:
 - [	
-The Hybrid Logbook: A Practical Record-Keeping Model for GA Pilots and Owners][https://slingology.blog/2025/12/02/the-hybrid-logbook-a-practical-record-keeping-model-for-ga-pilots-and-owners/]
-- [SilgologyMX Help Page][https://slingology.blog/slingologymx-help-pages/]
+The Hybrid Logbook: A Practical Record-Keeping Model for GA Pilots and Owners](https://slingology.blog/2025/12/02/the-hybrid-logbook-a-practical-record-keeping-model-for-ga-pilots-and-owners/)
+- [SilgologyMX Help Page](https://slingology.blog/slingologymx-help-pages/)
 
 ## Tech Stack
 
