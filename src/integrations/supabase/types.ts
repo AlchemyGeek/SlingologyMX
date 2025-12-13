@@ -721,7 +721,6 @@ export type Database = {
           alert_days: number | null
           alert_hours: number | null
           completed_at: string | null
-          component: Database["public"]["Enums"]["component_type"]
           counter_step: number | null
           counter_type: Database["public"]["Enums"]["counter_type"] | null
           created_at: string | null
@@ -745,7 +744,6 @@ export type Database = {
           alert_days?: number | null
           alert_hours?: number | null
           completed_at?: string | null
-          component: Database["public"]["Enums"]["component_type"]
           counter_step?: number | null
           counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null
@@ -769,7 +767,6 @@ export type Database = {
           alert_days?: number | null
           alert_hours?: number | null
           completed_at?: string | null
-          component?: Database["public"]["Enums"]["component_type"]
           counter_step?: number | null
           counter_type?: Database["public"]["Enums"]["counter_type"] | null
           created_at?: string | null

@@ -20,7 +20,6 @@ interface CounterNotification {
   description: string;
   counter_type: string;
   initial_counter_value: number;
-  component: string;
   type: string;
   alert_hours: number | null;
   notes: string | null;
@@ -43,7 +42,7 @@ const CountersPanel = ({ userId, currentCounters }: CountersPanelProps) => {
       setLoading(true);
       const { data, error } = await supabase
         .from("notifications")
-        .select("id, description, counter_type, initial_counter_value, component, type, alert_hours, notes")
+        .select("id, description, counter_type, initial_counter_value, type, alert_hours, notes")
         .eq("user_id", userId)
         .eq("is_completed", false)
         .eq("notification_basis", "Counter")
@@ -166,8 +165,6 @@ const CountersPanel = ({ userId, currentCounters }: CountersPanelProps) => {
                       </p>
                       <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
                         <span>Due at: {notification.initial_counter_value} hrs</span>
-                        <span className="text-muted-foreground/50">•</span>
-                        <span>{notification.component}</span>
                         <span className="text-muted-foreground/50">•</span>
                         <span>{notification.type}</span>
                         {notification.alert_hours && (
