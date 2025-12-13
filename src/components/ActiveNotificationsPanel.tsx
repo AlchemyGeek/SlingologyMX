@@ -160,6 +160,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             user_id: notification.user_id,
             description: notification.description,
             type: notification.type,
+            component: notification.component || "Other",
             initial_date: nextDate,
             recurrence: notification.recurrence, // Keep original recurrence (None for subscription-linked)
             notes: notification.notes,
@@ -187,6 +188,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
             user_id: notification.user_id,
             description: notification.description,
             type: notification.type,
+            component: notification.component || "Other",
             initial_date: new Date().toISOString().split('T')[0],
             recurrence: "None",
             notes: notification.notes,
