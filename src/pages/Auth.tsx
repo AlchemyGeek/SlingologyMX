@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 
@@ -20,6 +21,11 @@ const Auth = () => {
   const [sentEmail, setSentEmail] = useState("");
   const [signupEnabled, setSignupEnabled] = useState(true);
   const [checkingSignup, setCheckingSignup] = useState(true);
+  const [accessCodesEnabled, setAccessCodesEnabled] = useState(false);
+  const [accessCodeDialogOpen, setAccessCodeDialogOpen] = useState(false);
+  const [accessCodeInput, setAccessCodeInput] = useState("");
+  const [accessCodeValidating, setAccessCodeValidating] = useState(false);
+  const [accessCodeValidated, setAccessCodeValidated] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,26 +53,33 @@ const Auth = () => {
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // Check if signups are enabled
-    const checkSignupEnabled = async () => {
+    // Check if signups are enabled and access codes setting
+    const checkSettings = async () => {
       try {
         const { data, error } = await supabase
           .from("app_settings")
-          .select("setting_value")
-          .eq("setting_key", "signup_enabled")
-          .single();
+          .select("setting_key, setting_value")
+          .in("setting_key", ["signup_enabled", "access_codes_enabled"]);
 
         if (!error && data) {
-          setSignupEnabled(data.setting_value === "true");
+          const signupSetting = data.find(s => s.setting_key === "signup_enabled");
+          const accessCodesSetting = data.find(s => s.setting_key === "access_codes_enabled");
+          
+          if (signupSetting) {
+            setSignupEnabled(signupSetting.setting_value === "true");
+          }
+          if (accessCodesSetting) {
+            setAccessCodesEnabled(accessCodesSetting.setting_value === "true");
+          }
         }
       } catch (error) {
-        console.error("Error checking signup setting:", error);
+        console.error("Error checking settings:", error);
       } finally {
         setCheckingSignup(false);
       }
     };
 
-    checkSignupEnabled();
+    checkSettings();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
@@ -207,6 +220,73 @@ const Auth = () => {
     setPlaneModelMake("");
     setNewPassword("");
     setConfirmPassword("");
+    setAccessCodeInput("");
+    setAccessCodeValidated(false);
+  };
+
+  const handleSignupClick = () => {
+    // If access codes are enabled, show the dialog first
+    if (accessCodesEnabled) {
+      setAccessCodeDialogOpen(true);
+    } else {
+      setView("signup");
+    }
+  };
+
+  const validateAccessCode = async () => {
+    const code = accessCodeInput.trim().toUpperCase();
+    if (!code) {
+      toast.error("Please enter an access code");
+      return;
+    }
+
+    setAccessCodeValidating(true);
+
+    try {
+      // Check if the access code exists
+      const { data, error } = await supabase
+        .from("access_codes")
+        .select("id, code, counter")
+        .eq("code", code)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast.error("Invalid access code");
+        setAccessCodeValidating(false);
+        return;
+      }
+
+      // Check counter value
+      if (data.counter === 0) {
+        toast.error("This access code has been fully used");
+        setAccessCodeValidating(false);
+        return;
+      }
+
+      // If counter is positive (not -1), decrement it
+      if (data.counter > 0) {
+        const { error: updateError } = await supabase
+          .from("access_codes")
+          .update({ counter: data.counter - 1 })
+          .eq("id", data.id);
+
+        if (updateError) throw updateError;
+      }
+      // If counter is -1, we don't change it (unlimited use)
+
+      // Access code is valid - close dialog and proceed to signup
+      setAccessCodeValidated(true);
+      setAccessCodeDialogOpen(false);
+      setView("signup");
+      toast.success("Access code validated");
+    } catch (error: any) {
+      console.error("Error validating access code:", error);
+      toast.error("Failed to validate access code");
+    } finally {
+      setAccessCodeValidating(false);
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -280,7 +360,7 @@ const Auth = () => {
           <CardContent className="space-y-4">
             <Button 
               className="w-full h-12 text-lg" 
-              onClick={() => setView("signup")}
+              onClick={handleSignupClick}
               disabled={!signupEnabled || checkingSignup}
             >
               Sign Up
@@ -696,6 +776,49 @@ const Auth = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Access Code Dialog */}
+      <Dialog open={accessCodeDialogOpen} onOpenChange={setAccessCodeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Access Code</DialogTitle>
+            <DialogDescription>
+              An access code is required to sign up. Please enter your code below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="access-code">Access Code</Label>
+              <Input
+                id="access-code"
+                type="text"
+                placeholder="Enter 5-character code"
+                value={accessCodeInput}
+                onChange={(e) => setAccessCodeInput(e.target.value.toUpperCase())}
+                maxLength={5}
+                className="uppercase"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAccessCodeDialogOpen(false);
+                setAccessCodeInput("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={validateAccessCode}
+              disabled={accessCodeValidating || accessCodeInput.trim().length < 5}
+            >
+              {accessCodeValidating ? "Validating..." : "Submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
