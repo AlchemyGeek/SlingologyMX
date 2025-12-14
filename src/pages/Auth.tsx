@@ -380,6 +380,49 @@ const Auth = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Access Code Dialog */}
+        <Dialog open={accessCodeDialogOpen} onOpenChange={setAccessCodeDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Enter Access Code</DialogTitle>
+              <DialogDescription>
+                An access code is required to sign up. Please enter your code below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="access-code-choice">Access Code</Label>
+                <Input
+                  id="access-code-choice"
+                  type="text"
+                  placeholder="Enter 5-character code"
+                  value={accessCodeInput}
+                  onChange={(e) => setAccessCodeInput(e.target.value.toUpperCase())}
+                  maxLength={5}
+                  className="uppercase"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAccessCodeDialogOpen(false);
+                  setAccessCodeInput("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={validateAccessCode}
+                disabled={accessCodeValidating || accessCodeInput.trim().length < 5}
+              >
+                {accessCodeValidating ? "Validating..." : "Submit"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
