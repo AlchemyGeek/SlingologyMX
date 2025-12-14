@@ -25,7 +25,7 @@ const Auth = () => {
   const [accessCodeDialogOpen, setAccessCodeDialogOpen] = useState(false);
   const [accessCodeInput, setAccessCodeInput] = useState("");
   const [accessCodeValidating, setAccessCodeValidating] = useState(false);
-  const [accessCodeValidated, setAccessCodeValidated] = useState(false);
+  const [validatedAccessCode, setValidatedAccessCode] = useState<{ id: string; counter: number } | null>(null);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -199,6 +199,16 @@ const Auth = () => {
         setLoading(false);
         return;
       }
+      
+      // Decrement access code counter after successful signup (if access codes were used)
+      if (validatedAccessCode && validatedAccessCode.counter > 0) {
+        await supabase
+          .from("access_codes")
+          .update({ counter: validatedAccessCode.counter - 1 })
+          .eq("id", validatedAccessCode.id);
+      }
+      // If counter is -1, we don't change it (unlimited use)
+      
       setSentEmail(email);
       setEmailSent(true);
       toast.success("Verification email sent!");
@@ -221,7 +231,7 @@ const Auth = () => {
     setNewPassword("");
     setConfirmPassword("");
     setAccessCodeInput("");
-    setAccessCodeValidated(false);
+    setValidatedAccessCode(null);
   };
 
   const handleSignupClick = () => {
@@ -265,19 +275,10 @@ const Auth = () => {
         return;
       }
 
-      // If counter is positive (not -1), decrement it
-      if (data.counter > 0) {
-        const { error: updateError } = await supabase
-          .from("access_codes")
-          .update({ counter: data.counter - 1 })
-          .eq("id", data.id);
-
-        if (updateError) throw updateError;
-      }
-      // If counter is -1, we don't change it (unlimited use)
-
+      // Store the validated access code info for later use during signup
+      setValidatedAccessCode({ id: data.id, counter: data.counter });
+      
       // Access code is valid - close dialog and proceed to signup
-      setAccessCodeValidated(true);
       setAccessCodeDialogOpen(false);
       setView("signup");
       toast.success("Access code validated");
