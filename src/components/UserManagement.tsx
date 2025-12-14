@@ -26,6 +26,8 @@ const UserManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [signupEnabled, setSignupEnabled] = useState(true);
   const [signupLoading, setSignupLoading] = useState(true);
+  const [accessCodesEnabled, setAccessCodesEnabled] = useState(false);
+  const [accessCodesLoading, setAccessCodesLoading] = useState(true);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -89,6 +91,40 @@ const UserManagement = () => {
     }
   };
 
+  const fetchAccessCodesSetting = async () => {
+    setAccessCodesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "access_codes_enabled")
+        .single();
+
+      if (error) throw error;
+      setAccessCodesEnabled(data?.setting_value === "true");
+    } catch (error) {
+      console.error("Error fetching access codes setting:", error);
+    } finally {
+      setAccessCodesLoading(false);
+    }
+  };
+
+  const toggleAccessCodes = async (enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("app_settings")
+        .update({ setting_value: enabled ? "true" : "false", updated_at: new Date().toISOString() })
+        .eq("setting_key", "access_codes_enabled");
+
+      if (error) throw error;
+      setAccessCodesEnabled(enabled);
+      toast.success(`Access codes ${enabled ? "enabled" : "disabled"}`);
+    } catch (error: any) {
+      console.error("Error updating access codes setting:", error);
+      toast.error("Failed to update access codes setting");
+    }
+  };
+
   const toggleSignup = async (enabled: boolean) => {
     try {
       const { error } = await supabase
@@ -108,6 +144,7 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
     fetchSignupSetting();
+    fetchAccessCodesSetting();
   }, []);
 
   const formatDate = (dateString: string | null) => {
@@ -152,16 +189,29 @@ const UserManagement = () => {
                 {users.length} users
               </Badge>
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="signup-toggle" className="text-sm text-muted-foreground">
-                Allow new signups
-              </Label>
-              <Switch
-                id="signup-toggle"
-                checked={signupEnabled}
-                onCheckedChange={toggleSignup}
-                disabled={signupLoading}
-              />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="signup-toggle" className="text-sm text-muted-foreground">
+                  Allow new signups
+                </Label>
+                <Switch
+                  id="signup-toggle"
+                  checked={signupEnabled}
+                  onCheckedChange={toggleSignup}
+                  disabled={signupLoading}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="access-codes-toggle" className="text-sm text-muted-foreground">
+                  Access Codes
+                </Label>
+                <Switch
+                  id="access-codes-toggle"
+                  checked={accessCodesEnabled}
+                  onCheckedChange={toggleAccessCodes}
+                  disabled={accessCodesLoading}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
