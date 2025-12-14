@@ -52,6 +52,13 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     alert_hours: editingNotification?.alert_hours?.toString() || "10",
   });
 
+  // Check if this is a system-generated (record-linked) notification
+  const isSystemGenerated = editingNotification && (
+    editingNotification.maintenance_log_id || 
+    editingNotification.directive_id || 
+    editingNotification.subscription_id
+  );
+
   // Update initial counter value when counter type changes (for new notifications)
   useEffect(() => {
     if (!editingNotification && formData.notification_basis === "Counter" && currentCounters) {
@@ -74,8 +81,8 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
       return;
     }
 
-    // Validate counter-based notification fields
-    if (formData.notification_basis === "Counter") {
+    // Validate counter-based notification fields (only for non-system-generated or new notifications)
+    if (!isSystemGenerated && formData.notification_basis === "Counter") {
       if (!formData.initial_counter_value) {
         toast.error("Initial counter value is required");
         return;
@@ -107,34 +114,56 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     try {
       const isCounterBased = formData.notification_basis === "Counter";
       
-      const data: any = {
-        user_id: userId,
-        description: formData.description,
-        notes: formData.notes,
-        type: formData.type as "Maintenance" | "Subscription",
-        notification_basis: formData.notification_basis,
-        // For date-based
-        initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
-        recurrence: isCounterBased ? "None" : formData.recurrence,
-        // For counter-based
-        counter_type: isCounterBased ? formData.counter_type : null,
-        initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
-        counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
-        // Alert thresholds
-        alert_days: isCounterBased ? null : parseInt(formData.alert_days) || 7,
-        alert_hours: isCounterBased ? parseInt(formData.alert_hours) || 10 : null,
-      };
-
       let error;
       if (editingNotification) {
-        // Mark as user_modified when editing a record-linked notification
-        const updateData = {
-          ...data,
-          user_modified: editingNotification.maintenance_log_id || editingNotification.directive_id || editingNotification.subscription_id ? true : data.user_modified
-        };
-        const result = await supabase.from("notifications").update(updateData).eq("id", editingNotification.id);
-        error = result.error;
+        // For system-generated notifications, only update notes and alert fields
+        // Never set user_modified to true for system-generated notifications
+        if (isSystemGenerated) {
+          const updateData: any = {
+            notes: formData.notes,
+          };
+          // Add appropriate alert field based on notification type
+          if (isCounterBased) {
+            updateData.alert_hours = parseInt(formData.alert_hours) || 10;
+          } else {
+            updateData.alert_days = parseInt(formData.alert_days) || 7;
+          }
+          const result = await supabase.from("notifications").update(updateData).eq("id", editingNotification.id);
+          error = result.error;
+        } else {
+          // For user-created notifications, update all fields
+          const data: any = {
+            user_id: userId,
+            description: formData.description,
+            notes: formData.notes,
+            type: formData.type as "Maintenance" | "Subscription",
+            notification_basis: formData.notification_basis,
+            initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
+            recurrence: isCounterBased ? "None" : formData.recurrence,
+            counter_type: isCounterBased ? formData.counter_type : null,
+            initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
+            counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
+            alert_days: isCounterBased ? null : parseInt(formData.alert_days) || 7,
+            alert_hours: isCounterBased ? parseInt(formData.alert_hours) || 10 : null,
+          };
+          const result = await supabase.from("notifications").update(data).eq("id", editingNotification.id);
+          error = result.error;
+        }
       } else {
+        const data: any = {
+          user_id: userId,
+          description: formData.description,
+          notes: formData.notes,
+          type: formData.type as "Maintenance" | "Subscription",
+          notification_basis: formData.notification_basis,
+          initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
+          recurrence: isCounterBased ? "None" : formData.recurrence,
+          counter_type: isCounterBased ? formData.counter_type : null,
+          initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
+          counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
+          alert_days: isCounterBased ? null : parseInt(formData.alert_days) || 7,
+          alert_hours: isCounterBased ? parseInt(formData.alert_hours) || 10 : null,
+        };
         const result = await supabase.from("notifications").insert([data]);
         error = result.error;
       }
@@ -153,6 +182,11 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
 
   return (
     <Card className="p-4 bg-muted/50">
+      {isSystemGenerated && (
+        <p className="text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+          This is a system-generated notification. Only notes and alert settings can be edited.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="description">Notification</Label>
@@ -163,6 +197,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
             required
             placeholder="Describe the notification name..."
             maxLength={200}
+            disabled={isSystemGenerated}
           />
           <p className="text-xs text-muted-foreground">{formData.description.length}/200 characters</p>
         </div>
@@ -183,7 +218,11 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+            <Select 
+              value={formData.type} 
+              onValueChange={(value) => setFormData({ ...formData, type: value })}
+              disabled={isSystemGenerated}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -208,6 +247,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                 value={formData.initial_date}
                 onChange={(date) => setFormData({ ...formData, initial_date: date })}
                 required
+                disabled={isSystemGenerated}
               />
             </div>
 
@@ -216,6 +256,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
               <Select
                 value={formData.recurrence}
                 onValueChange={(value) => setFormData({ ...formData, recurrence: value })}
+                disabled={isSystemGenerated}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -255,6 +296,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                 <Select
                   value={formData.counter_type}
                   onValueChange={(value) => setFormData({ ...formData, counter_type: value })}
+                  disabled={isSystemGenerated}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -279,6 +321,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                   value={formData.initial_counter_value}
                   onChange={(e) => setFormData({ ...formData, initial_counter_value: e.target.value })}
                   required
+                  disabled={isSystemGenerated}
                 />
                 {currentCounters && (
                   <p className="text-xs text-muted-foreground">
@@ -294,13 +337,14 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                 value={formData.is_counter_recurring}
                 onValueChange={(value) => setFormData({ ...formData, is_counter_recurring: value })}
                 className="flex gap-4"
+                disabled={isSystemGenerated}
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="No" id="counter_recurring_no" />
+                  <RadioGroupItem value="No" id="counter_recurring_no" disabled={isSystemGenerated} />
                   <Label htmlFor="counter_recurring_no" className="font-normal">No</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Yes" id="counter_recurring_yes" />
+                  <RadioGroupItem value="Yes" id="counter_recurring_yes" disabled={isSystemGenerated} />
                   <Label htmlFor="counter_recurring_yes" className="font-normal">Yes</Label>
                 </div>
               </RadioGroup>
@@ -318,6 +362,7 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
                   onChange={(e) => setFormData({ ...formData, counter_step: e.target.value })}
                   placeholder="e.g., 100 for every 100 hours"
                   required
+                  disabled={isSystemGenerated}
                 />
               </div>
             )}
