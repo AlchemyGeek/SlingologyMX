@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.validate-access-code]
 verify_jwt = false
+
+[functions.decrement-access-code]
+verify_jwt = false

@@ -219,12 +219,11 @@ const Auth = () => {
         return;
       }
       
-      // Decrement access code counter after successful signup (if access codes were used)
+      // Decrement access code counter after successful signup via Edge Function
       if (validatedAccessCode && validatedAccessCode.counter > 0) {
-        await supabase
-          .from("access_codes")
-          .update({ counter: validatedAccessCode.counter - 1 })
-          .eq("id", validatedAccessCode.id);
+        await supabase.functions.invoke('decrement-access-code', {
+          body: { codeId: validatedAccessCode.id }
+        });
       }
       // If counter is -1, we don't change it (unlimited use)
       
@@ -263,7 +262,7 @@ const Auth = () => {
   };
 
   const validateAccessCode = async () => {
-    // Check if locked out
+    // Check if locked out (client-side as UX enhancement only)
     if (accessCodeLockoutUntil && accessCodeLockoutUntil > Date.now()) {
       const remainingMinutes = Math.ceil((accessCodeLockoutUntil - Date.now()) / 60000);
       toast.error(`Too many failed attempts. Please try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`);
@@ -271,55 +270,51 @@ const Auth = () => {
     }
 
     const code = accessCodeInput.trim().toUpperCase();
-    if (!code) {
-      toast.error("Please enter an access code");
+    if (!code || code.length !== 5) {
+      toast.error("Please enter a valid 5-character access code");
       return;
     }
 
     setAccessCodeValidating(true);
 
     try {
-      // Check if the access code exists
-      const { data, error } = await supabase
-        .from("access_codes")
-        .select("id, code, counter")
-        .eq("code", code)
-        .maybeSingle();
+      // Call server-side Edge Function for validation with rate limiting
+      const response = await supabase.functions.invoke('validate-access-code', {
+        body: { code }
+      });
 
-      if (error) throw error;
+      const result = response.data;
 
-      if (!data) {
-        // Invalid code - increment attempts
-        const newAttempts = accessCodeAttempts + 1;
-        setAccessCodeAttempts(newAttempts);
-        localStorage.setItem('accessCodeAttempts', newAttempts.toString());
-        
-        if (newAttempts >= 5) {
-          const lockoutTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+      // Handle rate limiting from server
+      if (response.error || result?.lockedOut) {
+        if (result?.lockedOut) {
+          const lockoutTime = Date.now() + (result.remainingMinutes || 10) * 60 * 1000;
           setAccessCodeLockoutUntil(lockoutTime);
           localStorage.setItem('accessCodeLockoutUntil', lockoutTime.toString());
-          toast.error("Too many failed attempts. You are locked out for 10 minutes.");
+          toast.error(`Too many failed attempts. You are locked out for ${result.remainingMinutes || 10} minutes.`);
         } else {
-          toast.error(`Invalid access code. ${5 - newAttempts} attempt${5 - newAttempts > 1 ? 's' : ''} remaining.`);
+          toast.error(result?.error || "Failed to validate access code");
         }
         setAccessCodeValidating(false);
         return;
       }
 
-      // Check counter value
-      if (data.counter === 0) {
-        // Used code counts as failed attempt too
-        const newAttempts = accessCodeAttempts + 1;
+      if (!result?.valid) {
+        // Invalid code - update client-side attempts for UX
+        const newAttempts = (result?.remainingAttempts !== undefined) 
+          ? (5 - result.remainingAttempts) 
+          : accessCodeAttempts + 1;
         setAccessCodeAttempts(newAttempts);
         localStorage.setItem('accessCodeAttempts', newAttempts.toString());
         
-        if (newAttempts >= 5) {
+        if (result?.remainingAttempts === 0) {
           const lockoutTime = Date.now() + 10 * 60 * 1000;
           setAccessCodeLockoutUntil(lockoutTime);
           localStorage.setItem('accessCodeLockoutUntil', lockoutTime.toString());
           toast.error("Too many failed attempts. You are locked out for 10 minutes.");
         } else {
-          toast.error(`This access code has been fully used. ${5 - newAttempts} attempt${5 - newAttempts > 1 ? 's' : ''} remaining.`);
+          const remaining = result?.remainingAttempts ?? (5 - newAttempts);
+          toast.error(`${result?.error || 'Invalid access code'}. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`);
         }
         setAccessCodeValidating(false);
         return;
@@ -332,7 +327,10 @@ const Auth = () => {
       setAccessCodeLockoutUntil(null);
 
       // Store the validated access code info for later use during signup
-      setValidatedAccessCode({ id: data.id, counter: data.counter });
+      setValidatedAccessCode({ 
+        id: result.codeId, 
+        counter: result.hasUnlimitedUses ? -1 : 1 
+      });
       
       // Access code is valid - close dialog and proceed to signup
       setAccessCodeDialogOpen(false);
