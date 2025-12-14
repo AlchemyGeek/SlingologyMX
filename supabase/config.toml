@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.admin-user-suspend]
 verify_jwt = false
+
+[functions.validate-access-code]
+verify_jwt = false
