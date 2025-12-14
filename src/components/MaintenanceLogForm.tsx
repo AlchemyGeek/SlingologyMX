@@ -486,13 +486,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
       if (!editingLog && logId && formData.is_recurring_task && formData.interval_type !== "None") {
         const notificationDescription = `Recurring: ${formData.entry_title}`;
         
-        const categoryToComponent: Record<string, Database["public"]["Enums"]["component_type"]> = {
-          "Airplane": "Airframe", "Airframe": "Airframe", "Propeller": "Propeller",
-          "Avionics": "Avionics", "Engine": "Other", "Electrical": "Other",
-          "Interior": "Other", "Exterior": "Other", "Accessories": "Other", "Other": "Other"
-        };
-        const component = categoryToComponent[formData.category] || "Other";
-        
         // Create date-based notification for Calendar or Mixed type
         if (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") {
           // Calculate next_due_date directly if not already set (in case useEffect hasn't run yet)
@@ -511,7 +504,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
                 user_id: userId,
                 description: notificationDescription,
                 type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-                component: component,
                 initial_date: format(nextDueDate, "yyyy-MM-dd"),
                 recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
                 notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
@@ -553,7 +545,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-              component: component,
               initial_date: format(new Date(), "yyyy-MM-dd"),
               recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Counter" as Database["public"]["Enums"]["notification_basis"],
