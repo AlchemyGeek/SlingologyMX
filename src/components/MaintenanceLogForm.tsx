@@ -361,9 +361,20 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         };
         const component = categoryToComponent[formData.category] || "Other";
         
+        // Calculate next_due_date if not set (in case useEffect hasn't run yet)
+        let calculatedNextDueDate = formData.next_due_date;
+        if (!calculatedNextDueDate && formData.is_recurring_task && 
+            (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") &&
+            formData.interval_months && formData.date_performed) {
+          const months = parseInt(formData.interval_months);
+          if (months > 0) {
+            calculatedNextDueDate = addMonths(formData.date_performed, months);
+          }
+        }
+        
         const needsDateNotification = formData.is_recurring_task && 
           (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && 
-          formData.next_due_date;
+          calculatedNextDueDate;
         const needsCounterNotification = formData.is_recurring_task && 
           (formData.interval_type === "Hours" || formData.interval_type === "Mixed") && 
           formData.recurrence_counter_type && formData.recurrence_counter_increment;
@@ -383,7 +394,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             await supabase.from("notifications")
               .update({
                 description: notificationDescription,
-                initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
+                initial_date: format(calculatedNextDueDate!, "yyyy-MM-dd"),
                 notes: `Auto-created from maintenance record: ${formData.entry_title}`,
               })
               .eq("id", existingDateNotif.id);
@@ -393,7 +404,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               user_id: userId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-              initial_date: format(formData.next_due_date!, "yyyy-MM-dd"),
+              initial_date: format(calculatedNextDueDate!, "yyyy-MM-dd"),
               recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
               notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
               notes: `Auto-created from maintenance record: ${formData.entry_title}`,
@@ -483,26 +494,37 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
         const component = categoryToComponent[formData.category] || "Other";
         
         // Create date-based notification for Calendar or Mixed type
-        if ((formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && formData.next_due_date) {
-          const { error: dateNotifError } = await supabase
-            .from("notifications")
-            .insert([{
-              user_id: userId,
-              description: notificationDescription,
-              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
-              component: component,
-              initial_date: format(formData.next_due_date, "yyyy-MM-dd"),
-              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
-              notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
-              notes: `Auto-created from maintenance record: ${formData.entry_title}`,
-              alert_days: 7,
-              maintenance_log_id: logId,
-            }]);
+        if (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") {
+          // Calculate next_due_date directly if not already set (in case useEffect hasn't run yet)
+          let nextDueDate = formData.next_due_date;
+          if (!nextDueDate && formData.interval_months && formData.date_performed) {
+            const months = parseInt(formData.interval_months);
+            if (months > 0) {
+              nextDueDate = addMonths(formData.date_performed, months);
+            }
+          }
           
-          if (dateNotifError) {
-            console.error("Error creating date-based notification:", dateNotifError);
-          } else {
-            toast.success("Date-based notification created");
+          if (nextDueDate) {
+            const { error: dateNotifError } = await supabase
+              .from("notifications")
+              .insert([{
+                user_id: userId,
+                description: notificationDescription,
+                type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+                component: component,
+                initial_date: format(nextDueDate, "yyyy-MM-dd"),
+                recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
+                notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
+                notes: `Auto-created from maintenance record: ${formData.entry_title}`,
+                alert_days: 7,
+                maintenance_log_id: logId,
+              }]);
+            
+            if (dateNotifError) {
+              console.error("Error creating date-based notification:", dateNotifError);
+            } else {
+              toast.success("Date-based notification created");
+            }
           }
         }
         
