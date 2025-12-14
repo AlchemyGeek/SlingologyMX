@@ -26,6 +26,8 @@ const Auth = () => {
   const [accessCodeInput, setAccessCodeInput] = useState("");
   const [accessCodeValidating, setAccessCodeValidating] = useState(false);
   const [validatedAccessCode, setValidatedAccessCode] = useState<{ id: string; counter: number } | null>(null);
+  const [accessCodeAttempts, setAccessCodeAttempts] = useState(0);
+  const [accessCodeLockoutUntil, setAccessCodeLockoutUntil] = useState<number | null>(null);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,6 +43,23 @@ const Auth = () => {
   const [planeModelMake, setPlaneModelMake] = useState("");
 
   useEffect(() => {
+    // Check for existing lockout in localStorage
+    const storedLockout = localStorage.getItem('accessCodeLockoutUntil');
+    const storedAttempts = localStorage.getItem('accessCodeAttempts');
+    if (storedLockout) {
+      const lockoutTime = parseInt(storedLockout, 10);
+      if (lockoutTime > Date.now()) {
+        setAccessCodeLockoutUntil(lockoutTime);
+        setAccessCodeAttempts(5);
+      } else {
+        localStorage.removeItem('accessCodeLockoutUntil');
+        localStorage.removeItem('accessCodeAttempts');
+      }
+    }
+    if (storedAttempts) {
+      setAccessCodeAttempts(parseInt(storedAttempts, 10));
+    }
+
     // Check URL hash FIRST, synchronously, before any async operations
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
@@ -244,6 +263,13 @@ const Auth = () => {
   };
 
   const validateAccessCode = async () => {
+    // Check if locked out
+    if (accessCodeLockoutUntil && accessCodeLockoutUntil > Date.now()) {
+      const remainingMinutes = Math.ceil((accessCodeLockoutUntil - Date.now()) / 60000);
+      toast.error(`Too many failed attempts. Please try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`);
+      return;
+    }
+
     const code = accessCodeInput.trim().toUpperCase();
     if (!code) {
       toast.error("Please enter an access code");
@@ -263,17 +289,47 @@ const Auth = () => {
       if (error) throw error;
 
       if (!data) {
-        toast.error("Invalid access code");
+        // Invalid code - increment attempts
+        const newAttempts = accessCodeAttempts + 1;
+        setAccessCodeAttempts(newAttempts);
+        localStorage.setItem('accessCodeAttempts', newAttempts.toString());
+        
+        if (newAttempts >= 5) {
+          const lockoutTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+          setAccessCodeLockoutUntil(lockoutTime);
+          localStorage.setItem('accessCodeLockoutUntil', lockoutTime.toString());
+          toast.error("Too many failed attempts. You are locked out for 10 minutes.");
+        } else {
+          toast.error(`Invalid access code. ${5 - newAttempts} attempt${5 - newAttempts > 1 ? 's' : ''} remaining.`);
+        }
         setAccessCodeValidating(false);
         return;
       }
 
       // Check counter value
       if (data.counter === 0) {
-        toast.error("This access code has been fully used");
+        // Used code counts as failed attempt too
+        const newAttempts = accessCodeAttempts + 1;
+        setAccessCodeAttempts(newAttempts);
+        localStorage.setItem('accessCodeAttempts', newAttempts.toString());
+        
+        if (newAttempts >= 5) {
+          const lockoutTime = Date.now() + 10 * 60 * 1000;
+          setAccessCodeLockoutUntil(lockoutTime);
+          localStorage.setItem('accessCodeLockoutUntil', lockoutTime.toString());
+          toast.error("Too many failed attempts. You are locked out for 10 minutes.");
+        } else {
+          toast.error(`This access code has been fully used. ${5 - newAttempts} attempt${5 - newAttempts > 1 ? 's' : ''} remaining.`);
+        }
         setAccessCodeValidating(false);
         return;
       }
+
+      // Success - reset attempts
+      setAccessCodeAttempts(0);
+      localStorage.removeItem('accessCodeAttempts');
+      localStorage.removeItem('accessCodeLockoutUntil');
+      setAccessCodeLockoutUntil(null);
 
       // Store the validated access code info for later use during signup
       setValidatedAccessCode({ id: data.id, counter: data.counter });
@@ -391,18 +447,32 @@ const Auth = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="access-code-choice">Access Code</Label>
-                <Input
-                  id="access-code-choice"
-                  type="text"
-                  placeholder="Enter 5-character code"
-                  value={accessCodeInput}
-                  onChange={(e) => setAccessCodeInput(e.target.value.toUpperCase())}
-                  maxLength={5}
-                  className="uppercase"
-                />
-              </div>
+              {accessCodeLockoutUntil && accessCodeLockoutUntil > Date.now() ? (
+                <div className="p-4 bg-destructive/10 rounded-lg text-center">
+                  <p className="text-destructive font-medium">Too many failed attempts</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Please try again in {Math.ceil((accessCodeLockoutUntil - Date.now()) / 60000)} minute(s).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="access-code-choice">Access Code</Label>
+                  <Input
+                    id="access-code-choice"
+                    type="text"
+                    placeholder="Enter 5-character code"
+                    value={accessCodeInput}
+                    onChange={(e) => setAccessCodeInput(e.target.value.toUpperCase())}
+                    maxLength={5}
+                    className="uppercase"
+                  />
+                  {accessCodeAttempts > 0 && accessCodeAttempts < 5 && (
+                    <p className="text-sm text-muted-foreground">
+                      {5 - accessCodeAttempts} attempt{5 - accessCodeAttempts > 1 ? 's' : ''} remaining
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button
@@ -416,7 +486,11 @@ const Auth = () => {
               </Button>
               <Button
                 onClick={validateAccessCode}
-                disabled={accessCodeValidating || accessCodeInput.trim().length < 5}
+                disabled={
+                  accessCodeValidating || 
+                  accessCodeInput.trim().length < 5 || 
+                  (accessCodeLockoutUntil !== null && accessCodeLockoutUntil > Date.now())
+                }
               >
                 {accessCodeValidating ? "Validating..." : "Submit"}
               </Button>
