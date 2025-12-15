@@ -676,7 +676,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                   placeholder="e.g., S/N 001-500"
                 />
               </div>
-              <div></div>
               <div className="space-y-2">
                 <Label>Applies to My Aircraft?</Label>
                 <Select
