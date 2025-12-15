@@ -210,7 +210,8 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
         await fetchActiveNotifications();
         onNotificationCompleted?.();
         toast.success("Notification completed and next instance created");
-      } else if (notification.counter_step) {
+      } else if (notification.counter_step && !notification.maintenance_log_id && !notification.directive_id) {
+        // Only create next instance for user-created counter notifications, not system-linked ones
         const { error: createError } = await supabase
           .from("notifications")
           .insert({
