@@ -106,17 +106,15 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
             return (
               <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {notification.description}
-                    {showLinkIcon && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Link className="h-4 w-4 text-primary flex-shrink-0" />
-                        </TooltipTrigger>
-                        <TooltipContent>System-managed notification</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
+                  {notification.description}
+                  {showLinkIcon && (
+                    <Tooltip>
+                      <TooltipTrigger className="inline align-middle ml-1">
+                        <Link size={16} className="text-primary" style={{ width: 16, height: 16, minWidth: 16, minHeight: 16 }} />
+                      </TooltipTrigger>
+                      <TooltipContent>System-managed notification</TooltipContent>
+                    </Tooltip>
+                  )}
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
                 <TableCell>{notification.counter_type}</TableCell>
