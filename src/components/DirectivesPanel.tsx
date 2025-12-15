@@ -21,7 +21,7 @@ export interface Directive {
   issue_date: string | null;
   effective_date: string | null;
   revision: string | null;
-  applicability_category: string | null;
+  
   applicability_model: string | null;
   applicable_serial_range: string | null;
   applicability_status: string | null;
@@ -67,7 +67,7 @@ const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setDirectives((data || []) as Directive[]);
+      setDirectives((data || []) as unknown as Directive[]);
     } catch (error: any) {
       toast.error("Failed to load directives");
       console.error("Error fetching directives:", error);

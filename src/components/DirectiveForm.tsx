@@ -89,7 +89,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     issue_date: null as Date | null,
     effective_date: null as Date | null,
     revision: "",
-    applicability_category: "",
+    
     applicability_model: "",
     applicable_serial_range: "",
     applicability_status: "Applies" as string,
@@ -130,7 +130,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         issue_date: editingDirective.issue_date ? parseLocalDate(editingDirective.issue_date) : null,
         effective_date: editingDirective.effective_date ? parseLocalDate(editingDirective.effective_date) : null,
         revision: editingDirective.revision || "",
-        applicability_category: (editingDirective as any).applicability_category || "",
+        
         applicability_model: (editingDirective as any).applicability_model || "",
         applicable_serial_range: editingDirective.applicable_serial_range || "",
         applicability_status: (editingDirective as any).applicability_status || "Unsure",
@@ -344,7 +344,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       issue_date: formData.issue_date ? format(formData.issue_date, "yyyy-MM-dd") : null,
       effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
       revision: formData.revision || null,
-      applicability_category: formData.applicability_category || null,
+      
       applicability_model: formData.applicability_model || null,
       applicable_serial_range: formData.applicable_serial_range || null,
       applicability_status: formData.applicability_status || null,
@@ -657,24 +657,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           <div className="space-y-4 border-b pb-4">
             <h3 className="text-lg font-medium">Applicability</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Applicability Category</Label>
-                <Select
-                  value={formData.applicability_category}
-                  onValueChange={(value) => setFormData({ ...formData, applicability_category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="applicability_model">Model</Label>
                 <Input
