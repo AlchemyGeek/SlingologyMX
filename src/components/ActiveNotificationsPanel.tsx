@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CheckCircle, Plus, Pencil, Trash2, AlertCircle, Link } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
@@ -281,6 +282,16 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                 <TableRow key={notification.id} className={rowClassName}>
                   <TableCell className="font-medium">
                     {notification.description}
+                    {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
+                            <Link style={{ width: 16, height: 16 }} className="text-primary" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>System-managed notification</TooltipContent>
+                      </Tooltip>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
@@ -355,6 +366,16 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                 <TableRow key={notification.id} className={rowClassName}>
                   <TableCell className="font-medium">
                     {notification.description}
+                    {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
+                            <Link style={{ width: 16, height: 16 }} className="text-primary" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>System-managed notification</TooltipContent>
+                      </Tooltip>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>

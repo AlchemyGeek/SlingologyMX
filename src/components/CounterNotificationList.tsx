@@ -107,6 +107,16 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
               <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
                   {notification.description}
+                  {showLinkIcon && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
+                          <Link style={{ width: 16, height: 16 }} className="text-primary" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>System-managed notification</TooltipContent>
+                    </Tooltip>
+                  )}
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
                 <TableCell>{notification.counter_type}</TableCell>
