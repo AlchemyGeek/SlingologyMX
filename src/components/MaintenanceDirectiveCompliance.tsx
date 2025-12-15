@@ -121,10 +121,16 @@ const MaintenanceDirectiveCompliance = ({
     }
   }, [datePerformed]);
 
-  // Fetch non-completed directives
+  // Fetch non-completed directives + any already-linked directives (even if completed)
   useEffect(() => {
     const fetchDirectives = async () => {
-      const { data, error } = await supabase
+      // Get IDs of already-linked directives
+      const linkedDirectiveIds = complianceLinks
+        .map(link => link.directive_id)
+        .filter(Boolean);
+
+      // Fetch non-completed directives
+      const { data: activeDirectives, error: activeError } = await supabase
         .from("directives")
         .select("id, directive_code, title, directive_status, compliance_scope, initial_due_type, counter_type, repeat_hours, repeat_months, category")
         .eq("user_id", userId)
@@ -132,15 +138,38 @@ const MaintenanceDirectiveCompliance = ({
         .eq("archived", false)
         .order("directive_code");
 
-      if (error) {
-        console.error("Error fetching directives:", error);
+      if (activeError) {
+        console.error("Error fetching directives:", activeError);
         return;
       }
-      setAvailableDirectives(data || []);
+
+      let allDirectives = activeDirectives || [];
+
+      // Also fetch any linked directives that may be completed (for editing existing records)
+      if (linkedDirectiveIds.length > 0) {
+        const { data: linkedDirectives, error: linkedError } = await supabase
+          .from("directives")
+          .select("id, directive_code, title, directive_status, compliance_scope, initial_due_type, counter_type, repeat_hours, repeat_months, category")
+          .in("id", linkedDirectiveIds);
+
+        if (!linkedError && linkedDirectives) {
+          // Merge, avoiding duplicates
+          const existingIds = new Set(allDirectives.map(d => d.id));
+          for (const d of linkedDirectives) {
+            if (!existingIds.has(d.id)) {
+              allDirectives.push(d);
+            }
+          }
+          // Re-sort by directive_code
+          allDirectives.sort((a, b) => a.directive_code.localeCompare(b.directive_code));
+        }
+      }
+
+      setAvailableDirectives(allDirectives);
     };
 
     fetchDirectives();
-  }, [userId]);
+  }, [userId, complianceLinks.length]);
 
   const createEmptyComplianceLink = (): DirectiveComplianceLink => ({
     directive_id: "",
