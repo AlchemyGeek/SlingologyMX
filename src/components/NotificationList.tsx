@@ -90,7 +90,9 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                     {showLinkIcon && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link className="h-4 w-4 min-h-4 min-w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="inline-flex flex-shrink-0 mt-0.5">
+                            <Link className="h-4 w-4 text-primary" />
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent>System-managed notification</TooltipContent>
                       </Tooltip>
