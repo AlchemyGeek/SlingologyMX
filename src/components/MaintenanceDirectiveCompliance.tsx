@@ -129,12 +129,12 @@ const MaintenanceDirectiveCompliance = ({
         .map(link => link.directive_id)
         .filter(Boolean);
 
-      // Fetch non-completed directives
+      // Fetch only Active directives
       const { data: activeDirectives, error: activeError } = await supabase
         .from("directives")
         .select("id, directive_code, title, directive_status, compliance_scope, initial_due_type, counter_type, repeat_hours, repeat_months, category")
         .eq("user_id", userId)
-        .neq("directive_status", "Completed")
+        .eq("directive_status", "Active")
         .eq("archived", false)
         .order("directive_code");
 
