@@ -41,7 +41,7 @@ const DIRECTIVE_TYPES = [
 ];
 
 const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
-const DIRECTIVE_STATUSES = ["Active", "Superseded", "Cancelled", "Proposed", "Completed"];
+const DIRECTIVE_STATUSES = ["Active", "Superseded", "Withdrawn", "Completed"];
 const CATEGORIES = ["Airframe", "Engine", "Propeller", "Avionics", "System", "Appliance", "Other"];
 const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "Conditional", "Informational Only"];
 const APPLICABILITY_STATUSES = ["Applies", "Does Not Apply", "Unsure"];

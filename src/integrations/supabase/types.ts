@@ -1034,7 +1034,7 @@ export type Database = {
       directive_status:
         | "Active"
         | "Superseded"
-        | "Cancelled"
+        | "Withdrawn"
         | "Proposed"
         | "Completed"
       directive_type:
@@ -1307,7 +1307,7 @@ export const Constants = {
       directive_status: [
         "Active",
         "Superseded",
-        "Cancelled",
+        "Withdrawn",
         "Proposed",
         "Completed",
       ],
