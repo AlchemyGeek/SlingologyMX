@@ -151,17 +151,17 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
         </Select>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border table-container">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead className="hidden xl:table-cell">Type</TableHead>
-              <TableHead className="hidden lg:table-cell">Category</TableHead>
+              <TableHead className="hide-at-900">Type</TableHead>
+              <TableHead className="hide-at-700">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden lg:table-cell">Effective Date</TableHead>
+              <TableHead className="hide-at-700">Effective Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,8 +180,8 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                 >
                   <TableCell className="font-mono font-medium">{directive.directive_code}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{directive.title}</TableCell>
-                  <TableCell className="hidden xl:table-cell text-sm">{directive.directive_type}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{directive.category}</TableCell>
+                  <TableCell className="hide-at-900 text-sm">{directive.directive_type}</TableCell>
+                  <TableCell className="hide-at-700">{directive.category}</TableCell>
                   <TableCell>
                     <Badge variant={getSeverityColor(directive.severity) as any}>
                       {directive.severity}
@@ -192,7 +192,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                       {directive.directive_status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell">
+                  <TableCell className="hide-at-700">
                     {directive.effective_date
                       ? format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")
                       : directive.issue_date
