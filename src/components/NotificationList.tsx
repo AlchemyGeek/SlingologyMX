@@ -85,12 +85,12 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
             return (
               <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {notification.description}
+                  <div className="flex items-start gap-2">
+                    <span className="flex-1">{notification.description}</span>
                     {showLinkIcon && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link className="h-4 w-4 text-primary flex-shrink-0" />
+                          <Link className="h-4 w-4 min-h-4 min-w-4 text-primary flex-shrink-0 mt-0.5" />
                         </TooltipTrigger>
                         <TooltipContent>System-managed notification</TooltipContent>
                       </Tooltip>
