@@ -44,15 +44,44 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
 
   const fetchActiveNotifications = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: notifData, error: notifError } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .eq("is_completed", false)
         .order("initial_date", { ascending: true });
 
-      if (error) throw error;
-      setNotifications(data || []);
+      if (notifError) throw notifError;
+      
+      // Fetch subscriptions to derive recurrence for subscription-linked notifications
+      const subscriptionIds = (notifData || [])
+        .filter(n => n.subscription_id)
+        .map(n => n.subscription_id);
+      
+      let subscriptionsMap: Record<string, any> = {};
+      if (subscriptionIds.length > 0) {
+        const { data: subData } = await supabase
+          .from("subscriptions")
+          .select("id, recurrence")
+          .in("id", subscriptionIds);
+        
+        if (subData) {
+          subscriptionsMap = subData.reduce((acc, sub) => {
+            acc[sub.id] = sub;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+      
+      // Enrich notifications with derived recurrence
+      const enrichedData = (notifData || []).map(n => ({
+        ...n,
+        derived_recurrence: n.subscription_id && subscriptionsMap[n.subscription_id]
+          ? subscriptionsMap[n.subscription_id].recurrence
+          : n.recurrence
+      }));
+      
+      setNotifications(enrichedData);
     } catch (error: any) {
       toast.error("Failed to load notifications");
     } finally {
@@ -297,7 +326,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
                     <Badge variant="outline">{notification.type}</Badge>
                   </TableCell>
                   <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                  <TableCell>{notification.recurrence}</TableCell>
+                  <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button

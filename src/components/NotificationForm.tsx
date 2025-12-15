@@ -37,6 +37,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, currentCounters, notificationBasis = "Date" }: NotificationFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [subscriptionRecurrence, setSubscriptionRecurrence] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     description: editingNotification?.description || "",
     notes: editingNotification?.notes || "",
@@ -58,6 +59,24 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
     editingNotification.directive_id || 
     editingNotification.subscription_id
   );
+
+  // Fetch subscription recurrence for subscription-linked notifications
+  useEffect(() => {
+    const fetchSubscriptionRecurrence = async () => {
+      if (editingNotification?.subscription_id) {
+        const { data } = await supabase
+          .from("subscriptions")
+          .select("recurrence")
+          .eq("id", editingNotification.subscription_id)
+          .maybeSingle();
+        
+        if (data) {
+          setSubscriptionRecurrence(data.recurrence);
+        }
+      }
+    };
+    fetchSubscriptionRecurrence();
+  }, [editingNotification?.subscription_id]);
 
   // Update initial counter value when counter type changes (for new notifications)
   useEffect(() => {
@@ -253,24 +272,30 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
 
             <div className="space-y-2">
               <Label htmlFor="recurrence">Recurrence</Label>
-              <Select
-                value={formData.recurrence}
-                onValueChange={(value) => setFormData({ ...formData, recurrence: value })}
-                disabled={isSystemGenerated}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="None">None</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
-                  <SelectItem value="Bi-Monthly">Bi-Monthly</SelectItem>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
-                  <SelectItem value="Quarterly">Quarterly</SelectItem>
-                  <SelectItem value="Semi-Annual">Semi-Annual</SelectItem>
-                  <SelectItem value="Yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
+              {isSystemGenerated && editingNotification?.subscription_id && subscriptionRecurrence ? (
+                <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  {subscriptionRecurrence} <span className="ml-1 text-xs">(from subscription)</span>
+                </div>
+              ) : (
+                <Select
+                  value={formData.recurrence}
+                  onValueChange={(value) => setFormData({ ...formData, recurrence: value })}
+                  disabled={isSystemGenerated}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Bi-Monthly">Bi-Monthly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                    <SelectItem value="Semi-Annual">Semi-Annual</SelectItem>
+                    <SelectItem value="Yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="space-y-2">
