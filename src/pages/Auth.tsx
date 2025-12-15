@@ -68,8 +68,8 @@ const Auth = () => {
       isRecoveryModeRef.current = true;
       setIsPasswordRecovery(true);
       setView("reset-password");
-      // Clear the hash to prevent re-triggering on refresh after password change
-      window.history.replaceState(null, '', window.location.pathname);
+      // Let Supabase process the hash first to establish session, then clear it
+      // The hash clearing will happen after the session is established
     }
 
     // Check if signups are enabled and access codes setting
@@ -383,6 +383,8 @@ const Auth = () => {
         password: newPassword,
       });
       if (error) throw error;
+      // Clear the hash now that password is reset
+      window.history.replaceState(null, '', window.location.pathname);
       // Sign out after password reset so user can log in with new password
       await supabase.auth.signOut();
       isRecoveryModeRef.current = false;
