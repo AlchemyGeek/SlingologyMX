@@ -22,6 +22,7 @@ export type Database = {
           id: string
           notes: string | null
           updated_at: string
+          use_count: number
           user_id: string
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           notes?: string | null
           updated_at?: string
+          use_count?: number
           user_id: string
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           id?: string
           notes?: string | null
           updated_at?: string
+          use_count?: number
           user_id?: string
         }
         Relationships: []
@@ -849,6 +852,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_code: string | null
           city: string | null
           country: string | null
           created_at: string | null
@@ -861,6 +865,7 @@ export type Database = {
           state_prefecture: string | null
         }
         Insert: {
+          access_code?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
@@ -873,6 +878,7 @@ export type Database = {
           state_prefecture?: string | null
         }
         Update: {
+          access_code?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
