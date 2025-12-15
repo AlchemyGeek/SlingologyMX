@@ -99,7 +99,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
                 <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                <TableCell>{notification.recurrence}</TableCell>
+                <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>
                 <TableCell>
                   <Badge variant={notification.is_completed ? "secondary" : "default"}>
                     {notification.is_completed ? "Completed" : "Active"}

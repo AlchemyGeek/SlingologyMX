@@ -32,16 +32,45 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
 
   const fetchNotifications = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch notifications
+      const { data: notifData, error: notifError } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (notifError) throw notifError;
       
-      const dateBasedNotifs = (data || []).filter(n => n.notification_basis === "Date" || !n.notification_basis);
-      const counterBasedNotifs = (data || []).filter(n => n.notification_basis === "Counter");
+      // Fetch subscriptions to derive recurrence for subscription-linked notifications
+      const subscriptionIds = (notifData || [])
+        .filter(n => n.subscription_id)
+        .map(n => n.subscription_id);
+      
+      let subscriptionsMap: Record<string, any> = {};
+      if (subscriptionIds.length > 0) {
+        const { data: subData } = await supabase
+          .from("subscriptions")
+          .select("id, recurrence")
+          .in("id", subscriptionIds);
+        
+        if (subData) {
+          subscriptionsMap = subData.reduce((acc, sub) => {
+            acc[sub.id] = sub;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+      
+      // Enrich notifications with derived recurrence
+      const enrichedData = (notifData || []).map(n => ({
+        ...n,
+        derived_recurrence: n.subscription_id && subscriptionsMap[n.subscription_id]
+          ? subscriptionsMap[n.subscription_id].recurrence
+          : n.recurrence
+      }));
+      
+      const dateBasedNotifs = enrichedData.filter(n => n.notification_basis === "Date" || !n.notification_basis);
+      const counterBasedNotifs = enrichedData.filter(n => n.notification_basis === "Counter");
       
       setDateNotifications(dateBasedNotifs);
       setCounterNotifications(counterBasedNotifs);
