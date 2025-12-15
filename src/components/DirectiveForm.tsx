@@ -32,13 +32,12 @@ interface DirectiveFormProps {
 }
 
 const DIRECTIVE_TYPES = [
-  "FAA Airworthiness Directive",
-  "Manufacturer Alert",
-  "Manufacturer Mandatory",
-  "Service Bulletin",
+  "Airworthiness Directive",
+  "Safety Alert",
+  "Mandatory Bulletin",
+  "Recommended Bulletin",
   "Service Instruction",
-  "Information Bulletin",
-  "Other",
+  "Information Notice",
 ];
 
 const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
