@@ -41,6 +41,7 @@ interface DirectiveComplianceLink {
   owner_notes: string;
   compliance_links: Array<{ description: string; url: string }>;
   isExpanded: boolean;
+  markAsCompleted: boolean;
 }
 
 interface DefaultCounters {
@@ -159,6 +160,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             owner_notes: link.owner_notes || "",
             compliance_links: link.compliance_links || [],
             isExpanded: false,
+            markAsCompleted: link.directives?.directive_status === "Completed" || link.directives?.compliance_scope === "One-Time",
           })));
         }
       };
@@ -737,6 +739,22 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               
               // Handle notification completion and recurrence (same as standalone compliance form)
               await handleDirectiveNotificationCompletionAndRecurrence(directive, link);
+              
+              // If markAsCompleted is true, update directive status to "Completed"
+              if (link.markAsCompleted) {
+                await supabase
+                  .from("directives")
+                  .update({ directive_status: "Completed" })
+                  .eq("id", link.directive_id);
+                
+                // Also delete any non-user-modified linked notifications
+                await supabase
+                  .from("notifications")
+                  .delete()
+                  .eq("directive_id", link.directive_id)
+                  .eq("user_modified", false)
+                  .eq("is_completed", false);
+              }
             }
           }
         }

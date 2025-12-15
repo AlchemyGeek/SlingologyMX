@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +53,7 @@ interface DirectiveComplianceLink {
   owner_notes: string;
   compliance_links: Array<{ description: string; url: string }>;
   isExpanded: boolean;
+  markAsCompleted: boolean;
 }
 
 interface MaintenanceDirectiveComplianceProps {
@@ -180,6 +181,7 @@ const MaintenanceDirectiveCompliance = ({
     owner_notes: "",
     compliance_links: [],
     isExpanded: true,
+    markAsCompleted: false,
   });
 
   const handleAddDirectiveLink = () => {
@@ -205,6 +207,8 @@ const MaintenanceDirectiveCompliance = ({
         counter_value: directive && isCounterBasedDirective(directive) 
           ? getCounterValue(defaultCounters, directive.counter_type || "Hobbs").toString()
           : "",
+        // Default markAsCompleted based on compliance_scope
+        markAsCompleted: directive?.compliance_scope === "One-Time",
       };
     } else {
       (newLinks[index] as any)[field] = value;
@@ -421,6 +425,28 @@ const MaintenanceDirectiveCompliance = ({
                             </div>
                           ))}
                         </div>
+                      )}
+                    </div>
+
+                    {/* Mark Directive as Completed Toggle */}
+                    <div className="space-y-2 pt-2 border-t">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={`mark-completed-${index}`}>Directive Status</Label>
+                          <p className="text-xs text-muted-foreground">
+                            If the directive doesn't require future compliance action, mark the status as completed.
+                          </p>
+                        </div>
+                        <Switch
+                          id={`mark-completed-${index}`}
+                          checked={link.markAsCompleted}
+                          onCheckedChange={(checked) => handleLinkChange(index, "markAsCompleted", checked)}
+                        />
+                      </div>
+                      {link.markAsCompleted && (
+                        <p className="text-xs text-primary">
+                          This directive will be marked as "Completed" when saved.
+                        </p>
                       )}
                     </div>
                   </CardContent>
