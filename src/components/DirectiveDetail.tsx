@@ -385,7 +385,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           </div>
 
           {/* Applicability Row - inline */}
-          {((directive as any).applicability_category || (directive as any).applicability_model || directive.applicable_serial_range || directive.applicability_status) && (
+          {((directive as any).applicability_model || directive.applicable_serial_range || directive.applicability_status) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
               <span className="font-medium text-muted-foreground">Applicability:</span>
               {directive.applicability_status && (
@@ -395,11 +395,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
               )}
               {directive.applicability_reason && (
                 <span className="text-muted-foreground">({directive.applicability_reason})</span>
-              )}
-              {(directive as any).applicability_category && (
-                <span>
-                  <span className="text-muted-foreground">Category:</span> {(directive as any).applicability_category}
-                </span>
               )}
               {(directive as any).applicability_model && (
                 <span>
