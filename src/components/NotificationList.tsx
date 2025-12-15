@@ -85,19 +85,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
             return (
               <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
-                  <div className="flex items-start gap-1.5">
-                    <span className="flex-1">{notification.description}</span>
-                    {showLinkIcon && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="flex-shrink-0 mt-0.5">
-                            <Link className="h-4 w-4 text-primary" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>System-managed notification</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
+                  {notification.description}
                 </TableCell>
                 <TableCell>{notification.type}</TableCell>
                 <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
