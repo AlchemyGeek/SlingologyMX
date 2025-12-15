@@ -219,13 +219,12 @@ const Auth = () => {
         return;
       }
       
-      // Decrement access code counter after successful signup via Edge Function
-      if (validatedAccessCode && validatedAccessCode.counter > 0) {
+      // Update access code counter and store code in profile after successful signup via Edge Function
+      if (validatedAccessCode) {
         await supabase.functions.invoke('decrement-access-code', {
-          body: { codeId: validatedAccessCode.id }
+          body: { codeId: validatedAccessCode.id, userId: data.user?.id }
         });
       }
-      // If counter is -1, we don't change it (unlimited use)
       
       setSentEmail(email);
       setEmailSent(true);
