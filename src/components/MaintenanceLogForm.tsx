@@ -740,8 +740,8 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               // Handle notification completion and recurrence (same as standalone compliance form)
               await handleDirectiveNotificationCompletionAndRecurrence(directive, link);
               
-              // If markAsCompleted is true, update directive status to "Completed"
-              if (link.markAsCompleted) {
+              // If markAsCompleted is true and this is a NEW compliance link (not editing existing), update directive status to "Completed"
+              if (link.markAsCompleted && !link.id) {
                 await supabase
                   .from("directives")
                   .update({ directive_status: "Completed" })
