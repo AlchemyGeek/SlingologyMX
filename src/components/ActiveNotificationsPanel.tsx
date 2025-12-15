@@ -280,12 +280,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               return (
                 <TableRow key={notification.id} className={rowClassName}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-1">
-                      {notification.description}
-                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
-                        <Link className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </div>
+                    {notification.description}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
@@ -359,12 +354,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
               return (
                 <TableRow key={notification.id} className={rowClassName}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-1">
-                      {notification.description}
-                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
-                        <Link className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </div>
+                    {notification.description}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{notification.type}</Badge>
