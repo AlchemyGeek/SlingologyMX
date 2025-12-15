@@ -85,16 +85,11 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
             return (
               <TableRow key={notification.id} className={rowClassName}>
                 <TableCell className="font-medium">
-                  <span className="inline">{notification.description}</span>
+                  {notification.description}
                   {showLinkIcon && (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="inline-flex align-middle ml-2 p-0 border-0 bg-transparent cursor-default">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                          </svg>
-                        </button>
+                      <TooltipTrigger className="inline align-middle ml-1">
+                        <Link size={16} className="text-primary" style={{ width: 16, height: 16, minWidth: 16, minHeight: 16 }} />
                       </TooltipTrigger>
                       <TooltipContent>System-managed notification</TooltipContent>
                     </Tooltip>
