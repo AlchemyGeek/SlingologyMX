@@ -157,11 +157,11 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead className="hidden lg:table-cell">Type</TableHead>
-              <TableHead className="hidden md:table-cell">Category</TableHead>
+              <TableHead className="hidden xl:table-cell">Type</TableHead>
+              <TableHead className="hidden lg:table-cell">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Effective Date</TableHead>
+              <TableHead className="hidden lg:table-cell">Effective Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,8 +180,8 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                 >
                   <TableCell className="font-mono font-medium">{directive.directive_code}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{directive.title}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm">{directive.directive_type}</TableCell>
-                  <TableCell className="hidden md:table-cell">{directive.category}</TableCell>
+                  <TableCell className="hidden xl:table-cell text-sm">{directive.directive_type}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{directive.category}</TableCell>
                   <TableCell>
                     <Badge variant={getSeverityColor(directive.severity) as any}>
                       {directive.severity}
@@ -192,7 +192,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                       {directive.directive_status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden lg:table-cell">
                     {directive.effective_date
                       ? format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")
                       : directive.issue_date
