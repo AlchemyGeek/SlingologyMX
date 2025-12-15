@@ -240,3 +240,21 @@ All colors MUST be HSL.
 .calendar-maintenance-day.calendar-directive-day {
   background: linear-gradient(135deg, hsl(45 93% 47% / 0.25) 50%, hsl(280 70% 50% / 0.25) 50%) !important;
 }
+
+/* Container query for responsive table columns */
+.table-container {
+  container-type: inline-size;
+}
+
+/* Hide columns based on container width */
+@container (max-width: 900px) {
+  .hide-at-900 {
+    display: none !important;
+  }
+}
+
+@container (max-width: 700px) {
+  .hide-at-700 {
+    display: none !important;
+  }
+}
