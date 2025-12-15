@@ -157,13 +157,6 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     }
   }, [editingDirective]);
 
-  // Auto-populate effective_date from issue_date when effective_date is empty
-  useEffect(() => {
-    if (formData.issue_date && !formData.effective_date) {
-      setFormData(prev => ({ ...prev, effective_date: formData.issue_date }));
-    }
-  }, [formData.issue_date]);
-
   // Auto-calculate initial_due_date when months change for "By Calendar"
   useEffect(() => {
     if (formData.initial_due_type === "By Calendar" && formData.initial_due_months) {
@@ -646,7 +639,14 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
                 <Label>Issue Date</Label>
                 <DateInput
                   value={formData.issue_date}
-                  onChange={(date) => setFormData({ ...formData, issue_date: date })}
+                  onChange={(date) => {
+                    // Auto-populate effective_date if it's empty
+                    if (date && !formData.effective_date) {
+                      setFormData({ ...formData, issue_date: date, effective_date: date });
+                    } else {
+                      setFormData({ ...formData, issue_date: date });
+                    }
+                  }}
                   placeholder="Pick a date"
                 />
               </div>
