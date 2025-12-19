@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HistoryPanelProps {
   userId: string;
@@ -32,6 +33,7 @@ interface DirectiveHistoryEntry {
 type SortDirection = "asc" | "desc" | null;
 
 const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
+  const isMobile = useIsMobile();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<DirectiveHistoryEntry[]>([]);
@@ -306,51 +308,57 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
               {filteredNotifications.length === 0 ? (
                 <p className="text-muted-foreground">No notifications match your filters.</p>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "description")}>
-                            Description <SortIcon field="description" currentSort={notifSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "type")}>
-                            Type <SortIcon field="type" currentSort={notifSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "initial_date")}>
-                            Initial Date <SortIcon field="initial_date" currentSort={notifSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "completed_at")}>
-                            Completed <SortIcon field="completed_at" currentSort={notifSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>Recurrence</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNotifications.map((notification) => (
-                        <TableRow key={notification.id}>
-                          <TableCell className="font-medium">{notification.description}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{notification.type}</Badge>
-                          </TableCell>
-                          <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            {notification.completed_at
-                              ? new Date(notification.completed_at).toLocaleDateString()
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>{notification.recurrence}</TableCell>
+                <div className="rounded-md border overflow-x-auto">
+                  <div className="min-w-[500px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "description")}>
+                              Description <SortIcon field="description" currentSort={notifSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "type")}>
+                                Type <SortIcon field="type" currentSort={notifSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "initial_date")}>
+                              Initial Date <SortIcon field="initial_date" currentSort={notifSort} />
+                            </Button>
+                          </TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "completed_at")}>
+                              Completed <SortIcon field="completed_at" currentSort={notifSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && <TableHead>Recurrence</TableHead>}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredNotifications.map((notification) => (
+                          <TableRow key={notification.id}>
+                            <TableCell className="font-medium">{notification.description}</TableCell>
+                            {!isMobile && (
+                              <TableCell>
+                                <Badge variant="outline">{notification.type}</Badge>
+                              </TableCell>
+                            )}
+                            <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              {notification.completed_at
+                                ? new Date(notification.completed_at).toLocaleDateString()
+                                : "N/A"}
+                            </TableCell>
+                            {!isMobile && <TableCell>{notification.recurrence}</TableCell>}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -383,61 +391,69 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
               {filteredMaintenance.length === 0 ? (
                 <p className="text-muted-foreground">No maintenance records match your filters.</p>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "entry_title")}>
-                            Title <SortIcon field="entry_title" currentSort={maintSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "category")}>
-                            Category <SortIcon field="category" currentSort={maintSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "subcategory")}>
-                            Subcategory <SortIcon field="subcategory" currentSort={maintSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "performed_by_name")}>
-                            Performed By <SortIcon field="performed_by_name" currentSort={maintSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "date_performed")}>
-                            Date <SortIcon field="date_performed" currentSort={maintSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>Tags</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredMaintenance.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">{log.entry_title}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{log.category}</Badge>
-                          </TableCell>
-                          <TableCell>{log.subcategory}</TableCell>
-                          <TableCell>{log.performed_by_name}</TableCell>
-                          <TableCell>{parseLocalDate(log.date_performed).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-1 flex-wrap">
-                              {log.tags?.map((tag: string, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          </TableCell>
+                <div className="rounded-md border overflow-x-auto">
+                  <div className="min-w-[500px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "entry_title")}>
+                              Title <SortIcon field="entry_title" currentSort={maintSort} />
+                            </Button>
+                          </TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "category")}>
+                              Category <SortIcon field="category" currentSort={maintSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "subcategory")}>
+                                Subcategory <SortIcon field="subcategory" currentSort={maintSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "performed_by_name")}>
+                                Performed By <SortIcon field="performed_by_name" currentSort={maintSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(maintSort, setMaintSort, "date_performed")}>
+                              Date <SortIcon field="date_performed" currentSort={maintSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && <TableHead>Tags</TableHead>}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredMaintenance.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium">{log.entry_title}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">{log.category}</Badge>
+                            </TableCell>
+                            {!isMobile && <TableCell>{log.subcategory}</TableCell>}
+                            {!isMobile && <TableCell>{log.performed_by_name}</TableCell>}
+                            <TableCell>{parseLocalDate(log.date_performed).toLocaleDateString()}</TableCell>
+                            {!isMobile && (
+                              <TableCell>
+                                <div className="flex gap-1 flex-wrap">
+                                  {log.tags?.map((tag: string, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -470,75 +486,87 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
               {filteredDirectives.length === 0 ? (
                 <p className="text-muted-foreground">No directive history matches your filters.</p>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "directive_code")}>
-                            Code <SortIcon field="directive_code" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "directive_title")}>
-                            Title <SortIcon field="directive_title" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "action_type")}>
-                            Action <SortIcon field="action_type" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "compliance_status")}>
-                            Status <SortIcon field="compliance_status" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "first_compliance_date")}>
-                            First Compliance <SortIcon field="first_compliance_date" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "last_compliance_date")}>
-                            Last Compliance <SortIcon field="last_compliance_date" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                        <TableHead>
-                          <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "created_at")}>
-                            Date <SortIcon field="created_at" currentSort={dirSort} />
-                          </Button>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredDirectives.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.directive_code}</TableCell>
-                          <TableCell>{entry.directive_title}</TableCell>
-                          <TableCell>
-                            <Badge variant={getActionBadgeVariant(entry.action_type)}>
-                              {entry.action_type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{entry.compliance_status || "-"}</TableCell>
-                          <TableCell>
-                            {entry.first_compliance_date
-                              ? parseLocalDate(entry.first_compliance_date).toLocaleDateString()
-                              : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {entry.last_compliance_date
-                              ? parseLocalDate(entry.last_compliance_date).toLocaleDateString()
-                              : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(entry.created_at).toLocaleDateString()}
-                          </TableCell>
+                <div className="rounded-md border overflow-x-auto">
+                  <div className="min-w-[500px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "directive_code")}>
+                              Code <SortIcon field="directive_code" currentSort={dirSort} />
+                            </Button>
+                          </TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "directive_title")}>
+                              Title <SortIcon field="directive_title" currentSort={dirSort} />
+                            </Button>
+                          </TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "action_type")}>
+                              Action <SortIcon field="action_type" currentSort={dirSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "compliance_status")}>
+                                Status <SortIcon field="compliance_status" currentSort={dirSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "first_compliance_date")}>
+                                First Compliance <SortIcon field="first_compliance_date" currentSort={dirSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "last_compliance_date")}>
+                                Last Compliance <SortIcon field="last_compliance_date" currentSort={dirSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(dirSort, setDirSort, "created_at")}>
+                              Date <SortIcon field="created_at" currentSort={dirSort} />
+                            </Button>
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredDirectives.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="font-medium">{entry.directive_code}</TableCell>
+                            <TableCell>{entry.directive_title}</TableCell>
+                            <TableCell>
+                              <Badge variant={getActionBadgeVariant(entry.action_type)}>
+                                {entry.action_type}
+                              </Badge>
+                            </TableCell>
+                            {!isMobile && <TableCell>{entry.compliance_status || "-"}</TableCell>}
+                            {!isMobile && (
+                              <TableCell>
+                                {entry.first_compliance_date
+                                  ? parseLocalDate(entry.first_compliance_date).toLocaleDateString()
+                                  : "-"}
+                              </TableCell>
+                            )}
+                            {!isMobile && (
+                              <TableCell>
+                                {entry.last_compliance_date
+                                  ? parseLocalDate(entry.last_compliance_date).toLocaleDateString()
+                                  : "-"}
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              {new Date(entry.created_at).toLocaleDateString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
             </TabsContent>
