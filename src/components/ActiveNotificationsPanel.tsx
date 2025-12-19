@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { addDays, addMonths } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
 import NotificationForm from "./NotificationForm";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
@@ -41,6 +42,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
   const [showForm, setShowForm] = useState(false);
   const [editingNotification, setEditingNotification] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"date" | "counter">("date");
+  const isMobile = useIsMobile();
 
   const fetchActiveNotifications = async () => {
     try {
@@ -289,75 +291,79 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
     dateNotifications.length === 0 ? (
       <p className="text-muted-foreground">No active date-based notifications.</p>
     ) : (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Recurrence</TableHead>
-              <TableHead className="w-[180px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {dateNotifications.map((notification) => {
-              const alertStatus = getAlertStatus(notification);
-              const rowClassName = cn(
-                alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
-                alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
-              );
-              
-              return (
-                <TableRow key={notification.id} className={rowClassName}>
-                  <TableCell className="font-medium">
-                    {notification.description}
-                    {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
-                            <Link style={{ width: 16, height: 16 }} className="text-primary" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>System-managed notification</TooltipContent>
-                      </Tooltip>
+      <div className="rounded-md border overflow-x-auto">
+        <div className="min-w-[500px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                {!isMobile && <TableHead>Type</TableHead>}
+                <TableHead>Due Date</TableHead>
+                {!isMobile && <TableHead>Recurrence</TableHead>}
+                <TableHead className="w-[180px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dateNotifications.map((notification) => {
+                const alertStatus = getAlertStatus(notification);
+                const rowClassName = cn(
+                  alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+                );
+                
+                return (
+                  <TableRow key={notification.id} className={rowClassName}>
+                    <TableCell className="font-medium">
+                      {notification.description}
+                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
+                              <Link style={{ width: 16, height: 16 }} className="text-primary" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>System-managed notification</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <Badge variant="outline">{notification.type}</Badge>
+                      </TableCell>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{notification.type}</Badge>
-                  </TableCell>
-                  <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                  <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkCompleted(notification.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(notification)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(notification.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
+                    {!isMobile && <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkCompleted(notification.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Complete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(notification)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(notification.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     )
   );
@@ -366,90 +372,96 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
     counterNotifications.length === 0 ? (
       <p className="text-muted-foreground">No active counter-based notifications.</p>
     ) : (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Counter</TableHead>
-              <TableHead>Due At</TableHead>
-              <TableHead>Remaining</TableHead>
-              <TableHead>Recurrence</TableHead>
-              <TableHead className="w-[180px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {counterNotifications.map((notification) => {
-              const alertStatus = getAlertStatus(notification);
-              const rowClassName = cn(
-                alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
-                alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
-              );
-              
-              const field = counterTypeToFieldMap[notification.counter_type];
-              const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
-              const targetValue = notification.initial_counter_value || 0;
-              const remaining = targetValue - currentValue;
-              
-              return (
-                <TableRow key={notification.id} className={rowClassName}>
-                  <TableCell className="font-medium">
-                    {notification.description}
-                    {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
-                            <Link style={{ width: 16, height: 16 }} className="text-primary" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>System-managed notification</TooltipContent>
-                      </Tooltip>
+      <div className="rounded-md border overflow-x-auto">
+        <div className="min-w-[500px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                {!isMobile && <TableHead>Type</TableHead>}
+                <TableHead>Counter</TableHead>
+                <TableHead>Due At</TableHead>
+                <TableHead>Remaining</TableHead>
+                {!isMobile && <TableHead>Recurrence</TableHead>}
+                <TableHead className="w-[180px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {counterNotifications.map((notification) => {
+                const alertStatus = getAlertStatus(notification);
+                const rowClassName = cn(
+                  alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
+                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+                );
+                
+                const field = counterTypeToFieldMap[notification.counter_type];
+                const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
+                const targetValue = notification.initial_counter_value || 0;
+                const remaining = targetValue - currentValue;
+                
+                return (
+                  <TableRow key={notification.id} className={rowClassName}>
+                    <TableCell className="font-medium">
+                      {notification.description}
+                      {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-block align-middle ml-1" style={{ width: 16, height: 16 }}>
+                              <Link style={{ width: 16, height: 16 }} className="text-primary" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>System-managed notification</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <Badge variant="outline">{notification.type}</Badge>
+                      </TableCell>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{notification.type}</Badge>
-                  </TableCell>
-                  <TableCell>{notification.counter_type}</TableCell>
-                  <TableCell>{targetValue.toFixed(1)}</TableCell>
-                  <TableCell>
-                    <span className={remaining <= 0 ? "text-destructive font-medium" : ""}>
-                      {remaining.toFixed(1)} hrs
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkCompleted(notification.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(notification)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(notification.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <TableCell>{notification.counter_type}</TableCell>
+                    <TableCell>{targetValue.toFixed(1)}</TableCell>
+                    <TableCell>
+                      <span className={remaining <= 0 ? "text-destructive font-medium" : ""}>
+                        {remaining.toFixed(1)} hrs
+                      </span>
+                    </TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        {notification.counter_step ? `Every ${notification.counter_step} hrs` : "None"}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkCompleted(notification.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Complete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(notification)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(notification.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     )
   );
