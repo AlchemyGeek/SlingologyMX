@@ -42,6 +42,7 @@ const Auth = () => {
 
   // Signup profile fields
   const [name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [country, setCountry] = useState("");
   const [statePrefecture, setStatePrefecture] = useState("");
   const [city, setCity] = useState("");
@@ -208,6 +209,7 @@ const Auth = () => {
           emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             name: name.trim(),
+            display_name: displayName.trim() || null,
             country: country.trim() || null,
             state_prefecture: statePrefecture.trim() || null,
             city: city.trim() || null,
@@ -246,6 +248,7 @@ const Auth = () => {
     setEmail("");
     setPassword("");
     setName("");
+    setDisplayName("");
     setCountry("");
     setStatePrefecture("");
     setCity("");
@@ -809,7 +812,7 @@ const Auth = () => {
             <div className="space-y-4">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Account Information</h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>
                   <Input
                     id="name"
@@ -820,6 +823,18 @@ const Auth = () => {
                     maxLength={50}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name (Alias)</Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    placeholder="Public display name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground">Shown publicly instead of your name</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email <span className="text-destructive">*</span></Label>

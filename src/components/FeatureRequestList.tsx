@@ -62,27 +62,27 @@ const FeatureRequestList = ({
         return;
       }
 
-      // Fetch profile names for all users
-      const userIds = [...new Set(featuresData.map((f) => f.user_id))];
+      // Fetch profile names for all users (use display_name if available, otherwise "Anonymous")
+      const userIds = [...new Set(featuresData.map((f) => f.user_id).filter(Boolean))];
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name")
+        .select("id, name, display_name")
         .in("id", userIds);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
       }
 
-      // Create a map of user_id to name
+      // Create a map of user_id to display name (prefer display_name, fallback to "Anonymous")
       const profileMap = new Map<string, string>();
-      profilesData?.forEach((profile) => {
-        profileMap.set(profile.id, profile.name || "Anonymous");
+      profilesData?.forEach((profile: any) => {
+        profileMap.set(profile.id, profile.display_name || "Anonymous");
       });
 
       // Map features with submitter names
       const featuresWithNames = featuresData.map((feature) => ({
         ...feature,
-        submitter_name: profileMap.get(feature.user_id) || "Anonymous",
+        submitter_name: feature.user_id ? (profileMap.get(feature.user_id) || "Anonymous") : "Anonymous",
       }));
       
       setFeatures(featuresWithNames);
