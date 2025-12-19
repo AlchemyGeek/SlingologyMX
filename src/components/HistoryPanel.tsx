@@ -320,7 +320,6 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
                             Type <SortIcon field="type" currentSort={notifSort} />
                           </Button>
                         </TableHead>
-                        <TableHead>Component</TableHead>
                         <TableHead>
                           <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(notifSort, setNotifSort, "initial_date")}>
                             Initial Date <SortIcon field="initial_date" currentSort={notifSort} />
@@ -341,7 +340,6 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
                           <TableCell>
                             <Badge variant="outline">{notification.type}</Badge>
                           </TableCell>
-                          <TableCell>{notification.component}</TableCell>
                           <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
                           <TableCell>
                             {notification.completed_at
