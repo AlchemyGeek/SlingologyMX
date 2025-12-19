@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, User as UserIcon, Lightbulb, BookOpen, Bug } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+
 import slingologyIcon from "@/assets/slingology-icon.png";
 import BugReportForm from "@/components/BugReportForm";
 import BugReportList from "@/components/BugReportList";
@@ -59,11 +59,6 @@ const BugReports = () => {
     setIsAdmin(!!data);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/");
-  };
 
   const handleBugChanged = () => {
     setRefreshKey((prev) => prev + 1);
@@ -95,33 +90,6 @@ const BugReports = () => {
               <h1 className="text-2xl font-bold">Bug Reports</h1>
               {isAdmin && <span className="text-sm text-muted-foreground">(Admin View)</span>}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                window.open(
-                  "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
-                  "_blank",
-                )
-              }
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Blog
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-              <UserIcon className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/feature-requests")}>
-              <Lightbulb className="h-4 w-4 mr-2" />
-              Feature Requests
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
       </header>

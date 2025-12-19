@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, User as UserIcon, Bug, BookOpen } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
+
 import slingologyIcon from "@/assets/slingology-icon.png";
 import FeatureRequestForm from "@/components/FeatureRequestForm";
 import FeatureRequestList from "@/components/FeatureRequestList";
@@ -39,11 +39,6 @@ const FeatureRequests = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/");
-  };
 
   const handleFeatureSubmitted = () => {
     setRefreshKey((prev) => prev + 1);
@@ -74,33 +69,6 @@ const FeatureRequests = () => {
               <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
               <h1 className="text-2xl font-bold">Feature Requests</h1>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                window.open(
-                  "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
-                  "_blank",
-                )
-              }
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Blog
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-              <UserIcon className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/bug-reports")}>
-              <Bug className="h-4 w-4 mr-2" />
-              Bug Reports
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
       </header>
