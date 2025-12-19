@@ -856,6 +856,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string | null
+          display_name: string | null
           email: string | null
           id: string
           membership_status: Database["public"]["Enums"]["membership_status"]
@@ -869,6 +870,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          display_name?: string | null
           email?: string | null
           id: string
           membership_status?: Database["public"]["Enums"]["membership_status"]
@@ -882,6 +884,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          display_name?: string | null
           email?: string | null
           id?: string
           membership_status?: Database["public"]["Enums"]["membership_status"]

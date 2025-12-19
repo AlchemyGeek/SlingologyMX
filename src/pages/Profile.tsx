@@ -14,6 +14,7 @@ import UserManagement from "@/components/UserManagement";
 
 interface ProfileData {
   name: string;
+  display_name: string;
   email: string;
   country: string;
   state_prefecture: string;
@@ -45,6 +46,18 @@ const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: Profil
           maxLength={50}
           placeholder="Enter your name"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="display_name">Display Name (Alias)</Label>
+        <Input
+          id="display_name"
+          value={profileData.display_name}
+          onChange={(e) => setProfileData({ ...profileData, display_name: e.target.value })}
+          maxLength={50}
+          placeholder="Enter a public display name"
+        />
+        <p className="text-xs text-muted-foreground">This name will be shown publicly instead of your real name</p>
       </div>
 
       <div className="space-y-2">
@@ -159,6 +172,7 @@ const Profile = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: "",
+    display_name: "",
     email: "",
     country: "",
     state_prefecture: "",
@@ -223,6 +237,7 @@ const Profile = () => {
     if (data) {
       setProfileData({
         name: data.name || "",
+        display_name: (data as any).display_name || "",
         email: data.email || user.email || "",
         country: data.country || "",
         state_prefecture: data.state_prefecture || "",
@@ -248,12 +263,13 @@ const Profile = () => {
       .from("profiles")
       .update({
         name: profileData.name,
+        display_name: profileData.display_name,
         country: profileData.country,
         state_prefecture: profileData.state_prefecture,
         city: profileData.city,
         plane_registration: profileData.plane_registration,
         plane_model_make: profileData.plane_model_make,
-      })
+      } as any)
       .eq("id", user.id);
 
     setSaving(false);
