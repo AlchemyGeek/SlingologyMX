@@ -4,6 +4,7 @@ import { Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SubscriptionListProps {
   subscriptions: any[];
@@ -13,6 +14,8 @@ interface SubscriptionListProps {
 }
 
 const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: SubscriptionListProps) => {
+  const isMobile = useIsMobile();
+  
   const handleDelete = async (id: string) => {
     try {
       // The notification will be automatically deleted due to ON DELETE CASCADE
@@ -34,42 +37,46 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Cost</TableHead>
-            <TableHead>Initial Date</TableHead>
-            <TableHead>Recurrence</TableHead>
-            <TableHead className="w-[120px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {subscriptions.map((subscription) => (
-            <TableRow key={subscription.id}>
-              <TableCell className="font-medium">{subscription.subscription_name}</TableCell>
-              <TableCell className="max-w-[200px] truncate" title={subscription.type}>
-                {subscription.type}
-              </TableCell>
-              <TableCell>${subscription.cost}</TableCell>
-              <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
-              <TableCell>{subscription.recurrence}</TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(subscription)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(subscription.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
+    <div className="rounded-md border overflow-x-auto">
+      <div className="min-w-[500px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              {!isMobile && <TableHead>Type</TableHead>}
+              {!isMobile && <TableHead>Cost</TableHead>}
+              <TableHead>Initial Date</TableHead>
+              {!isMobile && <TableHead>Recurrence</TableHead>}
+              <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {subscriptions.map((subscription) => (
+              <TableRow key={subscription.id}>
+                <TableCell className="font-medium">{subscription.subscription_name}</TableCell>
+                {!isMobile && (
+                  <TableCell className="max-w-[200px] truncate" title={subscription.type}>
+                    {subscription.type}
+                  </TableCell>
+                )}
+                {!isMobile && <TableCell>${subscription.cost}</TableCell>}
+                <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
+                {!isMobile && <TableCell>{subscription.recurrence}</TableCell>}
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(subscription)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(subscription.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

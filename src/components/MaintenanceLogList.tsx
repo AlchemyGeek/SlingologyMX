@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { parseLocalDate } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MaintenanceLog {
   id: string;
@@ -34,6 +35,7 @@ interface MaintenanceLogListProps {
 }
 
 const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
@@ -108,49 +110,53 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
         </Select>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Subcategory</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Tags</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAndSortedLogs.length === 0 ? (
+      <div className="rounded-md border overflow-x-auto">
+        <div className="min-w-[500px]">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No maintenance logs found
-                </TableCell>
+                <TableHead>Date</TableHead>
+                <TableHead>Category</TableHead>
+                {!isMobile && <TableHead>Subcategory</TableHead>}
+                <TableHead>Title</TableHead>
+                {!isMobile && <TableHead>Tags</TableHead>}
               </TableRow>
-            ) : (
-              filteredAndSortedLogs.map((log) => (
-                <TableRow
-                  key={log.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => onViewDetail(log)}
-                >
-                  <TableCell>{format(parseLocalDate(log.date_performed), "MMM dd, yyyy")}</TableCell>
-                  <TableCell>{log.category}</TableCell>
-                  <TableCell>{log.subcategory}</TableCell>
-                  <TableCell className="font-medium">{log.entry_title}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 flex-wrap">
-                      {log.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isMobile ? 3 : 5} className="text-center text-muted-foreground">
+                    No maintenance logs found
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredAndSortedLogs.map((log) => (
+                  <TableRow
+                    key={log.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => onViewDetail(log)}
+                  >
+                    <TableCell>{format(parseLocalDate(log.date_performed), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>{log.category}</TableCell>
+                    {!isMobile && <TableCell>{log.subcategory}</TableCell>}
+                    <TableCell className="font-medium">{log.entry_title}</TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {log.tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
