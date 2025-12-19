@@ -262,7 +262,8 @@ const Dashboard = () => {
             hasActiveAlerts={hasActiveAlerts}
           />
 
-          <main className="flex-1 p-6 space-y-6 overflow-auto">
+          <main className="flex-1 p-6 space-y-6 overflow-auto min-w-0">
+            <div className="min-w-[600px]">
             <AircraftCountersDisplay
               counters={counters}
               loading={countersLoading}
@@ -272,8 +273,9 @@ const Dashboard = () => {
               onRefetch={refetch}
             />
 
-            <div className="bg-card rounded-lg border p-6">
-              {renderContent()}
+              <div className="bg-card rounded-lg border p-6">
+                {renderContent()}
+              </div>
             </div>
           </main>
         </div>
