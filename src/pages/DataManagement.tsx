@@ -29,22 +29,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface ExportData {
-  version: string;
-  exportDate: string;
-  tables: {
-    aircraft_counters: any[];
-    aircraft_counter_history: any[];
-    subscriptions: any[];
-    notifications: any[];
-    maintenance_logs: any[];
-    directives: any[];
-    aircraft_directive_status: any[];
-    directive_history: any[];
-    maintenance_directive_compliance: any[];
-  };
-}
+import { 
+  ExportData, 
+  CURRENT_SCHEMA_VERSION, 
+  migrateToCurrentVersion, 
+  getVersionInfo 
+} from "@/lib/schemaMigrations";
 
 interface RecordCounts {
   aircraft_counters: number;
@@ -145,7 +135,7 @@ const DataManagement = () => {
         records.map(({ user_id, ...rest }) => rest);
 
       const exportData: ExportData = {
-        version: "1.0",
+        version: CURRENT_SCHEMA_VERSION,
         exportDate: new Date().toISOString(),
         tables: {
           aircraft_counters: sanitizeRecords(countersRes.data || []),
@@ -330,12 +320,25 @@ const DataManagement = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string) as ExportData;
+        const rawData = JSON.parse(e.target?.result as string);
         
-        // Validate structure
-        if (!data.version || !data.tables) {
-          toast.error("Invalid file format");
+        // Run migration system
+        const migrationResult = migrateToCurrentVersion(rawData);
+        
+        if (!migrationResult.success) {
+          toast.error(migrationResult.error || "Invalid file format");
           return;
+        }
+        
+        const data = migrationResult.data!;
+        
+        // Show migration info if any migrations were applied
+        if (migrationResult.migrationsApplied.length > 0) {
+          const versionInfo = getVersionInfo(rawData.version);
+          if (versionInfo.requiresMigration) {
+            toast.info(`File migrated from v${rawData.version} to v${CURRENT_SCHEMA_VERSION}`);
+          }
+          console.log("Migrations applied:", migrationResult.migrationsApplied);
         }
 
         setImportPreview(data);
