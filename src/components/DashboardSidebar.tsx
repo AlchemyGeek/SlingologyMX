@@ -1,4 +1,19 @@
-import { Calendar, Bell, History, CreditCard, Wrench, FileText, AlertCircle, HelpCircle, BookOpen, MessageCircle, Bug, Lightbulb, Database, Gauge } from "lucide-react";
+import {
+  Calendar,
+  Bell,
+  History,
+  CreditCard,
+  Wrench,
+  FileText,
+  AlertCircle,
+  HelpCircle,
+  BookOpen,
+  MessageCircle,
+  Bug,
+  Lightbulb,
+  Database,
+  Gauge,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -11,13 +26,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-type DashboardView = 
-  | "calendar" 
+type DashboardView =
+  | "calendar"
   | "counters"
-  | "notifications" 
-  | "history" 
-  | "subscriptions" 
-  | "maintenance" 
+  | "notifications"
+  | "history"
+  | "subscriptions"
+  | "maintenance"
   | "directives";
 
 interface DashboardSidebarProps {
@@ -41,8 +56,13 @@ const recordsItems = [
 
 const supportItems = [
   { id: "help", title: "Help", icon: HelpCircle, external: "https://slingology.blog/slingologymx-help-pages/" },
-  { id: "blog", title: "Blog", icon: BookOpen, external: "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu" },
-  { id: "discord", title: "Discord", icon: MessageCircle, external: "https://discord.gg/54wVtxv7" },
+  {
+    id: "blog",
+    title: "Blog",
+    icon: BookOpen,
+    external: "https://slingology.blog/category/mx/?utm_campaign=slingologymx&utm_source=service&utm_medium=menu",
+  },
+  { id: "discord", title: "Discord", icon: MessageCircle, external: "https://discord.gg/v3ydQuupmy" },
   { id: "data-management", title: "Data Management", icon: Database, route: "/data-management" },
   { id: "bug-reports", title: "Bug Reports", icon: Bug, route: "/bug-reports" },
   { id: "feature-requests", title: "Feature Requests", icon: Lightbulb, route: "/feature-requests" },
@@ -83,7 +103,9 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: 
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">Records</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">
+            Records
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {recordsItems.map((item) => (
@@ -103,7 +125,9 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: 
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">Support</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">
+            Support
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {supportItems.map((item) => (
