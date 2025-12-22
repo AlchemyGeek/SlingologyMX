@@ -55,6 +55,18 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const getApplicabilityColor = (status: string | null | undefined) => {
+  switch (status) {
+    case "Applies":
+      return "destructive";
+    case "Does Not Apply":
+      return "outline";
+    case "Unsure":
+    default:
+      return "secondary";
+  }
+};
+
 const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -161,13 +173,14 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
               <TableHead className="hide-at-700">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Applicable</TableHead>
               <TableHead className="hide-at-700">Effective Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedDirectives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No directives found
                 </TableCell>
               </TableRow>
@@ -190,6 +203,11 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                   <TableCell>
                     <Badge variant={getStatusColor(directive.directive_status) as any}>
                       {directive.directive_status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getApplicabilityColor(directive.applicability_status) as any}>
+                      {directive.applicability_status || "Unsure"}
                     </Badge>
                   </TableCell>
                   <TableCell className="hide-at-700">
