@@ -57,7 +57,8 @@ const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, cu
   const isSystemGenerated = editingNotification && (
     editingNotification.maintenance_log_id || 
     editingNotification.directive_id || 
-    editingNotification.subscription_id
+    editingNotification.subscription_id ||
+    editingNotification.equipment_id
   );
 
   // Fetch subscription recurrence for subscription-linked notifications
