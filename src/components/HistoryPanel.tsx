@@ -37,6 +37,7 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<DirectiveHistoryEntry[]>([]);
+  const [equipment, setEquipment] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Notification filters & sort
@@ -54,9 +55,14 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
   const [dirActionFilter, setDirActionFilter] = useState<string>("all");
   const [dirSort, setDirSort] = useState<{ field: string; direction: SortDirection }>({ field: "created_at", direction: "desc" });
 
+  // Equipment filters & sort
+  const [equipSearch, setEquipSearch] = useState("");
+  const [equipCategoryFilter, setEquipCategoryFilter] = useState<string>("all");
+  const [equipSort, setEquipSort] = useState<{ field: string; direction: SortDirection }>({ field: "created_at", direction: "desc" });
+
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes, directiveHistoryRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -72,16 +78,23 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
           .from("directive_history")
           .select("*")
           .eq("user_id", userId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("equipment")
+          .select("*")
+          .eq("user_id", userId)
           .order("created_at", { ascending: false })
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
       if (directiveHistoryRes.error) throw directiveHistoryRes.error;
+      if (equipmentRes.error) throw equipmentRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
       setDirectiveHistory(directiveHistoryRes.data || []);
+      setEquipment(equipmentRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -214,6 +227,50 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
     return result;
   }, [directiveHistory, dirSearch, dirActionFilter, dirSort]);
 
+  // Filtered & sorted equipment
+  const filteredEquipment = useMemo(() => {
+    let result = [...equipment];
+    
+    // Search filter
+    if (equipSearch) {
+      const search = equipSearch.toLowerCase();
+      result = result.filter(e => 
+        e.name?.toLowerCase().includes(search) ||
+        e.manufacturer?.toLowerCase().includes(search) ||
+        e.model_or_part_number?.toLowerCase().includes(search) ||
+        e.serial_number?.toLowerCase().includes(search) ||
+        e.tags?.some((t: string) => t.toLowerCase().includes(search))
+      );
+    }
+    
+    // Category filter
+    if (equipCategoryFilter !== "all") {
+      result = result.filter(e => e.category === equipCategoryFilter);
+    }
+    
+    // Sort
+    if (equipSort.direction) {
+      result.sort((a, b) => {
+        let aVal = a[equipSort.field];
+        let bVal = b[equipSort.field];
+        
+        if (equipSort.field.includes("date") || equipSort.field.includes("_at")) {
+          aVal = aVal ? new Date(aVal).getTime() : 0;
+          bVal = bVal ? new Date(bVal).getTime() : 0;
+        }
+        
+        if (typeof aVal === "string") aVal = aVal.toLowerCase();
+        if (typeof bVal === "string") bVal = bVal.toLowerCase();
+        
+        if ((aVal ?? "") < (bVal ?? "")) return equipSort.direction === "asc" ? -1 : 1;
+        if ((aVal ?? "") > (bVal ?? "")) return equipSort.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [equipment, equipSearch, equipCategoryFilter, equipSort]);
+
   const toggleSort = (
     currentSort: { field: string; direction: SortDirection },
     setSort: React.Dispatch<React.SetStateAction<{ field: string; direction: SortDirection }>>,
@@ -243,7 +300,7 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
-  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0 || directiveHistory.length > 0;
+  const hasHistory = notifications.length > 0 || maintenanceLogs.length > 0 || directiveHistory.length > 0 || equipment.length > 0;
 
   const getActionBadgeVariant = (actionType: string) => {
     switch (actionType) {
@@ -262,22 +319,24 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
   const notificationTypes = [...new Set(notifications.map(n => n.type))];
   const maintenanceCategories = [...new Set(maintenanceLogs.map(m => m.category))];
   const directiveActions = [...new Set(directiveHistory.map(d => d.action_type))];
+  const equipmentCategories = [...new Set(equipment.map(e => e.category))];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>History</CardTitle>
-        <CardDescription>All completed notifications, maintenance records, and directive history</CardDescription>
+        <CardDescription>All completed notifications, maintenance records, directive history, and equipment</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasHistory ? (
           <p className="text-muted-foreground">No history items yet.</p>
         ) : (
           <Tabs defaultValue="notifications" className="w-full">
-            <TabsList>
+            <TabsList className="flex-wrap h-auto gap-1">
               <TabsTrigger value="notifications">Notifications ({filteredNotifications.length})</TabsTrigger>
               <TabsTrigger value="maintenance">Maintenance ({filteredMaintenance.length})</TabsTrigger>
               <TabsTrigger value="directives">Directives ({filteredDirectives.length})</TabsTrigger>
+              <TabsTrigger value="equipment">Equipment ({filteredEquipment.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="notifications" className="mt-4 space-y-4">
@@ -562,6 +621,117 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
                             <TableCell>
                               {new Date(entry.created_at).toLocaleDateString()}
                             </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="equipment" className="mt-4 space-y-4">
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search equipment..."
+                    value={equipSearch}
+                    onChange={(e) => setEquipSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Select value={equipCategoryFilter} onValueChange={setEquipCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-[150px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {equipmentCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filteredEquipment.length === 0 ? (
+                <p className="text-muted-foreground">No equipment matches your filters.</p>
+              ) : (
+                <div className="rounded-md border overflow-x-auto">
+                  <div className="min-w-[500px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "name")}>
+                              Name <SortIcon field="name" currentSort={equipSort} />
+                            </Button>
+                          </TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "category")}>
+                              Category <SortIcon field="category" currentSort={equipSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "manufacturer")}>
+                                Manufacturer <SortIcon field="manufacturer" currentSort={equipSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "model_or_part_number")}>
+                                Model/Part# <SortIcon field="model_or_part_number" currentSort={equipSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          {!isMobile && (
+                            <TableHead>
+                              <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "installed_date")}>
+                                Installed <SortIcon field="installed_date" currentSort={equipSort} />
+                              </Button>
+                            </TableHead>
+                          )}
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort(equipSort, setEquipSort, "created_at")}>
+                              Created <SortIcon field="created_at" currentSort={equipSort} />
+                            </Button>
+                          </TableHead>
+                          {!isMobile && <TableHead>Tags</TableHead>}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEquipment.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">{item.category}</Badge>
+                            </TableCell>
+                            {!isMobile && <TableCell>{item.manufacturer || "-"}</TableCell>}
+                            {!isMobile && <TableCell>{item.model_or_part_number || "-"}</TableCell>}
+                            {!isMobile && (
+                              <TableCell>
+                                {item.installed_date
+                                  ? parseLocalDate(item.installed_date).toLocaleDateString()
+                                  : "-"}
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </TableCell>
+                            {!isMobile && (
+                              <TableCell>
+                                <div className="flex gap-1 flex-wrap">
+                                  {item.tags?.map((tag: string, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </TableCell>
+                            )}
                           </TableRow>
                         ))}
                       </TableBody>
