@@ -482,6 +482,73 @@ export type Database = {
           },
         ]
       }
+      equipment: {
+        Row: {
+          category: Database["public"]["Enums"]["directive_category"]
+          created_at: string | null
+          id: string
+          install_context: Database["public"]["Enums"]["install_context"] | null
+          installed_date: string | null
+          links: Json | null
+          manufacturer: string | null
+          model_or_part_number: string | null
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          serial_number: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+          vendor: string | null
+          warranty_expiration_date: string | null
+          warranty_start_date: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["directive_category"]
+          created_at?: string | null
+          id?: string
+          install_context?:
+            | Database["public"]["Enums"]["install_context"]
+            | null
+          installed_date?: string | null
+          links?: Json | null
+          manufacturer?: string | null
+          model_or_part_number?: string | null
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          vendor?: string | null
+          warranty_expiration_date?: string | null
+          warranty_start_date?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["directive_category"]
+          created_at?: string | null
+          id?: string
+          install_context?:
+            | Database["public"]["Enums"]["install_context"]
+            | null
+          installed_date?: string | null
+          links?: Json | null
+          manufacturer?: string | null
+          model_or_part_number?: string | null
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          vendor?: string | null
+          warranty_expiration_date?: string | null
+          warranty_start_date?: string | null
+        }
+        Relationships: []
+      }
       feature_requests: {
         Row: {
           admin_comment: string | null
@@ -1056,6 +1123,7 @@ export type Database = {
         | "By Calendar (Months)"
         | "At Next Inspection"
         | "Other"
+      install_context: "Installed" | "Portable" | "Tool" | "Other"
       interval_type: "Hours" | "Calendar" | "Mixed" | "None"
       maintenance_category:
         | "Airplane"
@@ -1332,6 +1400,7 @@ export const Constants = {
         "At Next Inspection",
         "Other",
       ],
+      install_context: ["Installed", "Portable", "Tool", "Other"],
       interval_type: ["Hours", "Calendar", "Mixed", "None"],
       maintenance_category: [
         "Airplane",
