@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.0";
+export const CURRENT_SCHEMA_VERSION = "1.1";
 
 export interface ExportData {
   version: string;
@@ -22,6 +22,7 @@ export interface ExportData {
     aircraft_directive_status: any[];
     directive_history: any[];
     maintenance_directive_compliance: any[];
+    equipment: any[];
   };
 }
 
@@ -63,23 +64,19 @@ interface Migration {
  * }
  */
 const MIGRATIONS: Migration[] = [
-  // Future migrations go here in order
-  // {
-  //   fromVersion: "1.0",
-  //   toVersion: "1.1", 
-  //   description: "Example: Add category field to notifications",
-  //   migrate: (data) => ({
-  //     ...data,
-  //     version: "1.1",
-  //     tables: {
-  //       ...data.tables,
-  //       notifications: data.tables.notifications.map(n => ({
-  //         ...n,
-  //         category: n.category ?? "General"
-  //       }))
-  //     }
-  //   })
-  // },
+  {
+    fromVersion: "1.0",
+    toVersion: "1.1", 
+    description: "Add equipment table",
+    migrate: (data) => ({
+      ...data,
+      version: "1.1",
+      tables: {
+        ...data.tables,
+        equipment: data.tables.equipment ?? []
+      }
+    })
+  },
 ];
 
 /**
@@ -145,7 +142,8 @@ function validateStructure(data: any): { valid: boolean; error?: string } {
     'directives',
     'aircraft_directive_status',
     'directive_history',
-    'maintenance_directive_compliance'
+    'maintenance_directive_compliance',
+    'equipment'
   ];
   
   // Ensure all table entries are arrays
@@ -174,6 +172,7 @@ function normalizeData(data: ExportData): ExportData {
       aircraft_directive_status: data.tables.aircraft_directive_status || [],
       directive_history: data.tables.directive_history || [],
       maintenance_directive_compliance: data.tables.maintenance_directive_compliance || [],
+      equipment: data.tables.equipment || [],
     }
   };
 }
