@@ -50,8 +50,16 @@ export function DateInput({
     if (newValue === "") {
       onChange(null);
     } else {
-      const parsed = parse(newValue, "yyyy-MM-dd", new Date());
-      if (isValid(parsed)) {
+      // Try multiple date formats
+      let parsed = parse(newValue, "yyyy-MM-dd", new Date());
+      
+      // If yyyy-MM-dd didn't work, try MM/dd/yyyy (US format)
+      if (!isValid(parsed) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) {
+        parsed = parse(newValue, "MM/dd/yyyy", new Date());
+      }
+      
+      // Validate the parsed date has a reasonable year
+      if (isValid(parsed) && parsed.getFullYear() >= 1900 && parsed.getFullYear() <= 2100) {
         onChange(parsed);
       }
     }
