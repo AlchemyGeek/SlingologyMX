@@ -13,6 +13,7 @@ import {
   Lightbulb,
   Database,
   Gauge,
+  Package,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -32,6 +33,7 @@ type DashboardView =
   | "notifications"
   | "history"
   | "subscriptions"
+  | "equipment"
   | "maintenance"
   | "directives";
 
@@ -50,6 +52,7 @@ const eventsItems = [
 
 const recordsItems = [
   { id: "subscriptions" as const, title: "Subscriptions", icon: CreditCard },
+  { id: "equipment" as const, title: "Equipment", icon: Package },
   { id: "maintenance" as const, title: "Maintenance", icon: Wrench },
   { id: "directives" as const, title: "Directives & Bulletins", icon: FileText },
 ];
