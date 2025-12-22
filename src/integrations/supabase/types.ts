@@ -1084,6 +1084,7 @@ export type Database = {
         | "UI/Display"
         | "Performance"
         | "Data"
+        | "Equipment"
       bug_priority: "Low" | "Medium" | "High" | "Urgent"
       bug_severity: "Minor" | "Moderate" | "Major" | "Critical"
       bug_status:
@@ -1351,6 +1352,7 @@ export const Constants = {
         "UI/Display",
         "Performance",
         "Data",
+        "Equipment",
       ],
       bug_priority: ["Low", "Medium", "High", "Urgent"],
       bug_severity: ["Minor", "Moderate", "Major", "Critical"],
