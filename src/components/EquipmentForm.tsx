@@ -312,7 +312,7 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
             id="vendor"
             value={formData.vendor}
             onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-            placeholder="e.g., Garmin"
+            placeholder="e.g., Aircraft Spruce"
           />
         </div>
 
