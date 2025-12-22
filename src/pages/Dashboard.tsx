@@ -14,6 +14,7 @@ import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
+import EquipmentPanel from "@/components/EquipmentPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import CountersPanel from "@/components/CountersPanel";
@@ -196,6 +197,13 @@ const Dashboard = () => {
           <SubscriptionsPanel
             userId={user!.id}
             onNotificationChanged={fetchActiveNotificationsForAlerts}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
+        );
+      case "equipment":
+        return (
+          <EquipmentPanel
+            userId={user!.id}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
         );
