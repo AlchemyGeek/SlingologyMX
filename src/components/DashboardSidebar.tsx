@@ -58,7 +58,7 @@ const recordsItems = [
 ];
 
 const supportItems = [
-  { id: "help", title: "Help", icon: HelpCircle, external: "https://slingology.blog/slingologymx-help-pages/?utm_campaign=slingologymx&utm_source=service&utm_medium=help"" },
+  { id: "help", title: "Help", icon: HelpCircle, external: "https://slingology.blog/slingologymx-help-pages/?utm_campaign=slingologymx&utm_source=service&utm_medium=help" },
   {
     id: "blog",
     title: "Blog",
