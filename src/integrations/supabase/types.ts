@@ -375,6 +375,10 @@ export type Database = {
           directive_status: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date: string | null
+          equipment_id: string | null
+          equipment_model: string | null
+          equipment_name: string | null
+          equipment_serial_number: string | null
           id: string
           initial_due_date: string | null
           initial_due_hours: number | null
@@ -413,6 +417,10 @@ export type Database = {
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
+          equipment_id?: string | null
+          equipment_model?: string | null
+          equipment_name?: string | null
+          equipment_serial_number?: string | null
           id?: string
           initial_due_date?: string | null
           initial_due_hours?: number | null
@@ -451,6 +459,10 @@ export type Database = {
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type?: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
+          equipment_id?: string | null
+          equipment_model?: string | null
+          equipment_name?: string | null
+          equipment_serial_number?: string | null
           id?: string
           initial_due_date?: string | null
           initial_due_hours?: number | null
@@ -473,6 +485,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "directives_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "directives_user_id_fkey"
             columns: ["user_id"]

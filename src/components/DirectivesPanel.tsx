@@ -43,6 +43,11 @@ export interface Directive {
   archived: boolean;
   created_at: string | null;
   updated_at: string | null;
+  // Equipment-related fields
+  equipment_id: string | null;
+  equipment_name: string | null;
+  equipment_model: string | null;
+  equipment_serial_number: string | null;
 }
 
 interface DirectivesPanelProps {

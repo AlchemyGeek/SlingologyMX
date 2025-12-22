@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+
+interface Equipment {
+  id: string;
+  name: string;
+  category: string;
+  model_or_part_number: string | null;
+  serial_number: string | null;
+}
 
 interface DirectiveFormProps {
   userId: string;
@@ -113,10 +121,16 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
     counter_value_mode: "absolute" as "absolute" | "incremental",
     counter_absolute_value: "",
     counter_increment_value: "",
+    // Equipment-related fields
+    equipment_id: "" as string,
+    equipment_name: "",
+    equipment_model: "",
+    equipment_serial_number: "",
   });
 
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
 
   useEffect(() => {
     if (editingDirective) {
@@ -153,9 +167,69 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         counter_value_mode: "absolute",
         counter_absolute_value: editingDirective.initial_due_hours?.toString() || "",
         counter_increment_value: "",
+        equipment_id: (editingDirective as any).equipment_id || "",
+        equipment_name: (editingDirective as any).equipment_name || "",
+        equipment_model: (editingDirective as any).equipment_model || "",
+        equipment_serial_number: (editingDirective as any).equipment_serial_number || "",
       });
     }
   }, [editingDirective]);
+
+  // Fetch equipment based on selected category
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      // Map directive category to equipment category
+      const categoryMap: Record<string, string> = {
+        "Airframe": "Airframe",
+        "Engine": "Engine",
+        "Propeller": "Propeller",
+        "Avionics": "Avionics",
+        "System": "Systems",
+        "Appliance": "Appliances",
+        "Other": "Other",
+      };
+      const equipmentCategory = categoryMap[formData.category] || formData.category;
+      
+      const { data, error } = await supabase
+        .from("equipment")
+        .select("id, name, category, model_or_part_number, serial_number")
+        .eq("user_id", userId)
+        .eq("category", equipmentCategory as any);
+      
+      if (!error && data) {
+        setEquipmentList(data);
+      } else {
+        setEquipmentList([]);
+      }
+    };
+    
+    fetchEquipment();
+  }, [formData.category, userId]);
+
+  // Handle equipment selection
+  const handleEquipmentSelect = (equipmentId: string) => {
+    if (equipmentId === "none") {
+      setFormData({
+        ...formData,
+        equipment_id: "",
+        equipment_name: "",
+        equipment_model: "",
+        equipment_serial_number: "",
+      });
+      return;
+    }
+    
+    const selectedEquipment = equipmentList.find(e => e.id === equipmentId);
+    if (selectedEquipment) {
+      setFormData({
+        ...formData,
+        equipment_id: selectedEquipment.id,
+        equipment_name: selectedEquipment.name,
+        equipment_model: selectedEquipment.model_or_part_number || "",
+        equipment_serial_number: selectedEquipment.serial_number || "",
+      });
+    }
+  };
 
   // Auto-calculate initial_due_date when months change for "By Calendar"
   useEffect(() => {
@@ -364,6 +438,11 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       requires_log_entry: formData.requires_log_entry,
       source_links: formData.source_links.length > 0 ? formData.source_links : null,
       counter_type: formData.initial_due_type === "By Total Time (Hours)" ? formData.counter_type : null,
+      // Equipment-related fields
+      equipment_id: formData.equipment_id || null,
+      equipment_name: formData.equipment_name || null,
+      equipment_model: formData.equipment_model || null,
+      equipment_serial_number: formData.equipment_serial_number || null,
     };
 
     try {
@@ -665,16 +744,64 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
           <div className="space-y-4 border-b pb-4">
             <h3 className="text-lg font-medium">Applicability</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Equipment dropdown */}
               <div className="space-y-2">
-                <Label htmlFor="applicability_model">Model</Label>
+                <Label>Link to Equipment</Label>
+                <Select
+                  value={formData.equipment_id || "none"}
+                  onValueChange={handleEquipmentSelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select equipment (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {equipmentList.map((equipment) => (
+                      <SelectItem key={equipment.id} value={equipment.id}>
+                        {equipment.name} {equipment.model_or_part_number ? `(${equipment.model_or_part_number})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Shows equipment matching the selected category ({formData.category})
+                </p>
+              </div>
+              
+              {/* Equipment Name - editable */}
+              <div className="space-y-2">
+                <Label htmlFor="equipment_name">Equipment Name</Label>
                 <Input
-                  id="applicability_model"
-                  value={formData.applicability_model}
-                  onChange={(e) => setFormData({ ...formData, applicability_model: e.target.value })}
+                  id="equipment_name"
+                  value={formData.equipment_name}
+                  onChange={(e) => setFormData({ ...formData, equipment_name: e.target.value })}
+                  placeholder="Enter or auto-fill from equipment"
+                />
+              </div>
+              
+              {/* Model - now equipment_model */}
+              <div className="space-y-2">
+                <Label htmlFor="equipment_model">Model</Label>
+                <Input
+                  id="equipment_model"
+                  value={formData.equipment_model}
+                  onChange={(e) => setFormData({ ...formData, equipment_model: e.target.value })}
                   maxLength={200}
                   placeholder="e.g., Rotax 916is"
                 />
               </div>
+              
+              {/* Equipment Serial Number - editable */}
+              <div className="space-y-2">
+                <Label htmlFor="equipment_serial_number">Serial Number</Label>
+                <Input
+                  id="equipment_serial_number"
+                  value={formData.equipment_serial_number}
+                  onChange={(e) => setFormData({ ...formData, equipment_serial_number: e.target.value })}
+                  placeholder="Enter or auto-fill from equipment"
+                />
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="applicable_serial_range">Applicable Serial Range</Label>
                 <Input

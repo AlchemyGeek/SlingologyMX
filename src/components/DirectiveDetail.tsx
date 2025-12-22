@@ -384,6 +384,28 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             )}
           </div>
 
+          {/* Equipment Info Row - if linked */}
+          {(directive.equipment_name || directive.equipment_model || directive.equipment_serial_number) && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
+              <span className="font-medium text-muted-foreground">Equipment:</span>
+              {directive.equipment_name && (
+                <span>
+                  <span className="text-muted-foreground">Name:</span> {directive.equipment_name}
+                </span>
+              )}
+              {directive.equipment_model && (
+                <span>
+                  <span className="text-muted-foreground">Model:</span> {directive.equipment_model}
+                </span>
+              )}
+              {directive.equipment_serial_number && (
+                <span>
+                  <span className="text-muted-foreground">S/N:</span> {directive.equipment_serial_number}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Applicability Row - inline */}
           {((directive as any).applicability_model || directive.applicable_serial_range || directive.applicability_status) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
