@@ -10,7 +10,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { X } from "lucide-react";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
@@ -27,11 +27,6 @@ const CATEGORIES: DirectiveCategory[] = [
   "System",
 ];
 const INSTALL_CONTEXTS: InstallContext[] = ["Installed", "Portable", "Tool", "Other"];
-
-interface Link {
-  url: string;
-  description: string;
-}
 
 interface EquipmentFormProps {
   userId: string;
@@ -50,30 +45,48 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
     serial_number: editingEquipment?.serial_number || "",
     notes: editingEquipment?.notes || "",
     install_context: (editingEquipment?.install_context || "") as InstallContext | "",
-    tags: editingEquipment?.tags?.join(", ") || "",
+    tags: editingEquipment?.tags || [] as string[],
     purchase_date: editingEquipment?.purchase_date ? parseLocalDate(editingEquipment.purchase_date) : null as Date | null,
     installed_date: editingEquipment?.installed_date ? parseLocalDate(editingEquipment.installed_date) : null as Date | null,
     warranty_start_date: editingEquipment?.warranty_start_date ? parseLocalDate(editingEquipment.warranty_start_date) : null as Date | null,
     warranty_expiration_date: editingEquipment?.warranty_expiration_date ? parseLocalDate(editingEquipment.warranty_expiration_date) : null as Date | null,
     vendor: editingEquipment?.vendor || "",
+    links: (editingEquipment?.links as unknown as Array<{ url: string; description: string }> | null) || [] as Array<{ url: string; description: string }>,
   });
 
-  const [links, setLinks] = useState<Link[]>(
-    (editingEquipment?.links as unknown as Link[] | null) || []
-  );
+  const [tagInput, setTagInput] = useState("");
+  const [linkDescInput, setLinkDescInput] = useState("");
+  const [linkUrlInput, setLinkUrlInput] = useState("");
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && tagInput.length <= 30) {
+      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (index: number) => {
+    setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) });
+  };
 
   const handleAddLink = () => {
-    setLinks([...links, { url: "", description: "" }]);
+    if (linkUrlInput.trim()) {
+      try {
+        new URL(linkUrlInput.trim());
+        setFormData({
+          ...formData,
+          links: [...formData.links, { url: linkUrlInput.trim(), description: linkDescInput.trim() }],
+        });
+        setLinkDescInput("");
+        setLinkUrlInput("");
+      } catch {
+        toast.error("Please enter a valid URL");
+      }
+    }
   };
 
   const handleRemoveLink = (index: number) => {
-    setLinks(links.filter((_, i) => i !== index));
-  };
-
-  const handleLinkChange = (index: number, field: keyof Link, value: string) => {
-    const newLinks = [...links];
-    newLinks[index][field] = value;
-    setLinks(newLinks);
+    setFormData({ ...formData, links: formData.links.filter((_, i) => i !== index) });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,25 +102,9 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
       return;
     }
 
-    // Validate links
-    const validLinks = links.filter((link) => link.url.trim() !== "");
-    for (const link of validLinks) {
-      try {
-        new URL(link.url);
-      } catch {
-        toast.error(`Invalid URL: ${link.url}`);
-        return;
-      }
-    }
-
     setLoading(true);
 
     try {
-      const tagsArray = formData.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
       const equipmentData = {
         user_id: userId,
         name: formData.name,
@@ -117,13 +114,13 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
         serial_number: formData.serial_number || null,
         notes: formData.notes || null,
         install_context: formData.install_context || null,
-        tags: tagsArray,
+        tags: formData.tags,
         purchase_date: formData.purchase_date ? format(formData.purchase_date, "yyyy-MM-dd") : null,
         installed_date: formData.installed_date ? format(formData.installed_date, "yyyy-MM-dd") : null,
         warranty_start_date: formData.warranty_start_date ? format(formData.warranty_start_date, "yyyy-MM-dd") : null,
         warranty_expiration_date: formData.warranty_expiration_date ? format(formData.warranty_expiration_date, "yyyy-MM-dd") : null,
         vendor: formData.vendor || null,
-        links: validLinks as unknown as Json,
+        links: formData.links as unknown as Json,
       };
 
       if (editingEquipment) {
@@ -242,13 +239,27 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags (comma-separated)</Label>
-            <Input
-              id="tags"
-              value={formData.tags}
-              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              placeholder="e.g., avionics, navigation, required"
-            />
+            <Label>Tags</Label>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
+                maxLength={30}
+                placeholder="Add tag..."
+              />
+              <Button type="button" onClick={handleAddTag} size="sm">
+                Add
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {formData.tags.map((tag, index) => (
+                <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                  {tag}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemoveTag(index)} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -317,36 +328,51 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
 
         {/* Links */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Links</Label>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddLink}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Link
-            </Button>
-          </div>
-          {links.length > 0 && (
-            <div className="space-y-2">
-              {links.map((link, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <Input
-                    value={link.url}
-                    onChange={(e) => handleLinkChange(index, "url", e.target.value)}
-                    placeholder="https://..."
-                    className="flex-1"
-                  />
-                  <Input
-                    value={link.description}
-                    onChange={(e) => handleLinkChange(index, "description", e.target.value)}
-                    placeholder="Description"
-                    className="flex-1"
-                  />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveLink(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
+          <Label>Links</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="link_desc_input" className="text-sm">Description (optional)</Label>
+              <Input
+                id="link_desc_input"
+                value={linkDescInput}
+                onChange={(e) => setLinkDescInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLink())}
+                maxLength={100}
+                placeholder="Manual, datasheet, etc."
+              />
             </div>
-          )}
+            <div className="space-y-1">
+              <Label htmlFor="link_url_input" className="text-sm">URL Link</Label>
+              <Input
+                id="link_url_input"
+                value={linkUrlInput}
+                onChange={(e) => setLinkUrlInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLink())}
+                maxLength={255}
+                placeholder="https://example.com/manual.pdf"
+              />
+            </div>
+          </div>
+          <Button type="button" onClick={handleAddLink} size="sm" className="mt-2">
+            Add Link
+          </Button>
+          <div className="space-y-1 mt-2">
+            {formData.links.map((link, index) => (
+              <div key={index} className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded">
+                <div className="flex-1 min-w-0">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium hover:underline block truncate"
+                  >
+                    {link.description || link.url}
+                  </a>
+                </div>
+                <X className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive" onClick={() => handleRemoveLink(index)} />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex gap-2">
