@@ -17,15 +17,7 @@ type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
 type DirectiveCategory = Database["public"]["Enums"]["directive_category"];
 type InstallContext = Database["public"]["Enums"]["install_context"];
 
-const CATEGORIES: DirectiveCategory[] = [
-  "Airframe",
-  "Appliance",
-  "Avionics",
-  "Engine",
-  "Other",
-  "Propeller",
-  "System",
-];
+const CATEGORIES: DirectiveCategory[] = ["Airframe", "Appliance", "Avionics", "Engine", "Other", "Propeller", "System"];
 const INSTALL_CONTEXTS: InstallContext[] = ["Installed", "Portable", "Tool", "Other"];
 
 interface EquipmentFormProps {
@@ -45,13 +37,23 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
     serial_number: editingEquipment?.serial_number || "",
     notes: editingEquipment?.notes || "",
     install_context: (editingEquipment?.install_context || "") as InstallContext | "",
-    tags: editingEquipment?.tags || [] as string[],
-    purchase_date: editingEquipment?.purchase_date ? parseLocalDate(editingEquipment.purchase_date) : null as Date | null,
-    installed_date: editingEquipment?.installed_date ? parseLocalDate(editingEquipment.installed_date) : null as Date | null,
-    warranty_start_date: editingEquipment?.warranty_start_date ? parseLocalDate(editingEquipment.warranty_start_date) : null as Date | null,
-    warranty_expiration_date: editingEquipment?.warranty_expiration_date ? parseLocalDate(editingEquipment.warranty_expiration_date) : null as Date | null,
+    tags: editingEquipment?.tags || ([] as string[]),
+    purchase_date: editingEquipment?.purchase_date
+      ? parseLocalDate(editingEquipment.purchase_date)
+      : (null as Date | null),
+    installed_date: editingEquipment?.installed_date
+      ? parseLocalDate(editingEquipment.installed_date)
+      : (null as Date | null),
+    warranty_start_date: editingEquipment?.warranty_start_date
+      ? parseLocalDate(editingEquipment.warranty_start_date)
+      : (null as Date | null),
+    warranty_expiration_date: editingEquipment?.warranty_expiration_date
+      ? parseLocalDate(editingEquipment.warranty_expiration_date)
+      : (null as Date | null),
     vendor: editingEquipment?.vendor || "",
-    links: (editingEquipment?.links as unknown as Array<{ url: string; description: string }> | null) || [] as Array<{ url: string; description: string }>,
+    links:
+      (editingEquipment?.links as unknown as Array<{ url: string; description: string }> | null) ||
+      ([] as Array<{ url: string; description: string }>),
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -118,16 +120,15 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
         purchase_date: formData.purchase_date ? format(formData.purchase_date, "yyyy-MM-dd") : null,
         installed_date: formData.installed_date ? format(formData.installed_date, "yyyy-MM-dd") : null,
         warranty_start_date: formData.warranty_start_date ? format(formData.warranty_start_date, "yyyy-MM-dd") : null,
-        warranty_expiration_date: formData.warranty_expiration_date ? format(formData.warranty_expiration_date, "yyyy-MM-dd") : null,
+        warranty_expiration_date: formData.warranty_expiration_date
+          ? format(formData.warranty_expiration_date, "yyyy-MM-dd")
+          : null,
         vendor: formData.vendor || null,
         links: formData.links as unknown as Json,
       };
 
       if (editingEquipment) {
-        const { error } = await supabase
-          .from("equipment")
-          .update(equipmentData)
-          .eq("id", editingEquipment.id);
+        const { error } = await supabase.from("equipment").update(equipmentData).eq("id", editingEquipment.id);
 
         if (error) throw error;
         toast.success("Equipment updated successfully!");
@@ -254,7 +255,10 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
             </div>
             <div className="flex gap-2 flex-wrap">
               {formData.tags.map((tag, index) => (
-                <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                <div
+                  key={index}
+                  className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded"
+                >
                   {tag}
                   <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemoveTag(index)} />
                 </div>
@@ -308,7 +312,7 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
             id="vendor"
             value={formData.vendor}
             onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-            placeholder="e.g., Aircraft Spruce"
+            placeholder="e.g., Garmin"
           />
         </div>
 
@@ -331,7 +335,9 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
           <Label>Links</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label htmlFor="link_desc_input" className="text-sm">Description (optional)</Label>
+              <Label htmlFor="link_desc_input" className="text-sm">
+                Description (optional)
+              </Label>
               <Input
                 id="link_desc_input"
                 value={linkDescInput}
@@ -342,7 +348,9 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="link_url_input" className="text-sm">URL Link</Label>
+              <Label htmlFor="link_url_input" className="text-sm">
+                URL Link
+              </Label>
               <Input
                 id="link_url_input"
                 value={linkUrlInput}
@@ -358,7 +366,10 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
           </Button>
           <div className="space-y-1 mt-2">
             {formData.links.map((link, index) => (
-              <div key={index} className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded">
+              <div
+                key={index}
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded"
+              >
                 <div className="flex-1 min-w-0">
                   <a
                     href={link.url}
@@ -369,7 +380,10 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
                     {link.description || link.url}
                   </a>
                 </div>
-                <X className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive" onClick={() => handleRemoveLink(index)} />
+                <X
+                  className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive"
+                  onClick={() => handleRemoveLink(index)}
+                />
               </div>
             ))}
           </div>
