@@ -68,6 +68,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
     "Notifications",
     "Maintenance Logs",
     "Directives",
+    "Equipment",
     "Subscriptions",
     "Calendar",
     "Counters",
