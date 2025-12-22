@@ -46,6 +46,7 @@ interface RecordCounts {
   aircraft_directive_status: number;
   directive_history: number;
   maintenance_directive_compliance: number;
+  equipment: number;
 }
 
 const tableDisplayNames: Record<string, string> = {
@@ -58,6 +59,7 @@ const tableDisplayNames: Record<string, string> = {
   aircraft_directive_status: "Directive Status",
   directive_history: "Directive History",
   maintenance_directive_compliance: "Compliance Records",
+  equipment: "Equipment",
 };
 
 const DataManagement = () => {
@@ -118,6 +120,7 @@ const DataManagement = () => {
         directiveStatusRes,
         directiveHistoryRes,
         complianceRes,
+        equipmentRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id),
@@ -128,6 +131,7 @@ const DataManagement = () => {
         supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id),
         supabase.from("directive_history").select("*").eq("user_id", user.id),
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
+        supabase.from("equipment").select("*").eq("user_id", user.id),
       ]);
 
       // Remove user_id from exported data (will be replaced on import)
@@ -147,6 +151,7 @@ const DataManagement = () => {
           aircraft_directive_status: sanitizeRecords(directiveStatusRes.data || []),
           directive_history: sanitizeRecords(directiveHistoryRes.data || []),
           maintenance_directive_compliance: sanitizeRecords(complianceRes.data || []),
+          equipment: sanitizeRecords(equipmentRes.data || []),
         },
       };
 
@@ -161,6 +166,7 @@ const DataManagement = () => {
         aircraft_directive_status: exportData.tables.aircraft_directive_status.length,
         directive_history: exportData.tables.directive_history.length,
         maintenance_directive_compliance: exportData.tables.maintenance_directive_compliance.length,
+        equipment: exportData.tables.equipment.length,
       };
       setExportCounts(counts);
 
@@ -200,6 +206,7 @@ const DataManagement = () => {
         directiveStatusRes,
         directiveHistoryRes,
         complianceRes,
+        equipmentRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id),
@@ -210,6 +217,7 @@ const DataManagement = () => {
         supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id),
         supabase.from("directive_history").select("*").eq("user_id", user.id),
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
+        supabase.from("equipment").select("*").eq("user_id", user.id),
       ]);
 
       // Helper to create human-readable ID from UUID and created_at date
@@ -230,6 +238,7 @@ const DataManagement = () => {
         directiveStatus: {},
         directiveHistory: {},
         compliance: {},
+        equipment: {},
       };
 
       // Sort records by created_at for consistent numbering and build mappings
@@ -245,6 +254,7 @@ const DataManagement = () => {
       const directiveStatus = (directiveStatusRes.data || []).sort(sortByCreated);
       const directiveHistory = (directiveHistoryRes.data || []).sort(sortByCreated);
       const compliance = (complianceRes.data || []).sort(sortByCreated);
+      const equipment = (equipmentRes.data || []).sort(sortByCreated);
 
       // Build ID maps
       counters.forEach((r, i) => { idMaps.counters[r.id] = createHumanId("CTR", r.id, r.created_at, i); });
@@ -256,6 +266,7 @@ const DataManagement = () => {
       directiveStatus.forEach((r, i) => { idMaps.directiveStatus[r.id] = createHumanId("ADS", r.id, r.created_at, i); });
       directiveHistory.forEach((r, i) => { idMaps.directiveHistory[r.id] = createHumanId("DHI", r.id, r.created_at, i); });
       compliance.forEach((r, i) => { idMaps.compliance[r.id] = createHumanId("CMP", r.id, r.created_at, i); });
+      equipment.forEach((r, i) => { idMaps.equipment[r.id] = createHumanId("EQP", r.id, r.created_at, i); });
 
       // Transform records: replace UUIDs with human-readable IDs
       const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
@@ -277,6 +288,9 @@ const DataManagement = () => {
         if (transformed.maintenance_log_id && idMaps.maintenanceLogs[transformed.maintenance_log_id]) {
           transformed.maintenance_log_id = idMaps.maintenanceLogs[transformed.maintenance_log_id];
         }
+        if (transformed.equipment_id && idMaps.equipment[transformed.equipment_id]) {
+          transformed.equipment_id = idMaps.equipment[transformed.equipment_id];
+        }
 
         return transformed;
       };
@@ -291,6 +305,7 @@ const DataManagement = () => {
         "Directive Status": directiveStatus.map(r => transformRecord(r, idMaps.directiveStatus)),
         "Directive History": directiveHistory.map(r => transformRecord(r, idMaps.directiveHistory)),
         "Compliance Records": compliance.map(r => transformRecord(r, idMaps.compliance)),
+        "Equipment": equipment.map(r => transformRecord(r, idMaps.equipment)),
       };
 
       // Create workbook with separate worksheets
@@ -354,6 +369,7 @@ const DataManagement = () => {
           aircraft_directive_status: data.tables.aircraft_directive_status?.length || 0,
           directive_history: data.tables.directive_history?.length || 0,
           maintenance_directive_compliance: data.tables.maintenance_directive_compliance?.length || 0,
+          equipment: data.tables.equipment?.length || 0,
         };
         setImportCounts(counts);
         setImportResult(null);
@@ -384,6 +400,7 @@ const DataManagement = () => {
         aircraft_directive_status: 0,
         directive_history: 0,
         maintenance_directive_compliance: 0,
+        equipment: 0,
       };
 
       const skipped: RecordCounts = {
@@ -396,6 +413,7 @@ const DataManagement = () => {
         aircraft_directive_status: 0,
         directive_history: 0,
         maintenance_directive_compliance: 0,
+        equipment: 0,
       };
 
       // ID mapping for cross-user imports (old ID -> new ID)
@@ -406,6 +424,7 @@ const DataManagement = () => {
 
       // Table import order
       const tableOrder = [
+        "equipment",
         "aircraft_counters",
         "aircraft_counter_history", 
         "subscriptions",
@@ -429,11 +448,44 @@ const DataManagement = () => {
       };
 
       // Import order matters due to foreign key relationships
+      // 0. Equipment (standalone - needed for directives and notifications)
+      const equipmentData = importPreview.tables.equipment || [];
+      for (let i = 0; i < equipmentData.length; i++) {
+        const record = equipmentData[i];
+        updateProgress("equipment", i, equipmentData.length, 0);
+        
+        // Check for duplicate based on name
+        const { data: existing } = await supabase
+          .from("equipment")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("name", record.name)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
+          skipped.equipment++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, ...recordWithoutId } = record;
+          const { error } = await supabase
+            .from("equipment")
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.equipment++;
+          } else {
+            console.error("Insert equipment error:", error);
+            skipped.equipment++;
+          }
+        }
+      }
+
       // 1. Aircraft counters (standalone - one per user)
       const countersData = importPreview.tables.aircraft_counters || [];
       for (let i = 0; i < countersData.length; i++) {
         const record = countersData[i];
-        updateProgress("aircraft_counters", i, countersData.length, 0);
+        updateProgress("aircraft_counters", i, countersData.length, 1);
         
         const { data: existing } = await supabase
           .from("aircraft_counters")
@@ -469,7 +521,7 @@ const DataManagement = () => {
       const counterHistoryData = importPreview.tables.aircraft_counter_history || [];
       for (let i = 0; i < counterHistoryData.length; i++) {
         const record = counterHistoryData[i];
-        updateProgress("aircraft_counter_history", i, counterHistoryData.length, 1);
+        updateProgress("aircraft_counter_history", i, counterHistoryData.length, 2);
         
         // Check for duplicate based on change_date and source
         const { data: existing } = await supabase
@@ -503,7 +555,7 @@ const DataManagement = () => {
       const subscriptionsData = importPreview.tables.subscriptions || [];
       for (let i = 0; i < subscriptionsData.length; i++) {
         const record = subscriptionsData[i];
-        updateProgress("subscriptions", i, subscriptionsData.length, 2);
+        updateProgress("subscriptions", i, subscriptionsData.length, 3);
         
         // Check for duplicate based on subscription_name
         const { data: existing } = await supabase
@@ -536,7 +588,7 @@ const DataManagement = () => {
       const directivesData = importPreview.tables.directives || [];
       for (let i = 0; i < directivesData.length; i++) {
         const record = directivesData[i];
-        updateProgress("directives", i, directivesData.length, 3);
+        updateProgress("directives", i, directivesData.length, 4);
         
         // Check for duplicate based on directive_code
         const { data: existing } = await supabase
@@ -551,10 +603,11 @@ const DataManagement = () => {
           skipped.directives++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, equipment_id, ...recordWithoutId } = record;
+          const mappedEquipmentId = equipment_id ? (idMap[equipment_id] || null) : null;
           const { error } = await supabase
             .from("directives")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, equipment_id: mappedEquipmentId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.directives++;
@@ -569,7 +622,7 @@ const DataManagement = () => {
       const maintenanceLogsData = importPreview.tables.maintenance_logs || [];
       for (let i = 0; i < maintenanceLogsData.length; i++) {
         const record = maintenanceLogsData[i];
-        updateProgress("maintenance_logs", i, maintenanceLogsData.length, 4);
+        updateProgress("maintenance_logs", i, maintenanceLogsData.length, 5);
         
         // Check for duplicate based on entry_title and date_performed
         const { data: existing } = await supabase
@@ -603,7 +656,7 @@ const DataManagement = () => {
       const notificationsData = importPreview.tables.notifications || [];
       for (let i = 0; i < notificationsData.length; i++) {
         const record = notificationsData[i];
-        updateProgress("notifications", i, notificationsData.length, 5);
+        updateProgress("notifications", i, notificationsData.length, 6);
         
         // Check for duplicate based on description, initial_date, type
         const { data: existing } = await supabase
@@ -620,7 +673,7 @@ const DataManagement = () => {
           skipped.notifications++;
         } else {
           const newId = generateId();
-          const { id: _oldId, subscription_id, directive_id, maintenance_log_id, ...recordWithoutId } = record;
+          const { id: _oldId, subscription_id, directive_id, maintenance_log_id, equipment_id, ...recordWithoutId } = record;
           
           const mappedRecord = {
             ...recordWithoutId,
@@ -629,6 +682,7 @@ const DataManagement = () => {
             subscription_id: subscription_id ? (idMap[subscription_id] || null) : null,
             directive_id: directive_id ? (idMap[directive_id] || null) : null,
             maintenance_log_id: maintenance_log_id ? (idMap[maintenance_log_id] || null) : null,
+            equipment_id: equipment_id ? (idMap[equipment_id] || null) : null,
           };
 
           const { error } = await supabase
@@ -648,7 +702,7 @@ const DataManagement = () => {
       const directiveStatusData = importPreview.tables.aircraft_directive_status || [];
       for (let i = 0; i < directiveStatusData.length; i++) {
         const record = directiveStatusData[i];
-        updateProgress("aircraft_directive_status", i, directiveStatusData.length, 6);
+        updateProgress("aircraft_directive_status", i, directiveStatusData.length, 7);
         
         const { id: _oldId, directive_id, ...recordWithoutId } = record;
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
@@ -689,7 +743,7 @@ const DataManagement = () => {
       const directiveHistoryData = importPreview.tables.directive_history || [];
       for (let i = 0; i < directiveHistoryData.length; i++) {
         const record = directiveHistoryData[i];
-        updateProgress("directive_history", i, directiveHistoryData.length, 7);
+        updateProgress("directive_history", i, directiveHistoryData.length, 8);
         
         // Check for duplicate based on directive_code, action_type, created_at
         const { data: existing } = await supabase
@@ -726,7 +780,7 @@ const DataManagement = () => {
       const complianceData = importPreview.tables.maintenance_directive_compliance || [];
       for (let i = 0; i < complianceData.length; i++) {
         const record = complianceData[i];
-        updateProgress("maintenance_directive_compliance", i, complianceData.length, 8);
+        updateProgress("maintenance_directive_compliance", i, complianceData.length, 9);
         
         const { id: _oldId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
