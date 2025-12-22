@@ -826,6 +826,7 @@ export type Database = {
           created_at: string | null
           description: string
           directive_id: string | null
+          equipment_id: string | null
           id: string
           initial_counter_value: number | null
           initial_date: string
@@ -849,6 +850,7 @@ export type Database = {
           created_at?: string | null
           description: string
           directive_id?: string | null
+          equipment_id?: string | null
           id?: string
           initial_counter_value?: number | null
           initial_date: string
@@ -872,6 +874,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           directive_id?: string | null
+          equipment_id?: string | null
           id?: string
           initial_counter_value?: number | null
           initial_date?: string
@@ -892,6 +895,13 @@ export type Database = {
             columns: ["directive_id"]
             isOneToOne: false
             referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
             referencedColumns: ["id"]
           },
           {

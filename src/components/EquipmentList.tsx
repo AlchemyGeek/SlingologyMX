@@ -53,6 +53,10 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit }: EquipmentListPr
 
   const handleDelete = async (id: string) => {
     try {
+      // Delete linked notification first (if any)
+      await supabase.from("notifications").delete().eq("equipment_id", id);
+      
+      // Delete the equipment
       const { error } = await supabase.from("equipment").delete().eq("id", id);
       if (error) throw error;
       toast.success("Equipment deleted");

@@ -127,16 +127,85 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
         links: formData.links as unknown as Json,
       };
 
+      const hasWarrantyExpiration = !!formData.warranty_expiration_date;
+      const warrantyExpirationStr = formData.warranty_expiration_date
+        ? format(formData.warranty_expiration_date, "yyyy-MM-dd")
+        : null;
+
       if (editingEquipment) {
         const { error } = await supabase.from("equipment").update(equipmentData).eq("id", editingEquipment.id);
 
         if (error) throw error;
+
+        // Handle linked notification for warranty expiration
+        const { data: existingNotif } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("equipment_id", editingEquipment.id)
+          .maybeSingle();
+
+        if (hasWarrantyExpiration) {
+          const notificationData = {
+            description: `Warranty Expiration: ${formData.name}`,
+            notes: formData.notes || null,
+            type: "Other" as const,
+            initial_date: warrantyExpirationStr!,
+            recurrence: "None" as const,
+            alert_days: 30,
+            notification_basis: "Date" as const,
+          };
+
+          if (existingNotif) {
+            // Update existing notification
+            await supabase
+              .from("notifications")
+              .update(notificationData)
+              .eq("equipment_id", editingEquipment.id);
+          } else {
+            // Create new notification
+            await supabase.from("notifications").insert([{
+              user_id: userId,
+              equipment_id: editingEquipment.id,
+              ...notificationData,
+            }]);
+            toast.info("A warranty expiration notification has been created.");
+          }
+        } else if (existingNotif) {
+          // Delete notification if warranty date removed
+          await supabase
+            .from("notifications")
+            .delete()
+            .eq("equipment_id", editingEquipment.id);
+        }
+
         toast.success("Equipment updated successfully!");
       } else {
-        const { error } = await supabase.from("equipment").insert([equipmentData]);
+        // Create equipment
+        const { data: newEquipment, error } = await supabase
+          .from("equipment")
+          .insert([equipmentData])
+          .select()
+          .single();
 
         if (error) throw error;
-        toast.success("Equipment created successfully!");
+
+        // Create linked notification if warranty expiration is set
+        if (hasWarrantyExpiration && newEquipment) {
+          await supabase.from("notifications").insert([{
+            user_id: userId,
+            equipment_id: newEquipment.id,
+            description: `Warranty Expiration: ${formData.name}`,
+            notes: formData.notes || null,
+            type: "Other" as const,
+            initial_date: warrantyExpirationStr!,
+            recurrence: "None" as const,
+            alert_days: 30,
+            notification_basis: "Date" as const,
+          }]);
+          toast.success("Equipment created with warranty expiration notification!");
+        } else {
+          toast.success("Equipment created successfully!");
+        }
       }
 
       onSuccess();
