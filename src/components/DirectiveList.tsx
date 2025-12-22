@@ -169,11 +169,11 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead className="hide-at-900">Type</TableHead>
-              <TableHead className="hide-at-700">Category</TableHead>
+              <TableHead className="hide-at-1000">Type</TableHead>
+              <TableHead className="hide-at-800">Category</TableHead>
               <TableHead>Severity</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Applicable</TableHead>
+              <TableHead className="hide-at-900">Status</TableHead>
+              <TableHead className="hide-at-800">Applicable</TableHead>
               <TableHead className="hide-at-700">Effective Date</TableHead>
             </TableRow>
           </TableHeader>
@@ -193,19 +193,19 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                 >
                   <TableCell className="font-mono font-medium">{directive.directive_code}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{directive.title}</TableCell>
-                  <TableCell className="hide-at-900 text-sm">{directive.directive_type}</TableCell>
-                  <TableCell className="hide-at-700">{directive.category}</TableCell>
+                  <TableCell className="hide-at-1000 text-sm">{directive.directive_type}</TableCell>
+                  <TableCell className="hide-at-800">{directive.category}</TableCell>
                   <TableCell>
                     <Badge variant={getSeverityColor(directive.severity) as any}>
                       {directive.severity}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hide-at-900">
                     <Badge variant={getStatusColor(directive.directive_status) as any}>
                       {directive.directive_status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hide-at-800">
                     <Badge variant={getApplicabilityColor(directive.applicability_status) as any}>
                       {directive.applicability_status || "Unsure"}
                     </Badge>
