@@ -248,7 +248,7 @@ const DirectiveComplianceForm = ({
       // Update directive status
       await supabase
         .from("directives")
-        .update({ directive_status: "Completed" })
+        .update({ directive_status: "Resolved" })
         .eq("id", directive.id);
 
       // Delete all linked notifications for this directive
@@ -415,8 +415,8 @@ const DirectiveComplianceForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Only apply directive completion logic if directive status is NOT already "Completed"
-    const shouldCheckCompletion = directive.directive_status !== "Completed" && formData.compliance_status === "Complied";
+    // Only apply directive completion logic if directive status is NOT already "Resolved"
+    const shouldCheckCompletion = directive.directive_status !== "Resolved" && formData.compliance_status === "Complied";
 
     if (shouldCheckCompletion) {
       if (directive.compliance_scope === "One-Time") {
