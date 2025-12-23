@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
+import { TagInput } from "@/components/ui/tag-input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,7 +103,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
   
   const [directiveComplianceLinks, setDirectiveComplianceLinks] = useState<DirectiveComplianceLink[]>([]);
 
-  const [tagInput, setTagInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [urlDescInput, setUrlDescInput] = useState("");
   const [showCounterUpdateDialog, setShowCounterUpdateDialog] = useState(false);
@@ -182,16 +182,6 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
     }
   }, [formData.date_performed, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && tagInput.length <= 30) {
-      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (index: number) => {
-    setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) });
-  };
 
   const handleAddUrl = () => {
     if (urlInput.trim() && urlInput.length <= 255) {
@@ -951,26 +941,12 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
           </div>
           <div className="space-y-2">
             <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                maxLength={30}
-                placeholder="Add tag..."
-              />
-              <Button type="button" onClick={handleAddTag} size="sm">
-                Add
-              </Button>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {formData.tags.map((tag, index) => (
-                <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                  {tag}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemoveTag(index)} />
-                </div>
-              ))}
-            </div>
+            <TagInput
+              userId={userId}
+              tags={formData.tags}
+              onTagsChange={(tags) => setFormData({ ...formData, tags })}
+              source="maintenance_logs"
+            />
           </div>
         </div>
       </div>
