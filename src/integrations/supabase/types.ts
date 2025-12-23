@@ -1137,6 +1137,7 @@ export type Database = {
         | "Withdrawn"
         | "Proposed"
         | "Completed"
+        | "Resolved"
       directive_type:
         | "FAA Airworthiness Directive"
         | "Manufacturer Alert"
@@ -1412,6 +1413,7 @@ export const Constants = {
         "Withdrawn",
         "Proposed",
         "Completed",
+        "Resolved",
       ],
       directive_type: [
         "FAA Airworthiness Directive",
