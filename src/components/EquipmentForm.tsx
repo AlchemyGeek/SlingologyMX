@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { TagInput } from "@/components/ui/tag-input";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
@@ -56,20 +57,8 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
       ([] as Array<{ url: string; description: string }>),
   });
 
-  const [tagInput, setTagInput] = useState("");
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && tagInput.length <= 30) {
-      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (index: number) => {
-    setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== index) });
-  };
 
   const handleAddLink = () => {
     if (linkUrlInput.trim()) {
@@ -310,29 +299,12 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
 
           <div className="space-y-2">
             <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                maxLength={30}
-                placeholder="Add tag..."
-              />
-              <Button type="button" onClick={handleAddTag} size="sm">
-                Add
-              </Button>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {formData.tags.map((tag, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded"
-                >
-                  {tag}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemoveTag(index)} />
-                </div>
-              ))}
-            </div>
+            <TagInput
+              userId={userId}
+              tags={formData.tags}
+              onTagsChange={(tags) => setFormData({ ...formData, tags })}
+              source="equipment"
+            />
           </div>
         </div>
 
