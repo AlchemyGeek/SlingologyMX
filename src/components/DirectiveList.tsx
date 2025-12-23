@@ -172,15 +172,14 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
               <TableHead className="hide-at-1000">Type</TableHead>
               <TableHead className="hide-at-800">Category</TableHead>
               <TableHead>Severity</TableHead>
-              <TableHead className="hide-at-900">Status</TableHead>
               <TableHead className="hide-at-800">Applicable</TableHead>
-              <TableHead className="hide-at-700">Effective Date</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedDirectives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No directives found
                 </TableCell>
               </TableRow>
@@ -200,22 +199,15 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                       {directive.severity}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hide-at-900">
-                    <Badge variant={getStatusColor(directive.directive_status) as any}>
-                      {directive.directive_status}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="hide-at-800">
                     <Badge variant={getApplicabilityColor(directive.applicability_status) as any}>
                       {directive.applicability_status || "Unsure"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hide-at-700">
-                    {directive.effective_date
-                      ? format(parseLocalDate(directive.effective_date), "MMM dd, yyyy")
-                      : directive.issue_date
-                      ? format(parseLocalDate(directive.issue_date), "MMM dd, yyyy")
-                      : "-"}
+                  <TableCell>
+                    <Badge variant={getStatusColor(directive.directive_status) as any}>
+                      {directive.directive_status}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))
