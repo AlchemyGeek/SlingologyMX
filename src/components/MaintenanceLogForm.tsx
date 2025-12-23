@@ -160,7 +160,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             owner_notes: link.owner_notes || "",
             compliance_links: link.compliance_links || [],
             isExpanded: false,
-            markAsCompleted: link.directives?.directive_status === "Completed" || link.directives?.compliance_scope === "One-Time",
+            markAsCompleted: link.directives?.directive_status === "Resolved" || link.directives?.compliance_scope === "One-Time",
           })));
         }
       };
@@ -740,11 +740,11 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               // Handle notification completion and recurrence (same as standalone compliance form)
               await handleDirectiveNotificationCompletionAndRecurrence(directive, link);
               
-              // If markAsCompleted is true and this is a NEW compliance link (not editing existing), update directive status to "Completed"
+              // If markAsCompleted is true and this is a NEW compliance link (not editing existing), update directive status to "Resolved"
               if (link.markAsCompleted && !link.id) {
                 await supabase
                   .from("directives")
-                  .update({ directive_status: "Completed" })
+                  .update({ directive_status: "Resolved" })
                   .eq("id", link.directive_id);
                 
                 // Also delete any non-user-modified linked notifications

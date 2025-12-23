@@ -122,7 +122,7 @@ const MaintenanceDirectiveCompliance = ({
     }
   }, [datePerformed]);
 
-  // Fetch non-completed directives + any already-linked directives (even if completed)
+  // Fetch non-resolved directives + any already-linked directives (even if resolved)
   useEffect(() => {
     const fetchDirectives = async () => {
       // Get IDs of already-linked directives
@@ -434,18 +434,18 @@ const MaintenanceDirectiveCompliance = ({
                         <div className="space-y-0.5">
                           <Label htmlFor={`mark-completed-${index}`}>Directive Status</Label>
                           <p className="text-xs text-muted-foreground">
-                            If the directive doesn't require future compliance action, mark the status as completed.
+                            If the directive doesn't require future compliance action, mark the status as resolved.
                           </p>
                         </div>
                         <Switch
-                          id={`mark-completed-${index}`}
+                          id={`mark-resolved-${index}`}
                           checked={link.markAsCompleted}
                           onCheckedChange={(checked) => handleLinkChange(index, "markAsCompleted", checked)}
                         />
                       </div>
                       {link.markAsCompleted && (
                         <p className="text-xs text-primary">
-                          This directive will be marked as "Completed" when saved.
+                          This directive will be marked as "Resolved" when saved.
                         </p>
                       )}
                     </div>
