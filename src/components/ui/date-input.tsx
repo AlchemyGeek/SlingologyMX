@@ -74,37 +74,40 @@ export function DateInput({
 
   return (
     <div className={cn("flex gap-2", className)}>
-      <Input
-        id={id}
-        type="date"
-        value={textValue}
-        onChange={handleTextChange}
-        disabled={disabled}
-        required={required}
-        className="flex-1"
-      />
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={disabled}
-            className="shrink-0"
-          >
-            <CalendarIcon className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <Calendar
-            mode="single"
-            selected={value || undefined}
-            onSelect={handleCalendarSelect}
-            initialFocus
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
+      <div className="relative flex-1">
+        <Input
+          id={id}
+          type="text"
+          value={textValue}
+          onChange={handleTextChange}
+          placeholder="YYYY-MM-DD"
+          disabled={disabled}
+          required={required}
+          className="pr-10"
+        />
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={disabled}
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+            >
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={value || undefined}
+              onSelect={handleCalendarSelect}
+              initialFocus
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 }
