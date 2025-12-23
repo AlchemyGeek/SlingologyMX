@@ -36,7 +36,7 @@ export function DateInput({
   // Sync text value when date prop changes
   React.useEffect(() => {
     if (value && isValid(value)) {
-      setTextValue(format(value, "yyyy-MM-dd"));
+      setTextValue(format(value, "MM-dd-yyyy"));
     } else {
       setTextValue("");
     }
@@ -50,12 +50,17 @@ export function DateInput({
     if (newValue === "") {
       onChange(null);
     } else {
-      // Try multiple date formats
-      let parsed = parse(newValue, "yyyy-MM-dd", new Date());
+      // Try MM-dd-yyyy format first (primary format)
+      let parsed = parse(newValue, "MM-dd-yyyy", new Date());
       
-      // If yyyy-MM-dd didn't work, try MM/dd/yyyy (US format)
+      // If that didn't work, try MM/dd/yyyy (US format with slashes)
       if (!isValid(parsed) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) {
         parsed = parse(newValue, "MM/dd/yyyy", new Date());
+      }
+      
+      // Also try yyyy-MM-dd as fallback
+      if (!isValid(parsed) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) {
+        parsed = parse(newValue, "yyyy-MM-dd", new Date());
       }
       
       // Validate the parsed date has a reasonable year
@@ -80,7 +85,7 @@ export function DateInput({
           type="text"
           value={textValue}
           onChange={handleTextChange}
-          placeholder="YYYY-MM-DD"
+          placeholder="MM-DD-YYYY"
           disabled={disabled}
           required={required}
           className="pr-10"
