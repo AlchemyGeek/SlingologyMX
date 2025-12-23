@@ -62,11 +62,11 @@ const FeatureRequestList = ({
         return;
       }
 
-      // Fetch profile names for all users (use display_name if available, otherwise "Anonymous")
+      // Fetch display names from the public_profiles view (only exposes id and display_name)
       const userIds = [...new Set(featuresData.map((f) => f.user_id).filter(Boolean))];
       const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, name, display_name")
+        .from("public_profiles")
+        .select("id, display_name")
         .in("id", userIds);
 
       if (profilesError) {
