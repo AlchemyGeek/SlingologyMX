@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 interface SubscriptionFormProps {
   userId: string;
+  aircraftId: string;
   onSuccess: () => void;
   onCancel: () => void;
   editingSubscription?: any;
@@ -32,7 +33,7 @@ const SUBSCRIPTION_TYPES = [
   "Other",
 ] as const;
 
-const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: SubscriptionFormProps) => {
+const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubscription }: SubscriptionFormProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     subscription_name: editingSubscription?.subscription_name || "",
@@ -112,6 +113,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
             // Create new notification (subscription changed from non-recurring to recurring)
             const { error: notifError } = await supabase.from("notifications").insert([{
               user_id: userId,
+              aircraft_id: aircraftId,
               description: formData.subscription_name,
               notes: formData.notes || null,
               type: "Subscription" as const,
@@ -147,6 +149,7 @@ const SubscriptionForm = ({ userId, onSuccess, onCancel, editingSubscription }: 
         if (isRecurring) {
           const notificationData = {
             user_id: userId,
+            aircraft_id: aircraftId,
             description: formData.subscription_name,
             notes: formData.notes || null,
             type: "Subscription" as const,

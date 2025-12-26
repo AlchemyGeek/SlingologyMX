@@ -23,12 +23,13 @@ const INSTALL_CONTEXTS: InstallContext[] = ["Installed", "Portable", "Tool", "Ot
 
 interface EquipmentFormProps {
   userId: string;
+  aircraftId: string;
   onSuccess: () => void;
   onCancel: () => void;
   editingEquipment?: Equipment | null;
 }
 
-const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: EquipmentFormProps) => {
+const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipment }: EquipmentFormProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: editingEquipment?.name || "",
@@ -98,6 +99,7 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
     try {
       const equipmentData = {
         user_id: userId,
+        aircraft_id: aircraftId,
         name: formData.name,
         category: formData.category,
         manufacturer: formData.manufacturer || null,
@@ -154,6 +156,7 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
             // Create new notification
             await supabase.from("notifications").insert([{
               user_id: userId,
+              aircraft_id: aircraftId,
               equipment_id: editingEquipment.id,
               ...notificationData,
             }]);
@@ -182,6 +185,7 @@ const EquipmentForm = ({ userId, onSuccess, onCancel, editingEquipment }: Equipm
         if (hasWarrantyExpiration && newEquipment) {
           await supabase.from("notifications").insert([{
             user_id: userId,
+            aircraft_id: aircraftId,
             equipment_id: newEquipment.id,
             description: `Warranty Expiration: ${formData.name}`,
             notes: formData.notes || null,

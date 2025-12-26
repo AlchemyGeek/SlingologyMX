@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActiveNotificationsPanelProps {
   userId: string;
+  aircraftId: string;
   currentCounters?: {
     hobbs: number;
     tach: number;
@@ -36,7 +37,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 type AlertStatus = "normal" | "reminder" | "due";
 
-const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompleted, refreshKey }: ActiveNotificationsPanelProps) => {
+const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotificationCompleted, refreshKey }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -50,6 +51,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .eq("is_completed", false)
         .order("initial_date", { ascending: true });
 
@@ -190,6 +192,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
           .from("notifications")
           .insert({
             user_id: notification.user_id,
+            aircraft_id: aircraftId,
             description: notification.description,
             type: notification.type,
             initial_date: nextDate,
@@ -218,6 +221,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
           .from("notifications")
           .insert({
             user_id: notification.user_id,
+            aircraft_id: aircraftId,
             description: notification.description,
             type: notification.type,
             initial_date: new Date().toISOString().split('T')[0],
@@ -489,6 +493,7 @@ const ActiveNotificationsPanel = ({ userId, currentCounters, onNotificationCompl
         {showForm ? (
           <NotificationForm
             userId={userId}
+            aircraftId={aircraftId}
             onSuccess={handleFormSuccess}
             onCancel={() => { setShowForm(false); setEditingNotification(null); }}
             editingNotification={editingNotification}
