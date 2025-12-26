@@ -34,6 +34,7 @@ interface Equipment {
 
 interface DirectiveFormProps {
   userId: string;
+  aircraftId: string;
   editingDirective?: Directive | null;
   onSuccess: () => void;
   onCancel: () => void;
@@ -84,8 +85,8 @@ const getCounterKey = (counterType: string): string => {
   return ct?.counterKey || "hobbs";
 };
 
-const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: DirectiveFormProps) => {
-  const { counters } = useAircraftCounters(userId);
+const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCancel }: DirectiveFormProps) => {
+  const { counters } = useAircraftCounters(userId, aircraftId);
   
   const [formData, setFormData] = useState({
     directive_code: "",
@@ -278,6 +279,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       // Create date-based notification with current date
       await supabase.from("notifications").insert({
         user_id: userId,
+        aircraft_id: aircraftId,
         description: notificationDescription,
         type: "Directives",
         initial_date: format(today, "yyyy-MM-dd"),
@@ -290,6 +292,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       // Create date-based notification for the specified date
       await supabase.from("notifications").insert({
         user_id: userId,
+        aircraft_id: aircraftId,
         description: notificationDescription,
         type: "Directives",
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
@@ -302,6 +305,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       // Create date-based notification for the calculated/specified date
       await supabase.from("notifications").insert({
         user_id: userId,
+        aircraft_id: aircraftId,
         description: notificationDescription,
         type: "Directives",
         initial_date: format(formData.initial_due_date, "yyyy-MM-dd"),
@@ -325,6 +329,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
       
       const { error } = await supabase.from("notifications").insert({
         user_id: userId,
+        aircraft_id: aircraftId,
         description: notificationDescription,
         type: "Directives",
         initial_date: format(today, "yyyy-MM-dd"),
@@ -409,6 +414,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
 
     const directiveData = {
       user_id: userId,
+      aircraft_id: aircraftId,
       directive_code: formData.directive_code,
       title: formData.title,
       directive_type: formData.directive_type as Database["public"]["Enums"]["directive_type"],
@@ -514,6 +520,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             // Create new date notification
             await supabase.from("notifications").insert({
               user_id: userId,
+              aircraft_id: aircraftId,
               description: notificationDescription,
               type: "Maintenance",
               initial_date: initialDate,
@@ -554,6 +561,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
             // Create new counter notification
             await supabase.from("notifications").insert({
               user_id: userId,
+              aircraft_id: aircraftId,
               description: notificationDescription,
               type: "Maintenance",
               initial_date: format(today, "yyyy-MM-dd"),
@@ -578,6 +586,7 @@ const DirectiveForm = ({ userId, editingDirective, onSuccess, onCancel }: Direct
         if (newDirective) {
           await supabase.from("directive_history").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             directive_id: newDirective.id,
             directive_code: newDirective.directive_code,
             directive_title: newDirective.title,

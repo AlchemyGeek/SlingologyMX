@@ -35,6 +35,7 @@ import { useAircraftCounters, AircraftCounters } from "@/hooks/useAircraftCounte
 interface DirectiveComplianceFormProps {
   directive: Directive;
   userId: string;
+  aircraftId: string;
   existingStatus: any | null;
   onSuccess: () => void;
   onCancel: () => void;
@@ -73,11 +74,12 @@ const getCounterKey = (counterType: string): string => {
 const DirectiveComplianceForm = ({
   directive,
   userId,
+  aircraftId,
   existingStatus,
   onSuccess,
   onCancel,
 }: DirectiveComplianceFormProps) => {
-  const { counters } = useAircraftCounters(userId);
+  const { counters } = useAircraftCounters(userId, aircraftId);
   const isCounterBased = isCounterBasedDirective(directive);
   
   // Get counter type directly from directive record
@@ -207,6 +209,7 @@ const DirectiveComplianceForm = ({
 
           await supabase.from("notifications").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             description: notificationDescription,
             type: "Directives",
             initial_date: format(today, "yyyy-MM-dd"),
@@ -225,6 +228,7 @@ const DirectiveComplianceForm = ({
 
           await supabase.from("notifications").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             description: notificationDescription,
             type: "Directives",
             initial_date: format(nextDueDate, "yyyy-MM-dd"),
@@ -303,6 +307,7 @@ const DirectiveComplianceForm = ({
         if (dateChanged && isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             directive_id: directive.id,
             directive_code: directive.directive_code,
             directive_title: directive.title,
@@ -317,13 +322,14 @@ const DirectiveComplianceForm = ({
         // Insert new compliance event
         const { error } = await supabase
           .from("maintenance_directive_compliance")
-          .insert([complianceEventData]);
+          .insert([{ ...complianceEventData, aircraft_id: aircraftId }]);
         if (error) throw error;
         
         // Log Compliance action if status is compliant
         if (isComplianceLoggableStatus) {
           await supabase.from("directive_history").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             directive_id: directive.id,
             directive_code: directive.directive_code,
             directive_title: directive.title,
@@ -386,6 +392,7 @@ const DirectiveComplianceForm = ({
 
       const summaryData = {
         user_id: userId,
+        aircraft_id: aircraftId,
         directive_id: directive.id,
         applicability_status: "Applies" as Database["public"]["Enums"]["applicability_status"],
         compliance_status: directive.compliance_scope === "Recurring" 

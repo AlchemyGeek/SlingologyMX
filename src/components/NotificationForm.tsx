@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 interface NotificationFormProps {
   userId: string;
+  aircraftId: string;
   onSuccess: () => void;
   onCancel: () => void;
   editingNotification?: any;
@@ -35,7 +36,7 @@ const counterTypeToFieldMap: Record<string, string> = {
   "Prop TT": "prop_total_time",
 };
 
-const NotificationForm = ({ userId, onSuccess, onCancel, editingNotification, currentCounters, notificationBasis = "Date" }: NotificationFormProps) => {
+const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNotification, currentCounters, notificationBasis = "Date" }: NotificationFormProps) => {
   const [loading, setLoading] = useState(false);
   const [subscriptionRecurrence, setSubscriptionRecurrence] = useState<string | null>(null);
   const [formData, setFormData] = useState({

@@ -52,10 +52,11 @@ export interface Directive {
 
 interface DirectivesPanelProps {
   userId: string;
+  aircraftId: string;
   onRecordChanged?: () => void;
 }
 
-const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
+const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPanelProps) => {
   const [directives, setDirectives] = useState<Directive[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -68,6 +69,7 @@ const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
         .from("directives")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .eq("archived", false)
         .order("created_at", { ascending: false });
 
@@ -108,6 +110,7 @@ const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
       if (directiveToDelete) {
         await supabase.from("directive_history").insert({
           user_id: userId,
+          aircraft_id: aircraftId,
           directive_id: directiveId,
           directive_code: directiveToDelete.directive_code,
           directive_title: directiveToDelete.title,
@@ -181,6 +184,7 @@ const DirectivesPanel = ({ userId, onRecordChanged }: DirectivesPanelProps) => {
     return (
       <DirectiveForm
         userId={userId}
+        aircraftId={aircraftId}
         editingDirective={editingDirective}
         onSuccess={handleDirectiveCreated}
         onCancel={handleCancelForm}
