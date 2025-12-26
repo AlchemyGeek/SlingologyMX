@@ -1179,6 +1179,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          aircraft_id: string
           cost: number | null
           created_at: string | null
           id: string
@@ -1191,6 +1192,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aircraft_id: string
           cost?: number | null
           created_at?: string | null
           id?: string
@@ -1203,6 +1205,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aircraft_id?: string
           cost?: number | null
           created_at?: string | null
           id?: string
@@ -1214,7 +1217,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

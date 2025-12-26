@@ -70,6 +70,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
       
       const subscriptionData = {
         user_id: userId,
+        aircraft_id: aircraftId,
         subscription_name: formData.subscription_name,
         notes: formData.notes || null,
         type: formData.type as typeof SUBSCRIPTION_TYPES[number],

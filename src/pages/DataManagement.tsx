@@ -143,7 +143,7 @@ const DataManagement = () => {
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
-        supabase.from("subscriptions").select("*").eq("user_id", user.id), // User-level, no aircraft_id
+        supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("notifications").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("maintenance_logs").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("directives").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -230,7 +230,7 @@ const DataManagement = () => {
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
-        supabase.from("subscriptions").select("*").eq("user_id", user.id), // User-level, no aircraft_id
+        supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("notifications").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("maintenance_logs").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("directives").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -581,11 +581,12 @@ const DataManagement = () => {
         const record = subscriptionsData[i];
         updateProgress("subscriptions", i, subscriptionsData.length, 3);
         
-        // Check for duplicate based on subscription_name
+        // Check for duplicate based on subscription_name within same aircraft
         const { data: existing } = await supabase
           .from("subscriptions")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("subscription_name", record.subscription_name)
           .maybeSingle();
 
@@ -594,10 +595,10 @@ const DataManagement = () => {
           skipped.subscriptions++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("subscriptions")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.subscriptions++;
