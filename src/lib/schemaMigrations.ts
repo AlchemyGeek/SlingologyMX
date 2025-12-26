@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.1";
+export const CURRENT_SCHEMA_VERSION = "1.2";
 
 export interface ExportData {
   version: string;
@@ -74,6 +74,55 @@ const MIGRATIONS: Migration[] = [
       tables: {
         ...data.tables,
         equipment: data.tables.equipment ?? []
+      }
+    })
+  },
+  {
+    fromVersion: "1.1",
+    toVersion: "1.2",
+    description: "Multi-aircraft support - aircraft_id field added to all records",
+    migrate: (data) => ({
+      ...data,
+      version: "1.2",
+      tables: {
+        ...data.tables,
+        // Ensure all aircraft-specific tables have aircraft_id field (will be replaced on import)
+        aircraft_counters: data.tables.aircraft_counters.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        aircraft_counter_history: data.tables.aircraft_counter_history.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        notifications: data.tables.notifications.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        maintenance_logs: data.tables.maintenance_logs.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        directives: data.tables.directives.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        aircraft_directive_status: data.tables.aircraft_directive_status.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        directive_history: data.tables.directive_history.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        maintenance_directive_compliance: data.tables.maintenance_directive_compliance.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        equipment: data.tables.equipment.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
       }
     })
   },
