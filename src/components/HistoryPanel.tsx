@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HistoryPanelProps {
   userId: string;
+  aircraftId: string;
   refreshKey?: number;
 }
 
@@ -32,7 +33,7 @@ interface DirectiveHistoryEntry {
 
 type SortDirection = "asc" | "desc" | null;
 
-const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
+const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => {
   const isMobile = useIsMobile();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
@@ -67,22 +68,26 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
           .from("notifications")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
           .eq("is_completed", true)
           .order("completed_at", { ascending: false }),
         supabase
           .from("maintenance_logs")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
           .order("date_performed", { ascending: false }),
         supabase
           .from("directive_history")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
           .order("created_at", { ascending: false }),
         supabase
           .from("equipment")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
           .order("created_at", { ascending: false })
       ]);
 
@@ -103,8 +108,8 @@ const HistoryPanel = ({ userId, refreshKey }: HistoryPanelProps) => {
   };
 
   useEffect(() => {
-    fetchHistory();
-  }, [userId, refreshKey]);
+    if (aircraftId) fetchHistory();
+  }, [userId, aircraftId, refreshKey]);
 
   // Filtered & sorted notifications
   const filteredNotifications = useMemo(() => {

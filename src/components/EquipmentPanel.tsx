@@ -28,6 +28,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
         .from("equipment")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -40,8 +41,8 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
   };
 
   useEffect(() => {
-    fetchEquipment();
-  }, [userId]);
+    if (aircraftId) fetchEquipment();
+  }, [userId, aircraftId]);
 
   const handleEquipmentCreated = () => {
     setShowForm(false);

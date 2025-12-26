@@ -173,6 +173,7 @@ const Dashboard = () => {
         return (
           <CalendarPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             refreshKey={recordsRefreshKey}
             currentCounters={currentCounters}
           />
@@ -181,6 +182,7 @@ const Dashboard = () => {
         return (
           <CountersPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             currentCounters={currentCounters}
           />
         );
@@ -195,7 +197,7 @@ const Dashboard = () => {
           />
         );
       case "history":
-        return <HistoryPanel userId={user!.id} refreshKey={recordsRefreshKey} />;
+        return <HistoryPanel userId={user!.id} aircraftId={selectedAircraft?.id || ""} refreshKey={recordsRefreshKey} />;
       case "subscriptions":
         return (
           <SubscriptionsPanel
