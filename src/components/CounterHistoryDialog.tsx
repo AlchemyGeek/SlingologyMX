@@ -44,23 +44,25 @@ interface CounterHistoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
+  aircraftId: string;
   onRevert: () => void;
 }
 
-const CounterHistoryDialog = ({ open, onOpenChange, userId, onRevert }: CounterHistoryDialogProps) => {
+const CounterHistoryDialog = ({ open, onOpenChange, userId, aircraftId, onRevert }: CounterHistoryDialogProps) => {
   const [history, setHistory] = useState<CounterHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [revertEntry, setRevertEntry] = useState<CounterHistoryEntry | null>(null);
   const [reverting, setReverting] = useState(false);
 
   const fetchHistory = async () => {
-    if (!userId) return;
+    if (!userId || !aircraftId) return;
     
     setLoading(true);
     const { data, error } = await supabase
       .from("aircraft_counter_history")
       .select("*")
       .eq("user_id", userId)
+      .eq("aircraft_id", aircraftId)
       .order("change_date", { ascending: false });
 
     if (error) {
@@ -73,10 +75,10 @@ const CounterHistoryDialog = ({ open, onOpenChange, userId, onRevert }: CounterH
   };
 
   useEffect(() => {
-    if (open) {
+    if (open && aircraftId) {
       fetchHistory();
     }
-  }, [open, userId]);
+  }, [open, userId, aircraftId]);
 
   const handleRevert = async () => {
     if (!revertEntry) return;
@@ -93,7 +95,8 @@ const CounterHistoryDialog = ({ open, onOpenChange, userId, onRevert }: CounterH
           engine_total_time: revertEntry.engine_total_time,
           prop_total_time: revertEntry.prop_total_time,
         })
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId);
 
       if (updateError) throw updateError;
 
@@ -102,6 +105,7 @@ const CounterHistoryDialog = ({ open, onOpenChange, userId, onRevert }: CounterH
         .from("aircraft_counter_history")
         .delete()
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .gt("change_date", revertEntry.change_date);
 
       if (deleteError) throw deleteError;

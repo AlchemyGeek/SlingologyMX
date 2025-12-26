@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2, FileSpreadsheet, Plane } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import * as XLSX from "xlsx";
@@ -29,6 +29,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAircraft } from "@/contexts/AircraftContext";
 import { 
   ExportData, 
   CURRENT_SCHEMA_VERSION, 
@@ -64,6 +72,7 @@ const tableDisplayNames: Record<string, string> = {
 
 const DataManagement = () => {
   const navigate = useNavigate();
+  const { aircraft, selectedAircraft, selectAircraft } = useAircraft();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -75,6 +84,7 @@ const DataManagement = () => {
   const [showImportConfirm, setShowImportConfirm] = useState(false);
   const [importResult, setImportResult] = useState<{ inserted: RecordCounts; skipped: RecordCounts } | null>(null);
   const [activeTab, setActiveTab] = useState("export");
+  const [selectedAircraftId, setSelectedAircraftId] = useState<string>(selectedAircraft?.id || "");
   
   // Progress tracking
   const [importProgress, setImportProgress] = useState<{
@@ -104,12 +114,21 @@ const DataManagement = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Sync selectedAircraftId with selectedAircraft when it changes
+  useEffect(() => {
+    if (selectedAircraft?.id && !selectedAircraftId) {
+      setSelectedAircraftId(selectedAircraft.id);
+    }
+  }, [selectedAircraft, selectedAircraftId]);
+
+  const currentAircraft = aircraft.find(a => a.id === selectedAircraftId);
+
   const handleExport = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !selectedAircraftId) return;
 
     setExporting(true);
     try {
-      // Fetch all user data from each table
+      // Fetch all user data from each table for selected aircraft
       const [
         countersRes,
         counterHistoryRes,
@@ -122,16 +141,16 @@ const DataManagement = () => {
         complianceRes,
         equipmentRes,
       ] = await Promise.all([
-        supabase.from("aircraft_counters").select("*").eq("user_id", user.id),
-        supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id),
-        supabase.from("subscriptions").select("*").eq("user_id", user.id),
-        supabase.from("notifications").select("*").eq("user_id", user.id),
-        supabase.from("maintenance_logs").select("*").eq("user_id", user.id),
-        supabase.from("directives").select("*").eq("user_id", user.id),
-        supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id),
-        supabase.from("directive_history").select("*").eq("user_id", user.id),
-        supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
-        supabase.from("equipment").select("*").eq("user_id", user.id),
+        supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id), // User-level, no aircraft_id
+        supabase.from("notifications").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("maintenance_logs").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("directives").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("directive_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Remove user_id from exported data (will be replaced on import)
@@ -175,7 +194,8 @@ const DataManagement = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `slingologymx-export-${new Date().toISOString().split("T")[0]}.json`;
+      const aircraftReg = currentAircraft?.registration || "aircraft";
+      a.download = `slingologymx-${aircraftReg}-export-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -191,11 +211,11 @@ const DataManagement = () => {
   };
 
   const handleExportExcel = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !selectedAircraftId) return;
 
     setExportingExcel(true);
     try {
-      // Fetch all user data from each table
+      // Fetch all user data from each table for selected aircraft
       const [
         countersRes,
         counterHistoryRes,
@@ -208,16 +228,16 @@ const DataManagement = () => {
         complianceRes,
         equipmentRes,
       ] = await Promise.all([
-        supabase.from("aircraft_counters").select("*").eq("user_id", user.id),
-        supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id),
-        supabase.from("subscriptions").select("*").eq("user_id", user.id),
-        supabase.from("notifications").select("*").eq("user_id", user.id),
-        supabase.from("maintenance_logs").select("*").eq("user_id", user.id),
-        supabase.from("directives").select("*").eq("user_id", user.id),
-        supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id),
-        supabase.from("directive_history").select("*").eq("user_id", user.id),
-        supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id),
-        supabase.from("equipment").select("*").eq("user_id", user.id),
+        supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id), // User-level, no aircraft_id
+        supabase.from("notifications").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("maintenance_logs").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("directives").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("aircraft_directive_status").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("directive_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Helper to create human-readable ID from UUID and created_at date
@@ -317,7 +337,8 @@ const DataManagement = () => {
       });
 
       // Download file
-      XLSX.writeFile(workbook, `slingologymx-export-${new Date().toISOString().split("T")[0]}.xlsx`);
+      const aircraftReg = currentAircraft?.registration || "aircraft";
+      XLSX.writeFile(workbook, `slingologymx-${aircraftReg}-export-${new Date().toISOString().split("T")[0]}.xlsx`);
 
       toast.success("Excel file exported successfully!");
     } catch (error) {
@@ -382,7 +403,7 @@ const DataManagement = () => {
   };
 
   const handleImport = async () => {
-    if (!user?.id || !importPreview) return;
+    if (!user?.id || !importPreview || !selectedAircraftId) return;
 
     setImporting(true);
     setShowImportConfirm(false);
@@ -467,10 +488,10 @@ const DataManagement = () => {
           skipped.equipment++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("equipment")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.equipment++;
@@ -491,10 +512,11 @@ const DataManagement = () => {
           .from("aircraft_counters")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .maybeSingle();
 
         if (existing) {
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           await supabase
             .from("aircraft_counters")
             .update({ ...recordWithoutId })
@@ -503,10 +525,10 @@ const DataManagement = () => {
           skipped.aircraft_counters++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("aircraft_counters")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.aircraft_counters++;
@@ -528,6 +550,7 @@ const DataManagement = () => {
           .from("aircraft_counter_history")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("change_date", record.change_date)
           .eq("source", record.source)
           .maybeSingle();
@@ -537,10 +560,10 @@ const DataManagement = () => {
           skipped.aircraft_counter_history++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("aircraft_counter_history")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.aircraft_counter_history++;
@@ -866,6 +889,32 @@ const DataManagement = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Aircraft Selector */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Plane className="h-5 w-5 text-muted-foreground" />
+                <Label htmlFor="aircraft-select" className="text-sm font-medium">
+                  Aircraft:
+                </Label>
+              </div>
+              <Select value={selectedAircraftId} onValueChange={setSelectedAircraftId}>
+                <SelectTrigger className="w-[250px]" id="aircraft-select">
+                  <SelectValue placeholder="Select aircraft" />
+                </SelectTrigger>
+                <SelectContent>
+                  {aircraft.map((ac) => (
+                    <SelectItem key={ac.id} value={ac.id}>
+                      {ac.registration} {ac.model_make && `- ${ac.model_make}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="export" className="flex items-center gap-2">
