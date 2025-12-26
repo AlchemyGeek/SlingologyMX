@@ -63,6 +63,7 @@ interface CounterUpdates {
 
 interface MaintenanceLogFormProps {
   userId: string;
+  aircraftId: string;
   editingLog?: any;
   defaultCounters?: DefaultCounters;
   onSuccess: () => void;
@@ -70,7 +71,7 @@ interface MaintenanceLogFormProps {
   onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
 }
 
-const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
+const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
@@ -249,6 +250,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
 
           await supabase.from("notifications").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             description: notificationDescription,
             type: "Directives",
             initial_date: format(today, "yyyy-MM-dd"),
@@ -267,6 +269,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
 
           await supabase.from("notifications").insert({
             user_id: userId,
+            aircraft_id: aircraftId,
             description: notificationDescription,
             type: "Directives",
             initial_date: format(nextDueDate, "yyyy-MM-dd"),
@@ -305,6 +308,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
 
     const logData = {
       user_id: userId,
+      aircraft_id: aircraftId,
       entry_title: formData.entry_title,
       category: formData.category,
       subcategory: formData.subcategory,
@@ -394,6 +398,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             // Create new
             await supabase.from("notifications").insert([{
               user_id: userId,
+              aircraft_id: aircraftId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
               initial_date: format(calculatedNextDueDate!, "yyyy-MM-dd"),
@@ -439,6 +444,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             // Create new
             await supabase.from("notifications").insert([{
               user_id: userId,
+              aircraft_id: aircraftId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
               initial_date: format(new Date(), "yyyy-MM-dd"),
@@ -494,6 +500,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
               .from("notifications")
               .insert([{
                 user_id: userId,
+                aircraft_id: aircraftId,
                 description: notificationDescription,
                 type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
                 initial_date: format(nextDueDate, "yyyy-MM-dd"),
@@ -535,6 +542,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             .from("notifications")
             .insert([{
               user_id: userId,
+              aircraft_id: aircraftId,
               description: notificationDescription,
               type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
               initial_date: format(new Date(), "yyyy-MM-dd"),
@@ -661,6 +669,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             maintenance_log_id: logId,
             directive_id: link.directive_id,
             user_id: userId,
+            aircraft_id: aircraftId,
             compliance_status: link.compliance_status,
             compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
             counter_type: link.counter_type || null,
@@ -696,6 +705,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             
             const statusData = {
               user_id: userId,
+              aircraft_id: aircraftId,
               directive_id: link.directive_id,
               compliance_status: "Complied Once" as const,
               first_compliance_date: link.compliance_date ? format(link.compliance_date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
@@ -719,6 +729,7 @@ const MaintenanceLogForm = ({ userId, editingLog, defaultCounters, onSuccess, on
             if (directive) {
               await supabase.from("directive_history").insert({
                 user_id: userId,
+                aircraft_id: aircraftId,
                 directive_id: link.directive_id,
                 directive_code: directive.directive_code,
                 directive_title: directive.title,

@@ -12,6 +12,7 @@ import { parseLocalDate } from "@/lib/utils";
 
 interface NotificationsPanelProps {
   userId: string;
+  aircraftId: string;
   currentCounters?: {
     hobbs: number;
     tach: number;
@@ -21,7 +22,7 @@ interface NotificationsPanelProps {
   };
 }
 
-const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps) => {
+const NotificationsPanel = ({ userId, aircraftId, currentCounters }: NotificationsPanelProps) => {
   console.log("=== NOTIFICATIONS PANEL MOUNTED ===");
   const [showForm, setShowForm] = useState(false);
   const [editingNotification, setEditingNotification] = useState<any>(null);
@@ -165,6 +166,7 @@ const NotificationsPanel = ({ userId, currentCounters }: NotificationsPanelProps
         {showForm && (
           <NotificationForm
             userId={userId}
+            aircraftId={aircraftId}
             onSuccess={handleNotificationCreated}
             onCancel={handleCancelForm}
             editingNotification={editingNotification}

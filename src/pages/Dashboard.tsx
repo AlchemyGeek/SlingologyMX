@@ -39,13 +39,14 @@ const Dashboard = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [activeView, setActiveView] = useState<DashboardView>("calendar");
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
+  const { selectedAircraft } = useAircraft();
   const {
     counters,
     loading: countersLoading,
     updateCounter,
     updateAllCounters,
     refetch,
-  } = useAircraftCounters(user?.id || "");
+  } = useAircraftCounters(user?.id || "", selectedAircraft?.id || "");
 
   // Fetch active notifications for alert indicator
   const fetchActiveNotificationsForAlerts = async () => {
@@ -187,6 +188,7 @@ const Dashboard = () => {
         return (
           <ActiveNotificationsPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             currentCounters={currentCounters}
             onNotificationCompleted={fetchActiveNotificationsForAlerts}
             refreshKey={recordsRefreshKey}
@@ -198,6 +200,7 @@ const Dashboard = () => {
         return (
           <SubscriptionsPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             onNotificationChanged={fetchActiveNotificationsForAlerts}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
@@ -206,6 +209,7 @@ const Dashboard = () => {
         return (
           <EquipmentPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
         );
@@ -213,6 +217,7 @@ const Dashboard = () => {
         return (
           <MaintenanceLogsPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             counters={counters}
             onUpdateGlobalCounters={(updates) => updateAllCounters(updates, "Maintenance Record")}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
@@ -222,6 +227,7 @@ const Dashboard = () => {
         return (
           <DirectivesPanel
             userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
         );

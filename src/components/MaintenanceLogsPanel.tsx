@@ -53,12 +53,13 @@ interface CounterUpdates {
 
 interface MaintenanceLogsPanelProps {
   userId: string;
+  aircraftId: string;
   counters: AircraftCounters;
   onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
   onRecordChanged?: () => void;
 }
 
-const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters, onRecordChanged }: MaintenanceLogsPanelProps) => {
+const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCounters, onRecordChanged }: MaintenanceLogsPanelProps) => {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
@@ -164,6 +165,7 @@ const MaintenanceLogsPanel = ({ userId, counters, onUpdateGlobalCounters, onReco
     return (
       <MaintenanceLogForm
         userId={userId}
+        aircraftId={aircraftId}
         editingLog={editingLog}
         defaultCounters={counters}
         onSuccess={handleLogCreated}
