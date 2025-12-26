@@ -80,7 +80,7 @@ const MIGRATIONS: Migration[] = [
   {
     fromVersion: "1.1",
     toVersion: "1.2",
-    description: "Multi-aircraft support - aircraft_id field added to all records",
+    description: "Multi-aircraft support - aircraft_id field added to all records including subscriptions",
     migrate: (data) => ({
       ...data,
       version: "1.2",
@@ -92,6 +92,10 @@ const MIGRATIONS: Migration[] = [
           aircraft_id: r.aircraft_id ?? null
         })),
         aircraft_counter_history: data.tables.aircraft_counter_history.map(r => ({
+          ...r,
+          aircraft_id: r.aircraft_id ?? null
+        })),
+        subscriptions: data.tables.subscriptions.map(r => ({
           ...r,
           aircraft_id: r.aircraft_id ?? null
         })),

@@ -21,11 +21,14 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
   const [loading, setLoading] = useState(true);
 
   const fetchSubscriptions = async () => {
+    if (!aircraftId) return;
+    
     try {
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -39,7 +42,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
 
   useEffect(() => {
     fetchSubscriptions();
-  }, [userId]);
+  }, [userId, aircraftId]);
 
   const handleSubscriptionCreated = () => {
     setShowForm(false);
