@@ -47,8 +47,54 @@ export type Database = {
         }
         Relationships: []
       }
+      aircraft: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean
+          model_make: string | null
+          registration: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          model_make?: string | null
+          registration: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          model_make?: string | null
+          registration?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aircraft_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aircraft_counter_history: {
         Row: {
+          aircraft_id: string
           airframe_total_time: number | null
           change_date: string
           created_at: string | null
@@ -61,6 +107,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aircraft_id: string
           airframe_total_time?: number | null
           change_date?: string
           created_at?: string | null
@@ -73,6 +120,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aircraft_id?: string
           airframe_total_time?: number | null
           change_date?: string
           created_at?: string | null
@@ -85,6 +133,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "aircraft_counter_history_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "aircraft_counter_history_user_id_fkey"
             columns: ["user_id"]
@@ -103,6 +158,7 @@ export type Database = {
       }
       aircraft_counters: {
         Row: {
+          aircraft_id: string
           airframe_total_time: number | null
           created_at: string | null
           engine_total_time: number | null
@@ -114,6 +170,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aircraft_id: string
           airframe_total_time?: number | null
           created_at?: string | null
           engine_total_time?: number | null
@@ -125,6 +182,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aircraft_id?: string
           airframe_total_time?: number | null
           created_at?: string | null
           engine_total_time?: number | null
@@ -137,16 +195,23 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "aircraft_counters_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: true
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "aircraft_counters_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "aircraft_counters_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -154,6 +219,7 @@ export type Database = {
       }
       aircraft_directive_status: {
         Row: {
+          aircraft_id: string
           applicability_reason: string | null
           applicability_status: Database["public"]["Enums"]["applicability_status"]
           archived: boolean
@@ -175,6 +241,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aircraft_id: string
           applicability_reason?: string | null
           applicability_status?: Database["public"]["Enums"]["applicability_status"]
           archived?: boolean
@@ -196,6 +263,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aircraft_id?: string
           applicability_reason?: string | null
           applicability_status?: Database["public"]["Enums"]["applicability_status"]
           archived?: boolean
@@ -217,6 +285,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "aircraft_directive_status_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "aircraft_directive_status_directive_id_fkey"
             columns: ["directive_id"]
@@ -339,6 +414,7 @@ export type Database = {
       directive_history: {
         Row: {
           action_type: string
+          aircraft_id: string
           compliance_status: string | null
           created_at: string
           directive_code: string
@@ -352,6 +428,7 @@ export type Database = {
         }
         Insert: {
           action_type: string
+          aircraft_id: string
           compliance_status?: string | null
           created_at?: string
           directive_code: string
@@ -365,6 +442,7 @@ export type Database = {
         }
         Update: {
           action_type?: string
+          aircraft_id?: string
           compliance_status?: string | null
           created_at?: string
           directive_code?: string
@@ -376,11 +454,20 @@ export type Database = {
           notes?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "directive_history_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       directives: {
         Row: {
           action_types: string[] | null
+          aircraft_id: string
           applicability_category: string | null
           applicability_model: string | null
           applicability_notes: string | null
@@ -423,6 +510,7 @@ export type Database = {
         }
         Insert: {
           action_types?: string[] | null
+          aircraft_id: string
           applicability_category?: string | null
           applicability_model?: string | null
           applicability_notes?: string | null
@@ -465,6 +553,7 @@ export type Database = {
         }
         Update: {
           action_types?: string[] | null
+          aircraft_id?: string
           applicability_category?: string | null
           applicability_model?: string | null
           applicability_notes?: string | null
@@ -507,6 +596,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "directives_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "directives_equipment_id_fkey"
             columns: ["equipment_id"]
             isOneToOne: false
@@ -531,6 +627,7 @@ export type Database = {
       }
       equipment: {
         Row: {
+          aircraft_id: string
           category: Database["public"]["Enums"]["directive_category"]
           created_at: string | null
           id: string
@@ -551,6 +648,7 @@ export type Database = {
           warranty_start_date: string | null
         }
         Insert: {
+          aircraft_id: string
           category: Database["public"]["Enums"]["directive_category"]
           created_at?: string | null
           id?: string
@@ -573,6 +671,7 @@ export type Database = {
           warranty_start_date?: string | null
         }
         Update: {
+          aircraft_id?: string
           category?: Database["public"]["Enums"]["directive_category"]
           created_at?: string | null
           id?: string
@@ -594,7 +693,15 @@ export type Database = {
           warranty_expiration_date?: string | null
           warranty_start_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "equipment_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feature_requests: {
         Row: {
@@ -666,6 +773,7 @@ export type Database = {
       }
       maintenance_directive_compliance: {
         Row: {
+          aircraft_id: string
           compliance_date: string
           compliance_links: Json | null
           compliance_status: string
@@ -680,6 +788,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aircraft_id: string
           compliance_date?: string
           compliance_links?: Json | null
           compliance_status?: string
@@ -694,6 +803,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aircraft_id?: string
           compliance_date?: string
           compliance_links?: Json | null
           compliance_status?: string
@@ -708,6 +818,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "maintenance_directive_compliance_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "maintenance_directive_compliance_directive_id_fkey"
             columns: ["directive_id"]
@@ -740,6 +857,7 @@ export type Database = {
       }
       maintenance_logs: {
         Row: {
+          aircraft_id: string
           airframe_total_time: number | null
           attachment_urls: Json | null
           category: Database["public"]["Enums"]["maintenance_category"]
@@ -779,6 +897,7 @@ export type Database = {
           vendor_name: string | null
         }
         Insert: {
+          aircraft_id: string
           airframe_total_time?: number | null
           attachment_urls?: Json | null
           category: Database["public"]["Enums"]["maintenance_category"]
@@ -820,6 +939,7 @@ export type Database = {
           vendor_name?: string | null
         }
         Update: {
+          aircraft_id?: string
           airframe_total_time?: number | null
           attachment_urls?: Json | null
           category?: Database["public"]["Enums"]["maintenance_category"]
@@ -862,6 +982,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "maintenance_logs_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "maintenance_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -879,6 +1006,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          aircraft_id: string
           alert_days: number | null
           alert_hours: number | null
           completed_at: string | null
@@ -903,6 +1031,7 @@ export type Database = {
           user_modified: boolean
         }
         Insert: {
+          aircraft_id: string
           alert_days?: number | null
           alert_hours?: number | null
           completed_at?: string | null
@@ -927,6 +1056,7 @@ export type Database = {
           user_modified?: boolean
         }
         Update: {
+          aircraft_id?: string
           alert_days?: number | null
           alert_hours?: number | null
           completed_at?: string | null
@@ -951,6 +1081,13 @@ export type Database = {
           user_modified?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_directive_id_fkey"
             columns: ["directive_id"]
