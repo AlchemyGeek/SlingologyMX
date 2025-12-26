@@ -6,6 +6,7 @@ import { Gauge } from "lucide-react";
 
 interface CountersPanelProps {
   userId: string;
+  aircraftId: string;
   currentCounters?: {
     hobbs: number;
     tach: number;
@@ -33,17 +34,19 @@ const counterTypeToFieldMap: Record<string, keyof CountersPanelProps["currentCou
   "Prop TT": "prop_total_time",
 };
 
-const CountersPanel = ({ userId, currentCounters }: CountersPanelProps) => {
+const CountersPanel = ({ userId, aircraftId, currentCounters }: CountersPanelProps) => {
   const [notifications, setNotifications] = useState<CounterNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCounterNotifications = async () => {
+      if (!aircraftId) return;
       setLoading(true);
       const { data, error } = await supabase
         .from("notifications")
         .select("id, description, counter_type, initial_counter_value, type, alert_hours, notes")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .eq("is_completed", false)
         .eq("notification_basis", "Counter")
         .not("counter_type", "is", null);
@@ -55,7 +58,7 @@ const CountersPanel = ({ userId, currentCounters }: CountersPanelProps) => {
     };
 
     fetchCounterNotifications();
-  }, [userId]);
+  }, [userId, aircraftId]);
 
   // Group notifications by counter type and calculate remaining hours
   const groupedNotifications = useMemo(() => {

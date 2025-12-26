@@ -94,8 +94,8 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
   };
 
   useEffect(() => {
-    fetchActiveNotifications();
-  }, [userId, refreshKey]);
+    if (aircraftId) fetchActiveNotifications();
+  }, [userId, aircraftId, refreshKey]);
 
   const dateNotifications = notifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
   const counterNotifications = notifications.filter(n => n.notification_basis === "Counter");

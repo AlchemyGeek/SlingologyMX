@@ -38,6 +38,7 @@ const NotificationsPanel = ({ userId, aircraftId, currentCounters }: Notificatio
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .order("created_at", { ascending: false });
 
       if (notifError) throw notifError;
@@ -117,8 +118,8 @@ const NotificationsPanel = ({ userId, aircraftId, currentCounters }: Notificatio
   }, [dateNotifications, counterNotifications, currentCounters]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [userId]);
+    if (aircraftId) fetchNotifications();
+  }, [userId, aircraftId]);
 
   const handleNotificationCreated = () => {
     setShowForm(false);

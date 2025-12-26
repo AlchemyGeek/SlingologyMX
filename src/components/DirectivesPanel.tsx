@@ -84,8 +84,8 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
   };
 
   useEffect(() => {
-    fetchDirectives();
-  }, [userId]);
+    if (aircraftId) fetchDirectives();
+  }, [userId, aircraftId]);
 
   const handleDirectiveCreated = () => {
     setShowForm(false);

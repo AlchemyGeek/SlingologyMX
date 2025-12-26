@@ -9,6 +9,7 @@ import { parseLocalDate } from "@/lib/utils";
 
 interface CalendarPanelProps {
   userId: string;
+  aircraftId: string;
   refreshKey?: number;
   currentCounters?: {
     hobbs: number;
@@ -29,7 +30,7 @@ const counterTypeToFieldMap: Record<string, string> = {
   "Prop TT": "prop_total_time",
 };
 
-const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelProps) => {
+const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: CalendarPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<any[]>([]);
@@ -37,8 +38,8 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, [userId, refreshKey]);
+    if (aircraftId) fetchData();
+  }, [userId, aircraftId, refreshKey]);
 
   const fetchData = async () => {
     try {
@@ -47,15 +48,18 @@ const CalendarPanel = ({ userId, refreshKey, currentCounters }: CalendarPanelPro
           .from("notifications")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
           .eq("is_completed", false),
         supabase
           .from("maintenance_logs")
           .select("*")
-          .eq("user_id", userId),
+          .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId),
         supabase
           .from("directive_history")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;

@@ -72,6 +72,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
         .from("maintenance_logs")
         .select("*")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .order("date_performed", { ascending: false });
 
       if (error) throw error;
@@ -85,8 +86,8 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
   };
 
   useEffect(() => {
-    fetchLogs();
-  }, [userId]);
+    if (aircraftId) fetchLogs();
+  }, [userId, aircraftId]);
 
   const handleLogCreated = () => {
     setShowForm(false);
