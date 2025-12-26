@@ -36,8 +36,11 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "" });
   const [saving, setSaving] = useState(false);
+
+  const CONFIRMATION_PHRASE = "delete my aircraft";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
@@ -278,21 +281,45 @@ export function AircraftManagement({ userId }: { userId: string }) {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deletingAircraft} onOpenChange={() => setDeletingAircraft(null)}>
+      <AlertDialog 
+        open={!!deletingAircraft} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingAircraft(null);
+            setDeleteConfirmText("");
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Aircraft?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deletingAircraft?.registration}</strong>? This
-              will also delete all associated maintenance logs, directives, equipment, and
-              notifications for this aircraft. This action cannot be undone.
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Are you sure you want to delete <strong>{deletingAircraft?.registration}</strong>? This
+                  will also delete all associated maintenance logs, directives, equipment, and
+                  notifications for this aircraft. This action cannot be undone.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{CONFIRMATION_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={CONFIRMATION_PHRASE}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmText.toLowerCase() !== CONFIRMATION_PHRASE}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete
             </AlertDialogAction>
