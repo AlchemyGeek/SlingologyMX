@@ -19,6 +19,8 @@ import DirectivesPanel from "@/components/DirectivesPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+import { AircraftSwitcher } from "@/components/AircraftSwitcher";
+import { useAircraft } from "@/contexts/AircraftContext";
 
 const counterTypeToFieldMap: Record<string, string> = {
   Hobbs: "hobbs",
@@ -248,7 +250,10 @@ const Dashboard = () => {
             <div className="flex items-center gap-2">
               <SidebarTrigger className="mr-2" />
               <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
-              <h1 className="text-2xl font-bold">SlingologyMX</h1>
+              <h1 className="text-2xl font-bold hidden sm:block">SlingologyMX</h1>
+              <div className="ml-4">
+                <AircraftSwitcher />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>

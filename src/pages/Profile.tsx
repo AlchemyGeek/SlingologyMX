@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, ArrowLeft, Save, User as UserIcon, Users } from "lucide-react";
+import { LogOut, ArrowLeft, Save, User as UserIcon, Users, Plane } from "lucide-react";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import UserManagement from "@/components/UserManagement";
+import { AircraftManagement } from "@/components/AircraftManagement";
 
 interface ProfileData {
   name: string;
@@ -19,8 +20,6 @@ interface ProfileData {
   country: string;
   state_prefecture: string;
   city: string;
-  plane_registration: string;
-  plane_model_make: string;
 }
 
 interface ProfileCardProps {
@@ -34,7 +33,7 @@ const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: Profil
   <Card>
     <CardHeader>
       <CardTitle>User Profile</CardTitle>
-      <CardDescription>Manage your personal information and aircraft details</CardDescription>
+      <CardDescription>Manage your personal information</CardDescription>
     </CardHeader>
     <CardContent className="space-y-6">
       <div className="space-y-2">
@@ -107,41 +106,6 @@ const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: Profil
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-sm font-semibold">Aircraft Information</h3>
-        <div className="space-y-2">
-          <Label htmlFor="registration">Plane Registration Number</Label>
-          <Input
-            id="registration"
-            value={profileData.plane_registration}
-            onChange={(e) =>
-              setProfileData({
-                ...profileData,
-                plane_registration: e.target.value,
-              })
-            }
-            maxLength={8}
-            placeholder="Enter registration number"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="model">Plane Model and Make</Label>
-          <Input
-            id="model"
-            value={profileData.plane_model_make}
-            onChange={(e) =>
-              setProfileData({
-                ...profileData,
-                plane_model_make: e.target.value,
-              })
-            }
-            maxLength={50}
-            placeholder="Enter plane model and make"
-          />
-        </div>
-      </div>
-
       <Button onClick={handleSave} disabled={saving} className="w-full">
         <Save className="h-4 w-4 mr-2" />
         {saving ? "Saving..." : "Save Profile"}
@@ -177,8 +141,6 @@ const Profile = () => {
     country: "",
     state_prefecture: "",
     city: "",
-    plane_registration: "",
-    plane_model_make: "",
   });
 
   useEffect(() => {
@@ -242,8 +204,6 @@ const Profile = () => {
         country: data.country || "",
         state_prefecture: data.state_prefecture || "",
         city: data.city || "",
-        plane_registration: data.plane_registration || "",
-        plane_model_make: data.plane_model_make || "",
       });
     }
   };
@@ -267,8 +227,6 @@ const Profile = () => {
         country: profileData.country,
         state_prefecture: profileData.state_prefecture,
         city: profileData.city,
-        plane_registration: profileData.plane_registration,
-        plane_model_make: profileData.plane_model_make,
       } as any)
       .eq("id", user.id);
 
@@ -295,6 +253,18 @@ const Profile = () => {
     return null;
   }
 
+  const renderProfileContent = () => (
+    <div className="space-y-6">
+      <ProfileCard
+        profileData={profileData}
+        setProfileData={setProfileData}
+        handleSave={handleSave}
+        saving={saving}
+      />
+      <AircraftManagement userId={user.id} />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -320,10 +290,14 @@ const Profile = () => {
       <main className="container mx-auto px-4 py-8">
         {isAdmin ? (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserIcon className="h-4 w-4" />
                 My Profile
+              </TabsTrigger>
+              <TabsTrigger value="aircraft" className="flex items-center gap-2">
+                <Plane className="h-4 w-4" />
+                Aircraft
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -338,19 +312,37 @@ const Profile = () => {
                 saving={saving}
               />
             </TabsContent>
+            <TabsContent value="aircraft" className="max-w-2xl">
+              <AircraftManagement userId={user.id} />
+            </TabsContent>
             <TabsContent value="users" className="max-w-4xl">
               <UserManagement />
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="max-w-2xl">
-            <ProfileCard
-              profileData={profileData}
-              setProfileData={setProfileData}
-              handleSave={handleSave}
-              saving={saving}
-            />
-          </div>
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
+                My Profile
+              </TabsTrigger>
+              <TabsTrigger value="aircraft" className="flex items-center gap-2">
+                <Plane className="h-4 w-4" />
+                Aircraft
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="profile" className="max-w-2xl">
+              <ProfileCard
+                profileData={profileData}
+                setProfileData={setProfileData}
+                handleSave={handleSave}
+                saving={saving}
+              />
+            </TabsContent>
+            <TabsContent value="aircraft" className="max-w-2xl">
+              <AircraftManagement userId={user.id} />
+            </TabsContent>
+          </Tabs>
         )}
       </main>
     </div>
