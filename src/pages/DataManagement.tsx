@@ -475,11 +475,12 @@ const DataManagement = () => {
         const record = equipmentData[i];
         updateProgress("equipment", i, equipmentData.length, 0);
         
-        // Check for duplicate based on name
+        // Check for duplicate based on name within same aircraft
         const { data: existing } = await supabase
           .from("equipment")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("name", record.name)
           .maybeSingle();
 
@@ -613,11 +614,12 @@ const DataManagement = () => {
         const record = directivesData[i];
         updateProgress("directives", i, directivesData.length, 4);
         
-        // Check for duplicate based on directive_code
+        // Check for duplicate based on directive_code within same aircraft
         const { data: existing } = await supabase
           .from("directives")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("directive_code", record.directive_code)
           .maybeSingle();
 
@@ -626,11 +628,11 @@ const DataManagement = () => {
           skipped.directives++;
         } else {
           const newId = generateId();
-          const { id: _oldId, equipment_id, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, equipment_id, ...recordWithoutId } = record;
           const mappedEquipmentId = equipment_id ? (idMap[equipment_id] || null) : null;
           const { error } = await supabase
             .from("directives")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id, equipment_id: mappedEquipmentId });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId, equipment_id: mappedEquipmentId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.directives++;
@@ -647,11 +649,12 @@ const DataManagement = () => {
         const record = maintenanceLogsData[i];
         updateProgress("maintenance_logs", i, maintenanceLogsData.length, 5);
         
-        // Check for duplicate based on entry_title and date_performed
+        // Check for duplicate based on entry_title and date_performed within same aircraft
         const { data: existing } = await supabase
           .from("maintenance_logs")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("entry_title", record.entry_title)
           .eq("date_performed", record.date_performed)
           .maybeSingle();
@@ -661,10 +664,10 @@ const DataManagement = () => {
           skipped.maintenance_logs++;
         } else {
           const newId = generateId();
-          const { id: _oldId, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, ...recordWithoutId } = record;
           const { error } = await supabase
             .from("maintenance_logs")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.maintenance_logs++;
@@ -681,11 +684,12 @@ const DataManagement = () => {
         const record = notificationsData[i];
         updateProgress("notifications", i, notificationsData.length, 6);
         
-        // Check for duplicate based on description, initial_date, type
+        // Check for duplicate based on description, initial_date, type within same aircraft
         const { data: existing } = await supabase
           .from("notifications")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("description", record.description)
           .eq("initial_date", record.initial_date)
           .eq("type", record.type)
@@ -696,12 +700,13 @@ const DataManagement = () => {
           skipped.notifications++;
         } else {
           const newId = generateId();
-          const { id: _oldId, subscription_id, directive_id, maintenance_log_id, equipment_id, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, subscription_id, directive_id, maintenance_log_id, equipment_id, ...recordWithoutId } = record;
           
           const mappedRecord = {
             ...recordWithoutId,
             id: newId,
             user_id: user.id,
+            aircraft_id: selectedAircraftId,
             subscription_id: subscription_id ? (idMap[subscription_id] || null) : null,
             directive_id: directive_id ? (idMap[directive_id] || null) : null,
             maintenance_log_id: maintenance_log_id ? (idMap[maintenance_log_id] || null) : null,
@@ -727,7 +732,7 @@ const DataManagement = () => {
         const record = directiveStatusData[i];
         updateProgress("aircraft_directive_status", i, directiveStatusData.length, 7);
         
-        const { id: _oldId, directive_id, ...recordWithoutId } = record;
+        const { id: _oldId, aircraft_id: _oldAircraftId, directive_id, ...recordWithoutId } = record;
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
         
         if (!mappedDirectiveId) {
@@ -736,11 +741,12 @@ const DataManagement = () => {
           continue;
         }
 
-        // Check for duplicate based on directive_id
+        // Check for duplicate based on directive_id within same aircraft
         const { data: existing } = await supabase
           .from("aircraft_directive_status")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("directive_id", mappedDirectiveId)
           .maybeSingle();
 
@@ -751,7 +757,7 @@ const DataManagement = () => {
           const newId = generateId();
           const { error } = await supabase
             .from("aircraft_directive_status")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId, directive_id: mappedDirectiveId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.aircraft_directive_status++;
@@ -768,11 +774,12 @@ const DataManagement = () => {
         const record = directiveHistoryData[i];
         updateProgress("directive_history", i, directiveHistoryData.length, 8);
         
-        // Check for duplicate based on directive_code, action_type, created_at
+        // Check for duplicate based on directive_code, action_type, created_at within same aircraft
         const { data: existing } = await supabase
           .from("directive_history")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("directive_code", record.directive_code)
           .eq("action_type", record.action_type)
           .eq("created_at", record.created_at)
@@ -783,12 +790,12 @@ const DataManagement = () => {
           skipped.directive_history++;
         } else {
           const newId = generateId();
-          const { id: _oldId, directive_id, ...recordWithoutId } = record;
+          const { id: _oldId, aircraft_id: _oldAircraftId, directive_id, ...recordWithoutId } = record;
           const mappedDirectiveId = directive_id ? (idMap[directive_id] || null) : null;
 
           const { error } = await supabase
             .from("directive_history")
-            .insert({ ...recordWithoutId, id: newId, user_id: user.id, directive_id: mappedDirectiveId });
+            .insert({ ...recordWithoutId, id: newId, user_id: user.id, aircraft_id: selectedAircraftId, directive_id: mappedDirectiveId });
           if (!error) {
             idMap[record.id] = newId;
             inserted.directive_history++;
@@ -805,7 +812,7 @@ const DataManagement = () => {
         const record = complianceData[i];
         updateProgress("maintenance_directive_compliance", i, complianceData.length, 9);
         
-        const { id: _oldId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
+        const { id: _oldId, aircraft_id: _oldAircraftId, directive_id, maintenance_log_id, ...recordWithoutId } = record;
         const mappedDirectiveId = directive_id ? idMap[directive_id] : null;
         const mappedMaintenanceLogId = maintenance_log_id ? (idMap[maintenance_log_id] || null) : null;
 
@@ -815,11 +822,12 @@ const DataManagement = () => {
           continue;
         }
 
-        // Check for duplicate based on directive_id and compliance_date
+        // Check for duplicate based on directive_id and compliance_date within same aircraft
         const { data: existing } = await supabase
           .from("maintenance_directive_compliance")
           .select("id")
           .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
           .eq("directive_id", mappedDirectiveId)
           .eq("compliance_date", record.compliance_date)
           .maybeSingle();
@@ -835,6 +843,7 @@ const DataManagement = () => {
               ...recordWithoutId, 
               id: newId, 
               user_id: user.id, 
+              aircraft_id: selectedAircraftId,
               directive_id: mappedDirectiveId,
               maintenance_log_id: mappedMaintenanceLogId 
             });
