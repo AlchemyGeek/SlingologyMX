@@ -20,21 +20,25 @@ const defaultCounters: AircraftCounters = {
 
 export type CounterChangeSource = "Dashboard" | "Maintenance Record";
 
-export const useAircraftCounters = (userId: string) => {
+export const useAircraftCounters = (userId: string, aircraftId: string | undefined) => {
   const [counters, setCounters] = useState<AircraftCounters>(defaultCounters);
   const [loading, setLoading] = useState(true);
 
   const fetchCounters = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !aircraftId) {
+      setLoading(false);
+      return;
+    }
     
     const { data, error } = await supabase
       .from("aircraft_counters")
       .select("*")
-      .eq("user_id", userId)
+      .eq("aircraft_id", aircraftId)
       .maybeSingle();
 
     if (error) {
       console.error("Error fetching counters:", error);
+      setLoading(false);
       return;
     }
 
@@ -48,10 +52,10 @@ export const useAircraftCounters = (userId: string) => {
         prop_total_time: Number(data.prop_total_time) || 0,
       });
     } else {
-      // Create initial counters record
+      // Create initial counters record for this aircraft
       const { data: newData, error: insertError } = await supabase
         .from("aircraft_counters")
-        .insert([{ user_id: userId }])
+        .insert([{ user_id: userId, aircraft_id: aircraftId }])
         .select()
         .single();
 
@@ -67,14 +71,14 @@ export const useAircraftCounters = (userId: string) => {
       }
     }
     setLoading(false);
-  }, [userId]);
+  }, [userId, aircraftId]);
 
   useEffect(() => {
     fetchCounters();
   }, [fetchCounters]);
 
   const logCounterHistory = async (newCounters: Partial<AircraftCounters>, source: CounterChangeSource) => {
-    if (!userId) return;
+    if (!userId || !aircraftId) return;
     
     // Merge current counters with new values
     const finalCounters = {
@@ -89,6 +93,7 @@ export const useAircraftCounters = (userId: string) => {
       .from("aircraft_counter_history")
       .insert([{
         user_id: userId,
+        aircraft_id: aircraftId,
         hobbs: finalCounters.hobbs,
         tach: finalCounters.tach,
         airframe_total_time: finalCounters.airframe_total_time,
