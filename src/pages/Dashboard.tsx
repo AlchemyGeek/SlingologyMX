@@ -289,6 +289,7 @@ const Dashboard = () => {
               counters={counters}
               loading={countersLoading}
               userId={user.id}
+              aircraftId={selectedAircraft?.id || ""}
               onUpdateCounter={updateCounter}
               onUpdateAllCounters={(updates) => updateAllCounters(updates, "Dashboard")}
               onRefetch={refetch}

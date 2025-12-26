@@ -19,6 +19,7 @@ interface AircraftCountersDisplayProps {
   counters: AircraftCounters;
   loading: boolean;
   userId: string;
+  aircraftId: string;
   onUpdateCounter: (field: keyof Omit<AircraftCounters, "id">, value: number) => Promise<void>;
   onUpdateAllCounters: (updates: Partial<Omit<AircraftCounters, "id">>) => Promise<void>;
   onRefetch: () => void;
@@ -36,7 +37,7 @@ const syncableCounters: (keyof Omit<AircraftCounters, "id">)[] = [
   "tach", "airframe_total_time", "engine_total_time", "prop_total_time"
 ];
 
-const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
+const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateCounter, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
   const [editingCounter, setEditingCounter] = useState<keyof Omit<AircraftCounters, "id"> | null>(null);
   const [editValue, setEditValue] = useState("");
   const [addValue, setAddValue] = useState("");
@@ -225,6 +226,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, onUpdateCounter, o
         open={isHistoryOpen}
         onOpenChange={setIsHistoryOpen}
         userId={userId}
+        aircraftId={aircraftId}
         onRevert={onRefetch}
       />
     </>
