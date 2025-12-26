@@ -40,7 +40,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "" });
   const [saving, setSaving] = useState(false);
 
-  const CONFIRMATION_PHRASE = "delete my aircraft";
+  const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
