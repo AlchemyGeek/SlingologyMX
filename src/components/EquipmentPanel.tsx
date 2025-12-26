@@ -12,10 +12,11 @@ type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
 
 interface EquipmentPanelProps {
   userId: string;
+  aircraftId: string;
   onRecordChanged?: () => void;
 }
 
-const EquipmentPanel = ({ userId, onRecordChanged }: EquipmentPanelProps) => {
+const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -77,6 +78,7 @@ const EquipmentPanel = ({ userId, onRecordChanged }: EquipmentPanelProps) => {
         {showForm ? (
           <EquipmentForm
             userId={userId}
+            aircraftId={aircraftId}
             onSuccess={handleEquipmentCreated}
             onCancel={handleCancelForm}
             editingEquipment={editingEquipment}
