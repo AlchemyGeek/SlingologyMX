@@ -21,7 +21,7 @@ interface UnifiedHistoryItem {
   id: string;
   date: Date;
   name: string;
-  recordType: "Notification" | "Maintenance" | "Directive" | "Equipment";
+  recordType: "Notification" | "Maintenance" | "Directive" | "Equipment" | "Counter";
   operationType: string;
   category: string;
 }
@@ -34,6 +34,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [maintenanceLogs, setMaintenanceLogs] = useState<any[]>([]);
   const [directiveHistory, setDirectiveHistory] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
+  const [counterHistory, setCounterHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Unified filters & sort
@@ -45,7 +46,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
 
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes, counterHistoryRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -70,18 +71,26 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
           .select("*")
           .eq("user_id", userId)
           .eq("aircraft_id", aircraftId)
-          .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("aircraft_counter_history")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
+          .order("change_date", { ascending: false })
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
       if (logsRes.error) throw logsRes.error;
       if (directiveHistoryRes.error) throw directiveHistoryRes.error;
       if (equipmentRes.error) throw equipmentRes.error;
+      if (counterHistoryRes.error) throw counterHistoryRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
       setDirectiveHistory(directiveHistoryRes.data || []);
       setEquipment(equipmentRes.data || []);
+      setCounterHistory(counterHistoryRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -151,8 +160,30 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       });
     });
 
+    // Counter history - use change_date
+    counterHistory.forEach((c) => {
+      // Build a descriptive name showing what counters were updated
+      const counters: string[] = [];
+      if (c.hobbs != null) counters.push(`Hobbs: ${c.hobbs}`);
+      if (c.tach != null) counters.push(`Tach: ${c.tach}`);
+      if (c.airframe_total_time != null) counters.push(`Airframe: ${c.airframe_total_time}`);
+      if (c.engine_total_time != null) counters.push(`Engine: ${c.engine_total_time}`);
+      if (c.prop_total_time != null) counters.push(`Prop: ${c.prop_total_time}`);
+      
+      const name = counters.length > 0 ? counters.join(", ") : "Counter Update";
+      
+      items.push({
+        id: `counter-${c.id}`,
+        date: new Date(c.change_date),
+        name: name,
+        recordType: "Counter",
+        operationType: "Updated",
+        category: c.source || "-",
+      });
+    });
+
     return items;
-  }, [notifications, maintenanceLogs, directiveHistory, equipment]);
+  }, [notifications, maintenanceLogs, directiveHistory, equipment, counterHistory]);
 
   // Get unique values for filters
   const recordTypes = [...new Set(unifiedHistory.map((item) => item.recordType))];
@@ -243,6 +274,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         return "outline";
       case "Equipment":
         return "default";
+      case "Counter":
+        return "secondary";
       default:
         return "outline";
     }
