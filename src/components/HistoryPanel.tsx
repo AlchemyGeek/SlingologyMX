@@ -257,6 +257,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       case "Compliance":
         return "default";
       case "Delete":
+      case "Deleted":
         return "destructive";
       default:
         return "outline";
