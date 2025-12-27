@@ -4,12 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DateInput } from "@/components/ui/date-input";
 import NotificationDetail from "./NotificationDetail";
 import EquipmentDetail from "./EquipmentDetail";
 import CounterHistoryDetail from "./CounterHistoryDetail";
@@ -70,6 +72,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [recordTypeFilter, setRecordTypeFilter] = useState<string>("all");
   const [operationFilter, setOperationFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [sort, setSort] = useState<{ field: keyof UnifiedHistoryItem; direction: SortDirection }>({ field: "date", direction: "desc" });
 
   const fetchHistory = async () => {
@@ -255,6 +259,18 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       result = result.filter((item) => item.category === categoryFilter);
     }
 
+    // Date range filter
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      result = result.filter((item) => item.date >= start);
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter((item) => item.date <= end);
+    }
+
     // Sort
     if (sort.direction) {
       result.sort((a, b) => {
@@ -276,7 +292,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     }
 
     return result;
-  }, [unifiedHistory, search, recordTypeFilter, operationFilter, categoryFilter, sort]);
+  }, [unifiedHistory, search, recordTypeFilter, operationFilter, categoryFilter, startDate, endDate, sort]);
 
   const toggleSort = (field: keyof UnifiedHistoryItem) => {
     if (sort.field !== field) {
@@ -631,51 +647,90 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         ) : (
           <div className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <Select value={recordTypeFilter} onValueChange={setRecordTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Record Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Records</SelectItem>
-                  {recordTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={operationFilter} onValueChange={setOperationFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Operation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Operations</SelectItem>
-                  {operationTypes.map((op) => (
-                    <SelectItem key={op} value={op}>{op}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!isMobile && (
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <div className="flex flex-col gap-3">
+              {/* First row: Search and dropdowns */}
+              <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Select value={recordTypeFilter} onValueChange={setRecordTypeFilter}>
                   <SelectTrigger className="w-full sm:w-[150px]">
-                    <SelectValue placeholder="Category" />
+                    <SelectValue placeholder="Record Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    <SelectItem value="all">All Records</SelectItem>
+                    {recordTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
+                <Select value={operationFilter} onValueChange={setOperationFilter}>
+                  <SelectTrigger className="w-full sm:w-[150px]">
+                    <SelectValue placeholder="Operation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Operations</SelectItem>
+                    {operationTypes.map((op) => (
+                      <SelectItem key={op} value={op}>{op}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!isMobile && (
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Second row: Date range filters */}
+              <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground whitespace-nowrap">From:</Label>
+                  <DateInput
+                    value={startDate}
+                    onChange={setStartDate}
+                    placeholder="Start date"
+                    className="w-[160px]"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground whitespace-nowrap">To:</Label>
+                  <DateInput
+                    value={endDate}
+                    onChange={setEndDate}
+                    placeholder="End date"
+                    className="w-[160px]"
+                  />
+                </div>
+                {(startDate || endDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStartDate(null);
+                      setEndDate(null);
+                    }}
+                    className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Clear dates
+                  </Button>
+                )}
+              </div>
             </div>
 
             {filteredHistory.length === 0 ? (
