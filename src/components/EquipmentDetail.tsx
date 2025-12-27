@@ -1,18 +1,39 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2, Pencil, Trash2 } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface EquipmentDetailProps {
   equipment: any;
   onClose: () => void;
+  onEdit?: (equipment: any) => void;
+  onDelete?: (equipmentId: string) => void;
 }
 
-const EquipmentDetail = ({ equipment, onClose }: EquipmentDetailProps) => {
+const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDetailProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const links = equipment.links || [];
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(equipment.id);
+    }
+    setShowDeleteDialog(false);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -21,6 +42,20 @@ const EquipmentDetail = ({ equipment, onClose }: EquipmentDetailProps) => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to History
         </Button>
+        <div className="flex gap-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(equipment)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -221,6 +256,24 @@ const EquipmentDetail = ({ equipment, onClose }: EquipmentDetailProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Equipment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this equipment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

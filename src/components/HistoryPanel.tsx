@@ -367,6 +367,90 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     }
   };
 
+  // Handle notification edit/delete
+  const handleNotificationEdit = (notification: any) => {
+    toast.info("Edit functionality - navigate to Notifications panel to edit");
+    setSelectedNotification(null);
+  };
+
+  const handleNotificationDelete = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      toast.success("Notification deleted successfully");
+      setSelectedNotification(null);
+      fetchHistory();
+    } catch (error: any) {
+      toast.error("Failed to delete notification");
+    }
+  };
+
+  // Handle equipment edit/delete
+  const handleEquipmentEdit = (equipment: any) => {
+    toast.info("Edit functionality - navigate to Equipment panel to edit");
+    setSelectedEquipment(null);
+  };
+
+  const handleEquipmentDelete = async (equipmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from("equipment")
+        .delete()
+        .eq("id", equipmentId);
+
+      if (error) throw error;
+
+      toast.success("Equipment deleted successfully");
+      setSelectedEquipment(null);
+      fetchHistory();
+    } catch (error: any) {
+      toast.error("Failed to delete equipment");
+    }
+  };
+
+  // Handle maintenance delete
+  const handleMaintenanceDelete = async (logId: string) => {
+    try {
+      const { error } = await supabase
+        .from("maintenance_logs")
+        .delete()
+        .eq("id", logId);
+
+      if (error) throw error;
+
+      toast.success("Maintenance log deleted successfully");
+      setSelectedMaintenance(null);
+      fetchHistory();
+    } catch (error: any) {
+      toast.error("Failed to delete maintenance log");
+    }
+  };
+
+  // Handle directive delete
+  const handleDirectiveDelete = async () => {
+    if (!selectedDirective) return;
+    
+    try {
+      const { error } = await supabase
+        .from("directives")
+        .delete()
+        .eq("id", selectedDirective.id);
+
+      if (error) throw error;
+
+      toast.success("Directive deleted successfully");
+      setSelectedDirective(null);
+      fetchHistory();
+    } catch (error: any) {
+      toast.error("Failed to delete directive");
+    }
+  };
+
   if (loading) {
     return <p className="text-muted-foreground">Loading...</p>;
   }
@@ -377,6 +461,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       <NotificationDetail
         notification={selectedNotification}
         onClose={() => setSelectedNotification(null)}
+        onEdit={handleNotificationEdit}
+        onDelete={handleNotificationDelete}
       />
     );
   }
@@ -386,8 +472,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       <MaintenanceLogDetail
         log={selectedMaintenance}
         onClose={() => setSelectedMaintenance(null)}
-        onEdit={() => {}}
-        onDelete={() => {}}
+        onEdit={() => toast.info("Edit functionality - navigate to Maintenance panel to edit")}
+        onDelete={handleMaintenanceDelete}
       />
     );
   }
@@ -398,8 +484,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         directive={selectedDirective}
         userId={userId}
         onClose={() => setSelectedDirective(null)}
-        onEdit={() => {}}
-        onDelete={() => {}}
+        onEdit={() => toast.info("Edit functionality - navigate to Directives panel to edit")}
+        onDelete={handleDirectiveDelete}
         onUpdate={() => {}}
       />
     );
@@ -410,6 +496,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       <EquipmentDetail
         equipment={selectedEquipment}
         onClose={() => setSelectedEquipment(null)}
+        onEdit={handleEquipmentEdit}
+        onDelete={handleEquipmentDelete}
       />
     );
   }
