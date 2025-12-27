@@ -1,19 +1,40 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Clock, Bell, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Calendar, Clock, Bell, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface NotificationDetailProps {
   notification: any;
   onClose: () => void;
+  onEdit?: (notification: any) => void;
+  onDelete?: (notificationId: string) => void;
 }
 
-const NotificationDetail = ({ notification, onClose }: NotificationDetailProps) => {
+const NotificationDetail = ({ notification, onClose, onEdit, onDelete }: NotificationDetailProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isCounterBased = notification.notification_basis === "Counter";
   const isRecurring = notification.recurrence !== "None";
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(notification.id);
+    }
+    setShowDeleteDialog(false);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -22,6 +43,20 @@ const NotificationDetail = ({ notification, onClose }: NotificationDetailProps) 
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to History
         </Button>
+        <div className="flex gap-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(notification)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -157,6 +192,24 @@ const NotificationDetail = ({ notification, onClose }: NotificationDetailProps) 
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Notification</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this notification? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
