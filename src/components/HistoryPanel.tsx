@@ -264,7 +264,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       : <ArrowDown className="ml-1 h-3 w-3" />;
   };
 
-  const getRecordTypeBadgeVariant = (recordType: string) => {
+  const getRecordTypeBadgeVariant = (recordType: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (recordType) {
       case "Notification":
         return "default";
@@ -275,10 +275,17 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       case "Equipment":
         return "default";
       case "Counter":
-        return "secondary";
+        return "outline"; // Will use custom className
       default:
         return "outline";
     }
+  };
+
+  const getRecordTypeBadgeClassName = (recordType: string): string => {
+    if (recordType === "Counter") {
+      return "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700";
+    }
+    return "";
   };
 
   const getOperationBadgeVariant = (operation: string) => {
@@ -405,7 +412,10 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
                           <TableCell>{item.date.toLocaleDateString()}</TableCell>
                           <TableCell className="font-medium max-w-[200px] truncate">{item.name}</TableCell>
                           <TableCell>
-                            <Badge variant={getRecordTypeBadgeVariant(item.recordType)}>
+                            <Badge 
+                              variant={getRecordTypeBadgeVariant(item.recordType)}
+                              className={getRecordTypeBadgeClassName(item.recordType)}
+                            >
                               {item.recordType}
                             </Badge>
                           </TableCell>
