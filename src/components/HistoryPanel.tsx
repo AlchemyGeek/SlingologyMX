@@ -10,6 +10,12 @@ import { ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import NotificationDetail from "./NotificationDetail";
+import EquipmentDetail from "./EquipmentDetail";
+import CounterHistoryDetail from "./CounterHistoryDetail";
+import MaintenanceLogDetail from "./MaintenanceLogDetail";
+import DirectiveDetail from "./DirectiveDetail";
+import type { Directive } from "./DirectivesPanel";
 
 interface HistoryPanelProps {
   userId: string;
@@ -35,7 +41,15 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [directiveHistory, setDirectiveHistory] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
   const [counterHistory, setCounterHistory] = useState<any[]>([]);
+  const [directives, setDirectives] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Selected detail view state
+  const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<any | null>(null);
+  const [selectedDirective, setSelectedDirective] = useState<Directive | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<any | null>(null);
+  const [selectedCounter, setSelectedCounter] = useState<any | null>(null);
 
   // Unified filters & sort
   const [search, setSearch] = useState("");
@@ -46,7 +60,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
 
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes, counterHistoryRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes, counterHistoryRes, directivesRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -77,7 +91,12 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
           .select("*")
           .eq("user_id", userId)
           .eq("aircraft_id", aircraftId)
-          .order("change_date", { ascending: false })
+          .order("change_date", { ascending: false }),
+        supabase
+          .from("directives")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId)
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
@@ -85,12 +104,14 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       if (directiveHistoryRes.error) throw directiveHistoryRes.error;
       if (equipmentRes.error) throw equipmentRes.error;
       if (counterHistoryRes.error) throw counterHistoryRes.error;
+      if (directivesRes.error) throw directivesRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
       setDirectiveHistory(directiveHistoryRes.data || []);
       setEquipment(equipmentRes.data || []);
       setCounterHistory(counterHistoryRes.data || []);
+      setDirectives(directivesRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -304,8 +325,102 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     }
   };
 
+  // Handle row click to show detail view
+  const handleRowClick = (item: UnifiedHistoryItem) => {
+    const rawId = item.id.split("-").slice(1).join("-"); // Extract the actual ID
+
+    switch (item.recordType) {
+      case "Notification": {
+        const notification = notifications.find((n) => n.id === rawId);
+        if (notification) setSelectedNotification(notification);
+        break;
+      }
+      case "Maintenance": {
+        const log = maintenanceLogs.find((m) => m.id === rawId);
+        if (log) setSelectedMaintenance(log);
+        break;
+      }
+      case "Directive": {
+        const historyEntry = directiveHistory.find((d) => d.id === rawId);
+        if (historyEntry?.directive_id) {
+          const directive = directives.find((d) => d.id === historyEntry.directive_id);
+          if (directive) {
+            setSelectedDirective(directive as Directive);
+          } else {
+            toast.info("Original directive no longer exists");
+          }
+        } else {
+          toast.info("Directive details not available");
+        }
+        break;
+      }
+      case "Equipment": {
+        const equip = equipment.find((e) => e.id === rawId);
+        if (equip) setSelectedEquipment(equip);
+        break;
+      }
+      case "Counter": {
+        const counter = counterHistory.find((c) => c.id === rawId);
+        if (counter) setSelectedCounter(counter);
+        break;
+      }
+    }
+  };
+
   if (loading) {
     return <p className="text-muted-foreground">Loading...</p>;
+  }
+
+  // Show detail views if selected
+  if (selectedNotification) {
+    return (
+      <NotificationDetail
+        notification={selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+      />
+    );
+  }
+
+  if (selectedMaintenance) {
+    return (
+      <MaintenanceLogDetail
+        log={selectedMaintenance}
+        onClose={() => setSelectedMaintenance(null)}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />
+    );
+  }
+
+  if (selectedDirective) {
+    return (
+      <DirectiveDetail
+        directive={selectedDirective}
+        userId={userId}
+        onClose={() => setSelectedDirective(null)}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        onUpdate={() => {}}
+      />
+    );
+  }
+
+  if (selectedEquipment) {
+    return (
+      <EquipmentDetail
+        equipment={selectedEquipment}
+        onClose={() => setSelectedEquipment(null)}
+      />
+    );
+  }
+
+  if (selectedCounter) {
+    return (
+      <CounterHistoryDetail
+        counterHistory={selectedCounter}
+        onClose={() => setSelectedCounter(null)}
+      />
+    );
   }
 
   const hasHistory = unifiedHistory.length > 0;
@@ -408,7 +523,11 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
                     </TableHeader>
                     <TableBody>
                       {filteredHistory.map((item) => (
-                        <TableRow key={item.id}>
+                        <TableRow 
+                          key={item.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleRowClick(item)}
+                        >
                           <TableCell>{item.date.toLocaleDateString()}</TableCell>
                           <TableCell className="font-medium max-w-[200px] truncate">{item.name}</TableCell>
                           <TableCell>
