@@ -124,12 +124,17 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
 
     // Directive history - use created_at (date of action)
     directiveHistory.forEach((d) => {
+      // Normalize action_type to past tense for consistency
+      let operation = d.action_type || "Created";
+      if (operation === "Create") operation = "Created";
+      if (operation === "Delete") operation = "Deleted";
+      
       items.push({
         id: `directive-${d.id}`,
         date: new Date(d.created_at),
         name: d.directive_title || d.directive_code || "Untitled",
         recordType: "Directive",
-        operationType: d.action_type || "Created",
+        operationType: operation,
         category: d.compliance_status || "-",
       });
     });
