@@ -15,7 +15,12 @@ import EquipmentDetail from "./EquipmentDetail";
 import CounterHistoryDetail from "./CounterHistoryDetail";
 import MaintenanceLogDetail from "./MaintenanceLogDetail";
 import DirectiveDetail from "./DirectiveDetail";
+import NotificationForm from "./NotificationForm";
+import EquipmentForm from "./EquipmentForm";
+import MaintenanceLogForm from "./MaintenanceLogForm";
+import DirectiveForm from "./DirectiveForm";
 import type { Directive } from "./DirectivesPanel";
+import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
 interface HistoryPanelProps {
   userId: string;
@@ -50,6 +55,15 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [selectedDirective, setSelectedDirective] = useState<Directive | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<any | null>(null);
   const [selectedCounter, setSelectedCounter] = useState<any | null>(null);
+
+  // Editing state
+  const [editingNotification, setEditingNotification] = useState<any | null>(null);
+  const [editingMaintenance, setEditingMaintenance] = useState<any | null>(null);
+  const [editingDirective, setEditingDirective] = useState<Directive | null>(null);
+  const [editingEquipment, setEditingEquipment] = useState<any | null>(null);
+
+  // Get current counters for notification form
+  const { counters: currentCounters } = useAircraftCounters(userId, aircraftId);
 
   // Unified filters & sort
   const [search, setSearch] = useState("");
@@ -369,8 +383,8 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
 
   // Handle notification edit/delete
   const handleNotificationEdit = (notification: any) => {
-    toast.info("Edit functionality - navigate to Notifications panel to edit");
     setSelectedNotification(null);
+    setEditingNotification(notification);
   };
 
   const handleNotificationDelete = async (notificationId: string) => {
@@ -391,9 +405,21 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   };
 
   // Handle equipment edit/delete
-  const handleEquipmentEdit = (equipment: any) => {
-    toast.info("Edit functionality - navigate to Equipment panel to edit");
+  const handleEquipmentEdit = (equip: any) => {
     setSelectedEquipment(null);
+    setEditingEquipment(equip);
+  };
+
+  // Handle maintenance edit
+  const handleMaintenanceEdit = (log: any) => {
+    setSelectedMaintenance(null);
+    setEditingMaintenance(log);
+  };
+
+  // Handle directive edit
+  const handleDirectiveEdit = (directive: Directive) => {
+    setSelectedDirective(null);
+    setEditingDirective(directive);
   };
 
   const handleEquipmentDelete = async (equipmentId: string) => {
@@ -455,6 +481,86 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     return <p className="text-muted-foreground">Loading...</p>;
   }
 
+  // Show edit forms if editing
+  if (editingNotification) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Edit Notification</h3>
+        <NotificationForm
+          userId={userId}
+          aircraftId={aircraftId}
+          editingNotification={editingNotification}
+          currentCounters={currentCounters ? {
+            hobbs: currentCounters.hobbs || 0,
+            tach: currentCounters.tach || 0,
+            airframe_total_time: currentCounters.airframe_total_time || 0,
+            engine_total_time: currentCounters.engine_total_time || 0,
+            prop_total_time: currentCounters.prop_total_time || 0,
+          } : undefined}
+          onSuccess={() => {
+            setEditingNotification(null);
+            fetchHistory();
+          }}
+          onCancel={() => setEditingNotification(null)}
+        />
+      </Card>
+    );
+  }
+
+  if (editingMaintenance) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Edit Maintenance Log</h3>
+        <MaintenanceLogForm
+          userId={userId}
+          aircraftId={aircraftId}
+          editingLog={editingMaintenance}
+          onSuccess={() => {
+            setEditingMaintenance(null);
+            fetchHistory();
+          }}
+          onCancel={() => setEditingMaintenance(null)}
+        />
+      </Card>
+    );
+  }
+
+  if (editingDirective) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Edit Directive</h3>
+        <DirectiveForm
+          userId={userId}
+          aircraftId={aircraftId}
+          editingDirective={editingDirective}
+          onSuccess={() => {
+            setEditingDirective(null);
+            fetchHistory();
+          }}
+          onCancel={() => setEditingDirective(null)}
+        />
+      </Card>
+    );
+  }
+
+  if (editingEquipment) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Edit Equipment</h3>
+        <EquipmentForm
+          userId={userId}
+          aircraftId={aircraftId}
+          editingEquipment={editingEquipment}
+          onSuccess={() => {
+            setEditingEquipment(null);
+            fetchHistory();
+          }}
+          onCancel={() => setEditingEquipment(null)}
+        />
+      </Card>
+    );
+  }
+
   // Show detail views if selected
   if (selectedNotification) {
     return (
@@ -472,7 +578,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       <MaintenanceLogDetail
         log={selectedMaintenance}
         onClose={() => setSelectedMaintenance(null)}
-        onEdit={() => toast.info("Edit functionality - navigate to Maintenance panel to edit")}
+        onEdit={() => handleMaintenanceEdit(selectedMaintenance)}
         onDelete={handleMaintenanceDelete}
       />
     );
@@ -484,7 +590,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         directive={selectedDirective}
         userId={userId}
         onClose={() => setSelectedDirective(null)}
-        onEdit={() => toast.info("Edit functionality - navigate to Directives panel to edit")}
+        onEdit={() => handleDirectiveEdit(selectedDirective)}
         onDelete={handleDirectiveDelete}
         onUpdate={() => {}}
       />
