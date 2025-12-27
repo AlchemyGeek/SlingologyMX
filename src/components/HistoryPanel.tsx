@@ -23,7 +23,6 @@ interface UnifiedHistoryItem {
   name: string;
   recordType: "Notification" | "Maintenance" | "Directive" | "Equipment";
   operationType: string;
-  recurrence: string;
   category: string;
 }
 
@@ -107,7 +106,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         name: n.description || "Untitled",
         recordType: "Notification",
         operationType: "Completed",
-        recurrence: n.recurrence === "None" ? "One-Time" : "Recurring",
         category: n.type || "-",
       });
     });
@@ -120,7 +118,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         name: m.entry_title || "Untitled",
         recordType: "Maintenance",
         operationType: m.subcategory || "Created",
-        recurrence: m.is_recurring_task ? "Recurring" : "One-Time",
         category: m.category || "-",
       });
     });
@@ -133,7 +130,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         name: d.directive_title || d.directive_code || "Untitled",
         recordType: "Directive",
         operationType: d.action_type || "Created",
-        recurrence: "-",
         category: d.compliance_status || "-",
       });
     });
@@ -146,7 +142,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         name: e.name || "Untitled",
         recordType: "Equipment",
         operationType: "Created",
-        recurrence: "-",
         category: e.category || "-",
       });
     });
@@ -358,13 +353,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
                         </TableHead>
                         {!isMobile && (
                           <TableHead>
-                            <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort("recurrence")}>
-                              Recurrence <SortIcon field="recurrence" />
-                            </Button>
-                          </TableHead>
-                        )}
-                        {!isMobile && (
-                          <TableHead>
                             <Button variant="ghost" size="sm" className="h-8 p-0" onClick={() => toggleSort("category")}>
                               Category <SortIcon field="category" />
                             </Button>
@@ -387,7 +375,6 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
                               {item.operationType}
                             </Badge>
                           </TableCell>
-                          {!isMobile && <TableCell>{item.recurrence}</TableCell>}
                           {!isMobile && <TableCell>{item.category}</TableCell>}
                         </TableRow>
                       ))}
