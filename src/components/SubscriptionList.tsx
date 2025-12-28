@@ -35,15 +35,32 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "cost" | "type">("name");
 
   const filteredSubscriptions = useMemo(() => {
-    return subscriptions.filter((subscription) => {
-      const matchesSearch = searchTerm === "" || 
-        subscription.subscription_name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = typeFilter === "all" || subscription.type === typeFilter;
-      return matchesSearch && matchesType;
-    });
-  }, [subscriptions, searchTerm, typeFilter]);
+    return subscriptions
+      .filter((subscription) => {
+        const matchesSearch = searchTerm === "" || 
+          subscription.subscription_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = typeFilter === "all" || subscription.type === typeFilter;
+        return matchesSearch && matchesType;
+      })
+      .sort((a, b) => {
+        if (sortBy === "name") {
+          return a.subscription_name.localeCompare(b.subscription_name);
+        }
+        if (sortBy === "date") {
+          return new Date(b.initial_date).getTime() - new Date(a.initial_date).getTime();
+        }
+        if (sortBy === "cost") {
+          return (b.cost || 0) - (a.cost || 0);
+        }
+        if (sortBy === "type") {
+          return a.type.localeCompare(b.type);
+        }
+        return 0;
+      });
+  }, [subscriptions, searchTerm, typeFilter, sortBy]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -56,12 +73,15 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
     }
   };
 
+  const hasActiveFilters = searchTerm !== "" || typeFilter !== "all" || sortBy !== "name";
+
   const clearFilters = () => {
     setSearchTerm("");
     setTypeFilter("all");
+    setSortBy("name");
   };
 
-  const hasActiveFilters = searchTerm !== "" || typeFilter !== "all";
+  
 
   if (loading) {
     return <p className="text-muted-foreground">Loading subscriptions...</p>;
@@ -93,6 +113,17 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
             {SUBSCRIPTION_TYPES.map((type) => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(value: "name" | "date" | "cost" | "type") => setSortBy(value)}>
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Sort by Name</SelectItem>
+            <SelectItem value="date">Sort by Date</SelectItem>
+            <SelectItem value="cost">Sort by Cost</SelectItem>
+            <SelectItem value="type">Sort by Type</SelectItem>
           </SelectContent>
         </Select>
         {hasActiveFilters && (
