@@ -157,13 +157,15 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect }: Equip
               <TableHead className="hide-at-900">Context</TableHead>
               <TableHead className="hide-at-700">Manufacturer</TableHead>
               <TableHead className="hide-at-700">Model/Part #</TableHead>
+              <TableHead className="hide-at-700">Serial #</TableHead>
+              <TableHead className="hide-at-900">Tags</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedEquipment.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   No equipment found
                 </TableCell>
               </TableRow>
@@ -189,6 +191,25 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect }: Equip
                   </TableCell>
                   <TableCell className="hide-at-700">{item.manufacturer || "—"}</TableCell>
                   <TableCell className="hide-at-700">{item.model_or_part_number || "—"}</TableCell>
+                  <TableCell className="hide-at-700">{item.serial_number || "—"}</TableCell>
+                  <TableCell className="hide-at-900">
+                    {item.tags && item.tags.length > 0 ? (
+                      <div className="flex gap-1 flex-wrap">
+                        {item.tags.slice(0, 2).map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {item.tags.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{item.tags.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
