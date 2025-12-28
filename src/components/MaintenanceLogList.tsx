@@ -27,6 +27,7 @@ interface MaintenanceLog {
   subcategory: string;
   tags: string[];
   date_performed: string;
+  has_compliance_item?: boolean;
 }
 
 interface MaintenanceLogListProps {
@@ -119,13 +120,14 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                 <TableHead>Category</TableHead>
                 {!isMobile && <TableHead>Subcategory</TableHead>}
                 <TableHead>Title</TableHead>
+                {!isMobile && <TableHead>Compliance</TableHead>}
                 {!isMobile && <TableHead>Tags</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAndSortedLogs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isMobile ? 3 : 5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={isMobile ? 3 : 6} className="text-center text-muted-foreground">
                     No maintenance logs found
                   </TableCell>
                 </TableRow>
@@ -140,6 +142,13 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                     <TableCell>{log.category}</TableCell>
                     {!isMobile && <TableCell>{log.subcategory}</TableCell>}
                     <TableCell className="font-medium">{log.entry_title}</TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <Badge variant={log.has_compliance_item ? "default" : "outline"}>
+                          {log.has_compliance_item ? "Yes" : "No"}
+                        </Badge>
+                      </TableCell>
+                    )}
                     {!isMobile && (
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
