@@ -28,6 +28,7 @@ interface MaintenanceLog {
   tags: string[];
   date_performed: string;
   has_compliance_item?: boolean;
+  has_linked_compliance?: boolean;
 }
 
 interface MaintenanceLogListProps {
@@ -144,9 +145,14 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                     <TableCell className="font-medium">{log.entry_title}</TableCell>
                     {!isMobile && (
                       <TableCell>
-                        <Badge variant={log.has_compliance_item ? "default" : "outline"}>
-                          {log.has_compliance_item ? "Yes" : "No"}
-                        </Badge>
+                        {(() => {
+                          const hasCompliance = log.has_compliance_item || log.has_linked_compliance;
+                          return (
+                            <Badge variant={hasCompliance ? "default" : "outline"}>
+                              {hasCompliance ? "Yes" : "No"}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                     )}
                     {!isMobile && (
