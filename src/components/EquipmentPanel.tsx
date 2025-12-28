@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import EquipmentForm from "./EquipmentForm";
 import EquipmentList from "./EquipmentList";
+import EquipmentDetail from "./EquipmentDetail";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -19,6 +20,7 @@ interface EquipmentPanelProps {
 const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +54,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
   };
 
   const handleEdit = (item: Equipment) => {
+    setSelectedEquipment(null);
     setEditingEquipment(item);
     setShowForm(true);
   };
@@ -60,6 +63,44 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
     setShowForm(false);
     setEditingEquipment(null);
   };
+
+  const handleSelect = (item: Equipment) => {
+    setSelectedEquipment(item);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedEquipment(null);
+  };
+
+  const handleDelete = async (equipmentId: string) => {
+    try {
+      await supabase.from("notifications").delete().eq("equipment_id", equipmentId);
+      const { error } = await supabase.from("equipment").delete().eq("id", equipmentId);
+      if (error) throw error;
+      toast.success("Equipment deleted");
+      setSelectedEquipment(null);
+      fetchEquipment();
+      onRecordChanged?.();
+    } catch (error: any) {
+      toast.error("Failed to delete equipment");
+    }
+  };
+
+  // Show detail view
+  if (selectedEquipment) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <EquipmentDetail
+            equipment={selectedEquipment}
+            onClose={handleCloseDetail}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -93,6 +134,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
               onRecordChanged?.();
             }}
             onEdit={handleEdit}
+            onSelect={handleSelect}
           />
         )}
       </CardContent>

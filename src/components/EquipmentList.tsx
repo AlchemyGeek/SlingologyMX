@@ -16,6 +16,7 @@ interface EquipmentListProps {
   loading: boolean;
   onUpdate: () => void;
   onEdit: (equipment: Equipment) => void;
+  onSelect: (equipment: Equipment) => void;
 }
 
 const CATEGORIES = [
@@ -45,7 +46,7 @@ const getContextColor = (context: string | null) => {
   }
 };
 
-const EquipmentList = ({ equipment, loading, onUpdate, onEdit }: EquipmentListProps) => {
+const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect }: EquipmentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [contextFilter, setContextFilter] = useState<string>("all");
@@ -168,7 +169,11 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit }: EquipmentListPr
               </TableRow>
             ) : (
               filteredAndSortedEquipment.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow 
+                  key={item.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => onSelect(item)}
+                >
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{item.category}</Badge>
@@ -185,7 +190,7 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit }: EquipmentListPr
                   <TableCell className="hide-at-700">{item.manufacturer || "—"}</TableCell>
                   <TableCell className="hide-at-700">{item.model_or_part_number || "—"}</TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>

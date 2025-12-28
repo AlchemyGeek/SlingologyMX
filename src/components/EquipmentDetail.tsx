@@ -40,7 +40,7 @@ const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDeta
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onClose}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to History
+          Back to List
         </Button>
         <div className="flex gap-2">
           {onEdit && (
