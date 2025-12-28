@@ -21,6 +21,7 @@ import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 import { AircraftSwitcher } from "@/components/AircraftSwitcher";
 import { useAircraft } from "@/contexts/AircraftContext";
+import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 
 const counterTypeToFieldMap: Record<string, string> = {
   Hobbs: "hobbs",
@@ -35,6 +36,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [activeView, setActiveView] = useState<DashboardView>("calendar");
@@ -47,6 +49,27 @@ const Dashboard = () => {
     updateAllCounters,
     refetch,
   } = useAircraftCounters(user?.id || "", selectedAircraft?.id || "");
+
+  // Admin notifications hook
+  const { notifications: adminNotifications, markAsSeen } = useAdminNotifications(user?.id, isAdmin);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user?.id) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdminStatus();
+  }, [user?.id]);
 
   // Fetch active notifications for alert indicator
   const fetchActiveNotificationsForAlerts = async () => {
@@ -264,9 +287,22 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  if (isAdmin) {
+                    markAsSeen("users");
+                  }
+                  navigate("/profile");
+                }}
+                className="relative"
+              >
                 <UserIcon className="h-4 w-4 mr-2" />
                 Profile
+                {isAdmin && adminNotifications.newUsers && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                )}
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -281,6 +317,8 @@ const Dashboard = () => {
             activeView={activeView}
             onViewChange={setActiveView}
             hasActiveAlerts={hasActiveAlerts}
+            adminNotifications={isAdmin ? adminNotifications : undefined}
+            onMarkNotificationSeen={isAdmin ? markAsSeen : undefined}
           />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto min-w-0">

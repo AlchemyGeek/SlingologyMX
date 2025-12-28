@@ -47,6 +47,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_status: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_seen_at: string
+          notification_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string
+          notification_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string
+          notification_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       aircraft: {
         Row: {
           created_at: string | null

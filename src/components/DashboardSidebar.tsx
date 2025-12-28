@@ -37,10 +37,18 @@ type DashboardView =
   | "maintenance"
   | "directives";
 
+interface AdminNotifications {
+  newUsers: boolean;
+  newBugReports: boolean;
+  newFeatureRequests: boolean;
+}
+
 interface DashboardSidebarProps {
   activeView: DashboardView;
   onViewChange: (view: DashboardView) => void;
   hasActiveAlerts?: boolean;
+  adminNotifications?: AdminNotifications;
+  onMarkNotificationSeen?: (type: "users" | "bug_reports" | "feature_requests") => void;
 }
 
 const eventsItems = [
@@ -71,7 +79,7 @@ const supportItems = [
   { id: "feature-requests", title: "Feature Requests", icon: Lightbulb, route: "/feature-requests" },
 ];
 
-export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: DashboardSidebarProps) {
+export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts, adminNotifications, onMarkNotificationSeen }: DashboardSidebarProps) {
   const navigate = useNavigate();
 
   return (
@@ -140,13 +148,27 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts }: 
                       if (item.external) {
                         window.open(item.external, "_blank");
                       } else if (item.route) {
+                        // Mark notifications as seen when navigating
+                        if (item.id === "bug-reports" && onMarkNotificationSeen) {
+                          onMarkNotificationSeen("bug_reports");
+                        } else if (item.id === "feature-requests" && onMarkNotificationSeen) {
+                          onMarkNotificationSeen("feature_requests");
+                        }
                         navigate(item.route);
                       }
                     }}
                     className="w-full"
                   >
                     <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <span className="flex items-center gap-2">
+                      {item.title}
+                      {item.id === "bug-reports" && adminNotifications?.newBugReports && (
+                        <span className="h-2 w-2 rounded-full bg-destructive" />
+                      )}
+                      {item.id === "feature-requests" && adminNotifications?.newFeatureRequests && (
+                        <span className="h-2 w-2 rounded-full bg-destructive" />
+                      )}
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
