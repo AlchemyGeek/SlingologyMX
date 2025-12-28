@@ -28,9 +28,10 @@ interface SubscriptionListProps {
   loading: boolean;
   onUpdate: () => void;
   onEdit: (subscription: any) => void;
+  onSelect: (subscription: any) => void;
 }
 
-const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: SubscriptionListProps) => {
+const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }: SubscriptionListProps) => {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -131,7 +132,11 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
                 </TableRow>
               ) : (
                 filteredSubscriptions.map((subscription) => (
-                  <TableRow key={subscription.id}>
+                  <TableRow 
+                    key={subscription.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => onSelect(subscription)}
+                  >
                     <TableCell className="font-medium">{subscription.subscription_name}</TableCell>
                     {!isMobile && (
                       <TableCell className="max-w-[200px] truncate" title={subscription.type}>
@@ -142,7 +147,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
                     <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
                     {!isMobile && <TableCell>{subscription.recurrence}</TableCell>}
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" onClick={() => onEdit(subscription)}>
                           <Pencil className="h-4 w-4" />
                         </Button>

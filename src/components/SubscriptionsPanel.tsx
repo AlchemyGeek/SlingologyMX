@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import SubscriptionForm from "./SubscriptionForm";
 import SubscriptionList from "./SubscriptionList";
+import SubscriptionDetail from "./SubscriptionDetail";
 import { toast } from "sonner";
 
 interface SubscriptionsPanelProps {
@@ -17,6 +18,7 @@ interface SubscriptionsPanelProps {
 const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecordChanged }: SubscriptionsPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<any>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +55,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
   };
 
   const handleEdit = (subscription: any) => {
+    setSelectedSubscription(null);
     setEditingSubscription(subscription);
     setShowForm(true);
   };
@@ -61,6 +64,44 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
     setShowForm(false);
     setEditingSubscription(null);
   };
+
+  const handleSelect = (subscription: any) => {
+    setSelectedSubscription(subscription);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedSubscription(null);
+  };
+
+  const handleDelete = async (subscriptionId: string) => {
+    try {
+      const { error } = await supabase.from("subscriptions").delete().eq("id", subscriptionId);
+      if (error) throw error;
+      toast.success("Subscription deleted");
+      setSelectedSubscription(null);
+      fetchSubscriptions();
+      onNotificationChanged?.();
+      onRecordChanged?.();
+    } catch (error: any) {
+      toast.error("Failed to delete subscription");
+    }
+  };
+
+  // Show detail view
+  if (selectedSubscription) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <SubscriptionDetail
+            subscription={selectedSubscription}
+            onClose={handleCloseDetail}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -95,6 +136,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
               onRecordChanged?.();
             }}
             onEdit={handleEdit}
+            onSelect={handleSelect}
           />
         )}
       </CardContent>
