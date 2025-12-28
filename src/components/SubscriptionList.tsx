@@ -1,10 +1,27 @@
+import { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, Pencil, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+const SUBSCRIPTION_TYPES = [
+  "EFB & Flight Planning",
+  "Avionics Subscriptions",
+  "Aircraft Maintenance, Tracking, & Record Services",
+  "Proficiency & Safety Tools",
+  "Aviation Community Memberships",
+  "Weather Tools",
+  "Magazine Subscription",
+  "Aircraft Operations & Financial Tools",
+  "Hardware-Related Annual Fees",
+  "Insurance Related Add-Ons",
+  "Other"
+];
 
 interface SubscriptionListProps {
   subscriptions: any[];
@@ -15,10 +32,20 @@ interface SubscriptionListProps {
 
 const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: SubscriptionListProps) => {
   const isMobile = useIsMobile();
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions.filter((subscription) => {
+      const matchesSearch = searchTerm === "" || 
+        subscription.subscription_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = typeFilter === "all" || subscription.type === typeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [subscriptions, searchTerm, typeFilter]);
+
   const handleDelete = async (id: string) => {
     try {
-      // The notification will be automatically deleted due to ON DELETE CASCADE
       const { error } = await supabase.from("subscriptions").delete().eq("id", id);
       if (error) throw error;
       toast.success("Subscription deleted");
@@ -27,6 +54,13 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
       toast.error("Failed to delete subscription");
     }
   };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setTypeFilter("all");
+  };
+
+  const hasActiveFilters = searchTerm !== "" || typeFilter !== "all";
 
   if (loading) {
     return <p className="text-muted-foreground">Loading subscriptions...</p>;
@@ -37,45 +71,92 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit }: Subscrip
   }
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <div className="min-w-[500px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              {!isMobile && <TableHead>Type</TableHead>}
-              {!isMobile && <TableHead>Cost</TableHead>}
-              <TableHead>Initial Date</TableHead>
-              {!isMobile && <TableHead>Recurrence</TableHead>}
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {subscriptions.map((subscription) => (
-              <TableRow key={subscription.id}>
-                <TableCell className="font-medium">{subscription.subscription_name}</TableCell>
-                {!isMobile && (
-                  <TableCell className="max-w-[200px] truncate" title={subscription.type}>
-                    {subscription.type}
-                  </TableCell>
-                )}
-                {!isMobile && <TableCell>${subscription.cost}</TableCell>}
-                <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
-                {!isMobile && <TableCell>{subscription.recurrence}</TableCell>}
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(subscription)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(subscription.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+    <div className="space-y-4">
+      {/* Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full sm:w-[250px]">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {SUBSCRIPTION_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
-          </TableBody>
-        </Table>
+          </SelectContent>
+        </Select>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="icon" onClick={clearFilters} title="Clear filters">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Results Count */}
+      {hasActiveFilters && (
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredSubscriptions.length} of {subscriptions.length} subscriptions
+        </p>
+      )}
+
+      {/* Table */}
+      <div className="rounded-md border overflow-x-auto">
+        <div className="min-w-[500px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                {!isMobile && <TableHead>Type</TableHead>}
+                {!isMobile && <TableHead>Cost</TableHead>}
+                <TableHead>Initial Date</TableHead>
+                {!isMobile && <TableHead>Recurrence</TableHead>}
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSubscriptions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isMobile ? 3 : 6} className="text-center text-muted-foreground">
+                    No subscriptions match your filters
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredSubscriptions.map((subscription) => (
+                  <TableRow key={subscription.id}>
+                    <TableCell className="font-medium">{subscription.subscription_name}</TableCell>
+                    {!isMobile && (
+                      <TableCell className="max-w-[200px] truncate" title={subscription.type}>
+                        {subscription.type}
+                      </TableCell>
+                    )}
+                    {!isMobile && <TableCell>${subscription.cost}</TableCell>}
+                    <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
+                    {!isMobile && <TableCell>{subscription.recurrence}</TableCell>}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(subscription)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(subscription.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
