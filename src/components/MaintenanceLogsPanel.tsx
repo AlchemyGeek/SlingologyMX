@@ -21,6 +21,7 @@ interface MaintenanceLog {
   engine_total_time: number | null;
   prop_total_time: number | null;
   has_compliance_item: boolean;
+  has_linked_compliance?: boolean; // Added to track linked compliance records
   compliance_type: string;
   compliance_reference: string | null;
   recurring_compliance: boolean;
@@ -68,15 +69,37 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
 
   const fetchLogs = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch maintenance logs
+      const { data: logsData, error: logsError } = await supabase
         .from("maintenance_logs")
         .select("*")
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId)
         .order("date_performed", { ascending: false });
 
-      if (error) throw error;
-      setLogs((data as unknown as MaintenanceLog[]) || []);
+      if (logsError) throw logsError;
+
+      // Fetch linked compliance records to check which logs have compliance
+      const { data: complianceData, error: complianceError } = await supabase
+        .from("maintenance_directive_compliance")
+        .select("maintenance_log_id")
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId);
+
+      if (complianceError) throw complianceError;
+
+      // Create a set of log IDs that have linked compliance records
+      const logsWithCompliance = new Set(
+        complianceData?.map(c => c.maintenance_log_id).filter(Boolean) || []
+      );
+
+      // Enrich logs with has_linked_compliance flag
+      const enrichedLogs = (logsData || []).map(log => ({
+        ...log,
+        has_linked_compliance: logsWithCompliance.has(log.id)
+      }));
+
+      setLogs(enrichedLogs as unknown as MaintenanceLog[]);
     } catch (error) {
       console.error("Error fetching maintenance logs:", error);
       toast.error("Failed to load maintenance logs");
