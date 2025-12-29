@@ -115,7 +115,7 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts, ad
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">
-            Records
+            Logs
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
