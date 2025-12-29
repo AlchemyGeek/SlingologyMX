@@ -48,7 +48,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     e.preventDefault();
 
     if (formData.subscription_name.length > 200) {
-      toast.error("Subscription name must be 200 characters or less");
+      toast.error("Commitment name must be 200 characters or less");
       return;
     }
 
@@ -124,7 +124,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
             }]);
 
             if (notifError) throw notifError;
-            toast.info("A renewal reminder notification has been created for this subscription.");
+            toast.info("A renewal reminder notification has been created for this commitment.");
           }
         } else if (existingNotif) {
           // Delete notification if subscription changed to non-recurring
@@ -135,7 +135,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
             .eq("subscription_id", editingSubscription.id);
         }
 
-        toast.success("Subscription updated successfully!");
+        toast.success("Commitment updated successfully!");
       } else {
         // Create subscription
         const { data: newSubscription, error: subError } = await supabase
@@ -163,9 +163,9 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
 
           if (notifError) throw notifError;
 
-          toast.success("Subscription created! A renewal reminder notification has been added.");
+          toast.success("Commitment created! A renewal reminder notification has been added.");
         } else {
-          toast.success("Subscription created successfully!");
+          toast.success("Commitment created successfully!");
         }
       }
 
@@ -181,13 +181,13 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     <Card className="p-4 bg-muted/50">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="subscription_name">Subscription Name</Label>
+          <Label htmlFor="subscription_name">Commitment Name</Label>
           <Input
             id="subscription_name"
             value={formData.subscription_name}
             onChange={(e) => setFormData({ ...formData, subscription_name: e.target.value })}
             required
-            placeholder="Enter subscription name..."
+            placeholder="Enter commitment name..."
             maxLength={200}
           />
           <p className="text-xs text-muted-foreground">{formData.subscription_name.length}/200 characters</p>
@@ -273,8 +273,8 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
                 ? "Updating..."
                 : "Creating..."
               : editingSubscription
-                ? "Update Subscription"
-                : "Create Subscription"}
+                ? "Update Commitment"
+                : "Create Commitment"}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

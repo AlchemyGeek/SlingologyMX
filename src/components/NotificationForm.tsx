@@ -249,7 +249,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Maintenance">Maintenance</SelectItem>
-                <SelectItem value="Subscription">Subscription</SelectItem>
+                <SelectItem value="Subscription">Commitment</SelectItem>
                 <SelectItem value="Directives">Directives</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
@@ -276,7 +276,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
               <Label htmlFor="recurrence">Recurrence</Label>
               {isSystemGenerated && editingNotification?.subscription_id && subscriptionRecurrence ? (
                 <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  {subscriptionRecurrence} <span className="ml-1 text-xs">(from subscription)</span>
+                  {subscriptionRecurrence} <span className="ml-1 text-xs">(from commitment)</span>
                 </div>
               ) : (
                 <Select
