@@ -32,7 +32,10 @@ type DashboardView =
   | "counters"
   | "notifications"
   | "history"
-  | "subscriptions"
+  | "transactions"
+  | "commitments"
+  | "reserves"
+  | "analysis"
   | "equipment"
   | "maintenance"
   | "directives";
@@ -59,10 +62,16 @@ const eventsItems = [
 ];
 
 const recordsItems = [
-  { id: "subscriptions" as const, title: "Subscriptions", icon: CreditCard },
   { id: "equipment" as const, title: "Equipment", icon: Package },
   { id: "maintenance" as const, title: "Maintenance", icon: Wrench },
   { id: "directives" as const, title: "Directives & Bulletins", icon: FileText },
+];
+
+const financialItems = [
+  { id: "transactions" as const, title: "Transactions", icon: CreditCard },
+  { id: "commitments" as const, title: "Commitments", icon: CreditCard },
+  { id: "reserves" as const, title: "Reserves", icon: CreditCard },
+  { id: "analysis" as const, title: "Analysis", icon: CreditCard },
 ];
 
 const supportItems = [
@@ -120,6 +129,28 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts, ad
           <SidebarGroupContent>
             <SidebarMenu>
               {recordsItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onViewChange(item.id)}
+                    isActive={activeView === item.id}
+                    className="w-full"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sm font-semibold uppercase tracking-wide text-foreground">
+            Financial
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {financialItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => onViewChange(item.id)}
