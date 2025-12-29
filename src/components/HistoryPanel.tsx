@@ -154,7 +154,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
         name: n.description || "Untitled",
         recordType: "Notification",
         operationType: "Completed",
-        category: n.type || "-",
+        category: n.type === "Subscription" ? "Commitment" : (n.type || "-"),
       });
     });
 
