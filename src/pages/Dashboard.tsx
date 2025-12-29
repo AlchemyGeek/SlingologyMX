@@ -221,7 +221,7 @@ const Dashboard = () => {
         );
       case "history":
         return <HistoryPanel userId={user!.id} aircraftId={selectedAircraft?.id || ""} refreshKey={recordsRefreshKey} />;
-      case "subscriptions":
+      case "commitments":
         return (
           <SubscriptionsPanel
             userId={user!.id}
@@ -229,6 +229,15 @@ const Dashboard = () => {
             onNotificationChanged={fetchActiveNotificationsForAlerts}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
+        );
+      case "transactions":
+      case "reserves":
+      case "analysis":
+        return (
+          <div className="text-center text-muted-foreground py-12">
+            <p className="text-lg">Coming Soon</p>
+            <p className="text-sm mt-2">This feature is under development.</p>
+          </div>
         );
       case "equipment":
         return (
