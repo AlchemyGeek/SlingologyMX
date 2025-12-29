@@ -14,6 +14,9 @@ import {
   Database,
   Gauge,
   Package,
+  ArrowLeftRight,
+  PiggyBank,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -68,10 +71,10 @@ const recordsItems = [
 ];
 
 const financialItems = [
-  { id: "transactions" as const, title: "Transactions", icon: CreditCard },
+  { id: "transactions" as const, title: "Transactions", icon: ArrowLeftRight },
   { id: "commitments" as const, title: "Commitments", icon: CreditCard },
-  { id: "reserves" as const, title: "Reserves", icon: CreditCard },
-  { id: "analysis" as const, title: "Analysis", icon: CreditCard },
+  { id: "reserves" as const, title: "Reserves", icon: PiggyBank },
+  { id: "analysis" as const, title: "Analysis", icon: BarChart3 },
 ];
 
 const supportItems = [
