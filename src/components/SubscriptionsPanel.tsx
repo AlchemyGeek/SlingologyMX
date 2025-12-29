@@ -36,7 +36,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
       if (error) throw error;
       setSubscriptions(data || []);
     } catch (error: any) {
-      toast.error("Failed to load subscriptions");
+      toast.error("Failed to load commitments");
     } finally {
       setLoading(false);
     }
@@ -77,13 +77,13 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
     try {
       const { error } = await supabase.from("subscriptions").delete().eq("id", subscriptionId);
       if (error) throw error;
-      toast.success("Subscription deleted");
+      toast.success("Commitment deleted");
       setSelectedSubscription(null);
       fetchSubscriptions();
       onNotificationChanged?.();
       onRecordChanged?.();
     } catch (error: any) {
-      toast.error("Failed to delete subscription");
+      toast.error("Failed to delete commitment");
     }
   };
 
@@ -108,12 +108,12 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Manage Subscriptions</CardTitle>
-            <CardDescription>Create and manage your aviation subscriptions</CardDescription>
+            <CardTitle>Manage Commitments</CardTitle>
+            <CardDescription>Create and manage your aviation commitments</CardDescription>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
             <Plus className="h-4 w-4 mr-2" />
-            New Subscription
+            New Commitment
           </Button>
         </div>
       </CardHeader>

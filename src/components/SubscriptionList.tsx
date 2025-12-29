@@ -66,10 +66,10 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
     try {
       const { error } = await supabase.from("subscriptions").delete().eq("id", id);
       if (error) throw error;
-      toast.success("Subscription deleted");
+      toast.success("Commitment deleted");
       onUpdate();
     } catch (error: any) {
-      toast.error("Failed to delete subscription");
+      toast.error("Failed to delete commitment");
     }
   };
 
@@ -84,11 +84,11 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
   
 
   if (loading) {
-    return <p className="text-muted-foreground">Loading subscriptions...</p>;
+    return <p className="text-muted-foreground">Loading commitments...</p>;
   }
 
   if (subscriptions.length === 0) {
-    return <p className="text-muted-foreground">No subscriptions yet. Create your first one!</p>;
+    return <p className="text-muted-foreground">No commitments yet. Create your first one!</p>;
   }
 
   return (
@@ -136,7 +136,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
       {/* Results Count */}
       {hasActiveFilters && (
         <p className="text-sm text-muted-foreground">
-          Showing {filteredSubscriptions.length} of {subscriptions.length} subscriptions
+          Showing {filteredSubscriptions.length} of {subscriptions.length} commitments
         </p>
       )}
 
@@ -158,7 +158,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
               {filteredSubscriptions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isMobile ? 3 : 6} className="text-center text-muted-foreground">
-                    No subscriptions match your filters
+                    No commitments match your filters
                   </TableCell>
                 </TableRow>
               ) : (

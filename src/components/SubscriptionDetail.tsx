@@ -69,7 +69,7 @@ const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete }: Subscri
         <CardContent className="space-y-6">
           {/* Basic Information */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Subscription Details</h3>
+            <h3 className="text-lg font-semibold mb-4">Commitment Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -138,9 +138,9 @@ const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete }: Subscri
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+            <AlertDialogTitle>Delete Commitment</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this subscription? This action cannot be undone.
+              Are you sure you want to delete this commitment? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
