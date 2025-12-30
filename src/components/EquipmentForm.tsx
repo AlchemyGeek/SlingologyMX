@@ -215,7 +215,7 @@ const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipme
         {/* Required Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name *</Label>
+            <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>
             <Input
               id="name"
               value={formData.name}
@@ -228,7 +228,7 @@ const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipme
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
+            <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value as DirectiveCategory })}

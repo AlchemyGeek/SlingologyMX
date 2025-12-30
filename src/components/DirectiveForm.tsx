@@ -624,7 +624,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
             <h3 className="text-lg font-medium">Core Identification</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="directive_code">Directive Code *</Label>
+                <Label htmlFor="directive_code">Directive Code <span className="text-destructive">*</span></Label>
                 <Input
                   id="directive_code"
                   value={formData.directive_code}
@@ -635,7 +635,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -645,7 +645,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 />
               </div>
               <div className="space-y-2">
-                <Label>Directive Type *</Label>
+                <Label>Directive Type <span className="text-destructive">*</span></Label>
                 <Select value={formData.directive_type} onValueChange={(value) => setFormData({ ...formData, directive_type: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -658,7 +658,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Severity *</Label>
+                <Label>Severity <span className="text-destructive">*</span></Label>
                 <Select value={formData.severity} onValueChange={(value) => setFormData({ ...formData, severity: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -671,7 +671,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Directive Status *</Label>
+                <Label>Directive Status <span className="text-destructive">*</span></Label>
                 <Select value={formData.directive_status} onValueChange={(value) => setFormData({ ...formData, directive_status: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -684,7 +684,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Category *</Label>
+                <Label>Category <span className="text-destructive">*</span></Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -864,7 +864,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
             <h3 className="text-lg font-medium">Compliance Requirements</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Compliance Scope {formData.applicability_status === "Applies" ? "*" : ""}</Label>
+                <Label>Compliance Scope {formData.applicability_status === "Applies" && <span className="text-destructive">*</span>}</Label>
                 <Select value={formData.compliance_scope} onValueChange={(value) => setFormData({ ...formData, compliance_scope: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -877,7 +877,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Initial Due Type {formData.applicability_status === "Applies" ? "*" : ""}</Label>
+                <Label>Initial Due Type {formData.applicability_status === "Applies" && <span className="text-destructive">*</span>}</Label>
                 <Select 
                   value={formData.initial_due_type} 
                   onValueChange={(value) => setFormData({ 

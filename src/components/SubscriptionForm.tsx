@@ -184,7 +184,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     <Card className="p-4 bg-muted/50">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="subscription_name">Commitment Name</Label>
+          <Label htmlFor="subscription_name">Commitment Name <span className="text-destructive">*</span></Label>
           <Input
             id="subscription_name"
             value={formData.subscription_name}
@@ -211,7 +211,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">Type <span className="text-destructive">*</span></Label>
             <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
               <SelectTrigger>
                 <SelectValue />
@@ -239,7 +239,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="initial_date">Initial Date</Label>
+            <Label htmlFor="initial_date">Initial Date <span className="text-destructive">*</span></Label>
             <DateInput
               id="initial_date"
               value={formData.initial_date}
@@ -258,7 +258,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="recurrence">Recurrence</Label>
+            <Label htmlFor="recurrence">Recurrence <span className="text-destructive">*</span></Label>
             <Select
               value={formData.recurrence}
               onValueChange={(value) => setFormData({ ...formData, recurrence: value })}

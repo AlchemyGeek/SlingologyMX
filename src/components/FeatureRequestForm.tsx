@@ -80,7 +80,7 @@ const FeatureRequestForm = ({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
             <Input
               id="title"
               value={title}
@@ -95,7 +95,7 @@ const FeatureRequestForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
             <Textarea
               id="description"
               value={description}
