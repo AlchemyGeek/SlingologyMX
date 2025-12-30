@@ -249,7 +249,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="final_date">Final Date (optional)</Label>
+            <Label htmlFor="final_date">Final Date</Label>
             <DateInput
               id="final_date"
               value={formData.final_date}
