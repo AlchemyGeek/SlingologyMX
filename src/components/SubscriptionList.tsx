@@ -10,16 +10,16 @@ import { parseLocalDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const SUBSCRIPTION_TYPES = [
-  "EFB & Flight Planning",
-  "Avionics Subscriptions",
-  "Aircraft Maintenance, Tracking, & Record Services",
-  "Proficiency & Safety Tools",
-  "Aviation Community Memberships",
-  "Weather Tools",
-  "Magazine Subscription",
-  "Aircraft Operations & Financial Tools",
-  "Hardware-Related Annual Fees",
-  "Insurance Related Add-Ons",
+  "Facilities & Storage",
+  "Insurance",
+  "Navigation, Charts & Flight Planning",
+  "Avionics Data & Services",
+  "Maintenance, Compliance & Records",
+  "Training, Proficiency & Safety",
+  "Memberships & Associations",
+  "Publications & Media",
+  "Operations & Administration",
+  "Hardware-Related Services",
   "Other"
 ];
 
