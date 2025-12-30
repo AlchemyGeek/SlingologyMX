@@ -901,7 +901,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <h3 className="text-lg font-medium">Identity & Classification</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="entry_title">Entry Title *</Label>
+            <Label htmlFor="entry_title">Entry Title <span className="text-destructive">*</span></Label>
             <Input
               id="entry_title"
               value={formData.entry_title}
@@ -912,7 +912,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             <p className="text-xs text-muted-foreground">{formData.entry_title.length}/120</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
+            <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
             <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as Database["public"]["Enums"]["maintenance_category"] })}>
               <SelectTrigger>
                 <SelectValue />
@@ -932,7 +932,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="subcategory">Subcategory *</Label>
+            <Label htmlFor="subcategory">Subcategory <span className="text-destructive">*</span></Label>
             <Select value={formData.subcategory} onValueChange={(value) => setFormData({ ...formData, subcategory: value as Database["public"]["Enums"]["maintenance_subcategory"] })}>
               <SelectTrigger>
                 <SelectValue />
@@ -967,7 +967,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <h3 className="text-lg font-medium">Time & Usage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Date Performed *</Label>
+            <Label>Date Performed <span className="text-destructive">*</span></Label>
             <DateInput
               value={formData.date_performed}
               onChange={(date) => date && setFormData({ ...formData, date_performed: date })}
@@ -975,7 +975,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hobbs_at_event">Hobbs at Event *</Label>
+            <Label htmlFor="hobbs_at_event">Hobbs at Event <span className="text-destructive">*</span></Label>
             <Input
               id="hobbs_at_event"
               type="number"
@@ -987,7 +987,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tach_at_event">Tach at Event *</Label>
+            <Label htmlFor="tach_at_event">Tach at Event <span className="text-destructive">*</span></Label>
             <Input
               id="tach_at_event"
               type="number"
@@ -999,7 +999,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="airframe_total_time">Airframe Total Time *</Label>
+            <Label htmlFor="airframe_total_time">Airframe Total Time <span className="text-destructive">*</span></Label>
             <Input
               id="airframe_total_time"
               type="number"
@@ -1011,7 +1011,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="engine_total_time">Engine Total Time *</Label>
+            <Label htmlFor="engine_total_time">Engine Total Time <span className="text-destructive">*</span></Label>
             <Input
               id="engine_total_time"
               type="number"
@@ -1023,7 +1023,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="prop_total_time">Prop Total Time *</Label>
+            <Label htmlFor="prop_total_time">Prop Total Time <span className="text-destructive">*</span></Label>
             <Input
               id="prop_total_time"
               type="number"
@@ -1156,7 +1156,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <h3 className="text-lg font-medium">Performed By</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="performed_by_type">Performed By Type *</Label>
+            <Label htmlFor="performed_by_type">Performed By Type <span className="text-destructive">*</span></Label>
             <Select value={formData.performed_by_type} onValueChange={(value) => setFormData({ ...formData, performed_by_type: value as Database["public"]["Enums"]["performed_by_type"] })}>
               <SelectTrigger>
                 <SelectValue />
@@ -1172,7 +1172,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="performed_by_name">Performed By Name *</Label>
+            <Label htmlFor="performed_by_name">Performed By Name <span className="text-destructive">*</span></Label>
             <Input
               id="performed_by_name"
               value={formData.performed_by_name}

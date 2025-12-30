@@ -164,7 +164,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Bug Title *</Label>
+            <Label htmlFor="title">Bug Title <span className="text-destructive">*</span></Label>
             <Input
               id="title"
               value={title}
@@ -180,7 +180,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
               <Select
                 value={category}
                 onValueChange={(v) => setCategory(v as BugCategory)}
@@ -199,7 +199,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="severity">Severity *</Label>
+              <Label htmlFor="severity">Severity <span className="text-destructive">*</span></Label>
               <Select
                 value={severity}
                 onValueChange={(v) => setSeverity(v as BugSeverity)}
@@ -219,7 +219,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">What happened? *</Label>
+            <Label htmlFor="description">What happened? <span className="text-destructive">*</span></Label>
             <Textarea
               id="description"
               value={description}
@@ -253,7 +253,7 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="actualResult">Actual Result *</Label>
+            <Label htmlFor="actualResult">Actual Result <span className="text-destructive">*</span></Label>
             <Textarea
               id="actualResult"
               value={actualResult}

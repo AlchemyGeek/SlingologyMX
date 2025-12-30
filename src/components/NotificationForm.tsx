@@ -210,7 +210,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="description">Notification</Label>
+          <Label htmlFor="description">Notification <span className="text-destructive">*</span></Label>
           <Textarea
             id="description"
             value={formData.description}
@@ -238,7 +238,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">Type <span className="text-destructive">*</span></Label>
             <Select 
               value={formData.type} 
               onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -262,7 +262,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
         {!isCounterBased && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="initial_date">Initial Date</Label>
+              <Label htmlFor="initial_date">Initial Date <span className="text-destructive">*</span></Label>
               <DateInput
                 id="initial_date"
                 value={formData.initial_date}
@@ -273,7 +273,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="recurrence">Recurrence</Label>
+              <Label htmlFor="recurrence">Recurrence <span className="text-destructive">*</span></Label>
               {isSystemGenerated && editingNotification?.subscription_id && subscriptionRecurrence ? (
                 <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
                   {subscriptionRecurrence} <span className="ml-1 text-xs">(from commitment)</span>
@@ -319,7 +319,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="counter_type">Counter Type</Label>
+                <Label htmlFor="counter_type">Counter Type <span className="text-destructive">*</span></Label>
                 <Select
                   value={formData.counter_type}
                   onValueChange={(value) => setFormData({ ...formData, counter_type: value })}
@@ -339,7 +339,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="initial_counter_value">Initial Counter Value</Label>
+                <Label htmlFor="initial_counter_value">Initial Counter Value <span className="text-destructive">*</span></Label>
                 <Input
                   id="initial_counter_value"
                   type="number"
