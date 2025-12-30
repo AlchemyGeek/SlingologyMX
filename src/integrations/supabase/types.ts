@@ -1442,6 +1442,16 @@ export type Database = {
         | "Hardware-Related Annual Fees"
         | "Insurance Related Add-Ons"
         | "Other"
+        | "Facilities & Storage"
+        | "Insurance"
+        | "Navigation, Charts & Flight Planning"
+        | "Avionics Data & Services"
+        | "Maintenance, Compliance & Records"
+        | "Training, Proficiency & Safety"
+        | "Memberships & Associations"
+        | "Publications & Media"
+        | "Operations & Administration"
+        | "Hardware-Related Services"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1718,6 +1728,16 @@ export const Constants = {
         "Hardware-Related Annual Fees",
         "Insurance Related Add-Ons",
         "Other",
+        "Facilities & Storage",
+        "Insurance",
+        "Navigation, Charts & Flight Planning",
+        "Avionics Data & Services",
+        "Maintenance, Compliance & Records",
+        "Training, Proficiency & Safety",
+        "Memberships & Associations",
+        "Publications & Media",
+        "Operations & Administration",
+        "Hardware-Related Services",
       ],
     },
   },
