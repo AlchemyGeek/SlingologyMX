@@ -41,6 +41,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     type: editingSubscription?.type || "Other",
     cost: editingSubscription?.cost?.toString() || "",
     initial_date: editingSubscription?.initial_date ? parseLocalDate(editingSubscription.initial_date) : null as Date | null,
+    final_date: editingSubscription?.final_date ? parseLocalDate(editingSubscription.final_date) : null as Date | null,
     recurrence: editingSubscription?.recurrence || "Yearly",
   });
 
@@ -67,6 +68,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
 
     try {
       const initialDateStr = formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : "";
+      const finalDateStr = formData.final_date ? format(formData.final_date, "yyyy-MM-dd") : null;
       
       const subscriptionData = {
         user_id: userId,
@@ -76,6 +78,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
         type: formData.type as typeof SUBSCRIPTION_TYPES[number],
         cost: costValue,
         initial_date: initialDateStr,
+        final_date: finalDateStr,
         recurrence: formData.recurrence as "None" | "Weekly" | "Bi-Monthly" | "Monthly" | "Semi-Annual" | "Yearly",
       };
 
@@ -242,6 +245,15 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
               value={formData.initial_date}
               onChange={(date) => setFormData({ ...formData, initial_date: date })}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="final_date">Final Date (optional)</Label>
+            <DateInput
+              id="final_date"
+              value={formData.final_date}
+              onChange={(date) => setFormData({ ...formData, final_date: date })}
             />
           </div>
 

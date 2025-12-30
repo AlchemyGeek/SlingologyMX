@@ -94,6 +94,17 @@ const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete }: Subscri
                   </p>
                 </div>
               </div>
+              {subscription.final_date && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Final Date</p>
+                    <p className="font-medium">
+                      {format(parseLocalDate(subscription.final_date), "PPP")}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
