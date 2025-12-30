@@ -1206,6 +1206,7 @@ export type Database = {
           aircraft_id: string
           cost: number | null
           created_at: string | null
+          final_date: string | null
           id: string
           initial_date: string
           notes: string | null
@@ -1219,6 +1220,7 @@ export type Database = {
           aircraft_id: string
           cost?: number | null
           created_at?: string | null
+          final_date?: string | null
           id?: string
           initial_date: string
           notes?: string | null
@@ -1232,6 +1234,7 @@ export type Database = {
           aircraft_id?: string
           cost?: number | null
           created_at?: string | null
+          final_date?: string | null
           id?: string
           initial_date?: string
           notes?: string | null
