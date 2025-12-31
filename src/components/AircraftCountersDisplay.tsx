@@ -62,11 +62,17 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
       toast.error("Please enter a valid positive number");
       return;
     }
+
+    const currentValue = counters[editingCounter];
+    if (newValue < currentValue) {
+      toast.error(`Value cannot be less than current value (${currentValue.toFixed(1)})`);
+      return;
+    }
     
     try {
       if (syncEnabled && isSyncableCounter) {
         // Calculate difference and apply to all syncable counters
-        const diff = newValue - counters[editingCounter];
+        const diff = newValue - currentValue;
         const updates: Partial<Omit<AircraftCounters, "id">> = {};
         syncableCounters.forEach(key => {
           updates[key] = counters[key] + diff;
