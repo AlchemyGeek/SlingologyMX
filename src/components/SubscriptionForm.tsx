@@ -22,14 +22,15 @@ interface SubscriptionFormProps {
 const SUBSCRIPTION_TYPES = [
   "Facilities & Storage",
   "Insurance",
-  "Navigation, Charts & Flight Planning",
   "Avionics Data & Services",
+  "Navigation, Charts & Flight Planning",
+  "Weather Services",
   "Maintenance, Compliance & Records",
-  "Training, Proficiency & Safety",
+  "Hardware Services & Fees",
+  "Training & Proficiency",
   "Memberships & Associations",
   "Publications & Media",
   "Operations & Administration",
-  "Hardware-Related Services",
   "Other",
 ] as const;
 
