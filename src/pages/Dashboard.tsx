@@ -16,6 +16,7 @@ import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import EquipmentPanel from "@/components/EquipmentPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
+import TransactionsPanel from "@/components/TransactionsPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
@@ -231,6 +232,13 @@ const Dashboard = () => {
           />
         );
       case "transactions":
+        return (
+          <TransactionsPanel
+            userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
+        );
       case "reserves":
       case "analysis":
         return (
