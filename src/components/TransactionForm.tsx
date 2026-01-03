@@ -51,10 +51,6 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
     allocation_period_value: editingTransaction?.allocation_period_value?.toString() || "",
     allocation_period_unit: editingTransaction?.allocation_period_unit || null,
     allocation_start_date: editingTransaction?.allocation_start_date ? parseLocalDate(editingTransaction.allocation_start_date) : null,
-    hobbs_hours: editingTransaction?.hobbs_hours?.toString() || "",
-    tach_hours: editingTransaction?.tach_hours?.toString() || "",
-    flight_time_hours: editingTransaction?.flight_time_hours?.toString() || "",
-    block_time_hours: editingTransaction?.block_time_hours?.toString() || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,10 +115,6 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
         allocation_period_unit: formData.allocate_over_time ? formData.allocation_period_unit as typeof ALLOCATION_UNITS[number] : null,
         allocation_start_date: formData.allocate_over_time ? (allocationStartDateStr || transactionDateStr) : null,
         allocation_end_date: allocationEndDateStr,
-        hobbs_hours: formData.hobbs_hours ? parseFloat(formData.hobbs_hours) : null,
-        tach_hours: formData.tach_hours ? parseFloat(formData.tach_hours) : null,
-        flight_time_hours: formData.flight_time_hours ? parseFloat(formData.flight_time_hours) : null,
-        block_time_hours: formData.block_time_hours ? parseFloat(formData.block_time_hours) : null,
       };
 
       if (editingTransaction) {
@@ -412,62 +404,6 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
           )}
         </div>
 
-        <Separator />
-
-        {/* Counter Snapshots */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Counter Snapshots</h3>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hobbs_hours">Hobbs</Label>
-              <Input
-                id="hobbs_hours"
-                type="number"
-                step="0.1"
-                value={formData.hobbs_hours}
-                onChange={(e) => setFormData({ ...formData, hobbs_hours: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tach_hours">Tach</Label>
-              <Input
-                id="tach_hours"
-                type="number"
-                step="0.1"
-                value={formData.tach_hours}
-                onChange={(e) => setFormData({ ...formData, tach_hours: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="flight_time_hours">Flight Time</Label>
-              <Input
-                id="flight_time_hours"
-                type="number"
-                step="0.1"
-                value={formData.flight_time_hours}
-                onChange={(e) => setFormData({ ...formData, flight_time_hours: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="block_time_hours">Block Time</Label>
-              <Input
-                id="block_time_hours"
-                type="number"
-                step="0.1"
-                value={formData.block_time_hours}
-                onChange={(e) => setFormData({ ...formData, block_time_hours: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-          </div>
-        </div>
 
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={loading}>
