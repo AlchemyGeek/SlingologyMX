@@ -67,7 +67,7 @@ export const createMaintenanceTransactions = async (
   // If only total cost is specified (no labor, no parts), create a single "Other" transaction
   if (hasTotalCost && !hasLaborCost && !hasPartsCost) {
     transactions.push({
-      title: `Maintenance:${log.entry_title}:Other`,
+      title: `${log.entry_title}:Other`,
       transaction_date: log.date_performed,
       amount: log.total_cost!,
       direction: "Debit",
@@ -85,7 +85,7 @@ export const createMaintenanceTransactions = async (
     // Create individual transactions for each cost type
     if (hasLaborCost) {
       transactions.push({
-        title: `Maintenance:${log.entry_title}:Labor`,
+        title: `${log.entry_title}:Labor`,
         transaction_date: log.date_performed,
         amount: log.labor_cost!,
         direction: "Debit",
@@ -103,7 +103,7 @@ export const createMaintenanceTransactions = async (
     
     if (hasPartsCost) {
       transactions.push({
-        title: `Maintenance:${log.entry_title}:Parts`,
+        title: `${log.entry_title}:Parts`,
         transaction_date: log.date_performed,
         amount: log.parts_cost!,
         direction: "Debit",
@@ -121,7 +121,7 @@ export const createMaintenanceTransactions = async (
     
     if (hasOtherCost) {
       transactions.push({
-        title: `Maintenance:${log.entry_title}:Other`,
+        title: `${log.entry_title}:Other`,
         transaction_date: log.date_performed,
         amount: otherCostValue,
         direction: "Debit",
@@ -209,7 +209,7 @@ export const updateMaintenanceTransactions = async (
                          category === "Maintenance Parts" ? "Parts" : "Other";
     
     const transactionData = {
-      title: `Maintenance:${log.entry_title}:${categoryLabel}`,
+      title: `${log.entry_title}:${categoryLabel}`,
       transaction_date: log.date_performed,
       amount,
       status: "Pending" as const,
