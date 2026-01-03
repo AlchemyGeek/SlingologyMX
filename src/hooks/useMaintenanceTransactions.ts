@@ -8,8 +8,6 @@ interface MaintenanceLogData {
   labor_cost: number | null;
   other_cost: number | null;
   total_cost: number | null;
-  hobbs_at_event: number | null;
-  tach_at_event: number | null;
 }
 
 interface TransactionData {
@@ -28,8 +26,6 @@ interface TransactionData {
   include_in_cash_flow: boolean;
   include_in_ownership_total: boolean;
   include_in_cost_per_hour: boolean;
-  tach_hours: number | null;
-  hobbs_hours: number | null;
 }
 
 type TransactionCategory = "Maintenance Labor" | "Maintenance Parts" | "Other";
@@ -84,8 +80,6 @@ export const createMaintenanceTransactions = async (
       include_in_cash_flow: true,
       include_in_ownership_total: true,
       include_in_cost_per_hour: true,
-      tach_hours: log.tach_at_event,
-      hobbs_hours: log.hobbs_at_event,
     });
   } else {
     // Create individual transactions for each cost type
@@ -104,8 +98,6 @@ export const createMaintenanceTransactions = async (
         include_in_cash_flow: true,
         include_in_ownership_total: true,
         include_in_cost_per_hour: true,
-        tach_hours: log.tach_at_event,
-        hobbs_hours: log.hobbs_at_event,
       });
     }
     
@@ -124,8 +116,6 @@ export const createMaintenanceTransactions = async (
         include_in_cash_flow: true,
         include_in_ownership_total: true,
         include_in_cost_per_hour: true,
-        tach_hours: log.tach_at_event,
-        hobbs_hours: log.hobbs_at_event,
       });
     }
     
@@ -144,8 +134,6 @@ export const createMaintenanceTransactions = async (
         include_in_cash_flow: true,
         include_in_ownership_total: true,
         include_in_cost_per_hour: true,
-        tach_hours: log.tach_at_event,
-        hobbs_hours: log.hobbs_at_event,
       });
     }
   }
@@ -225,8 +213,6 @@ export const updateMaintenanceTransactions = async (
       transaction_date: log.date_performed,
       amount,
       status: "Pending" as const,
-      tach_hours: log.tach_at_event,
-      hobbs_hours: log.hobbs_at_event,
     };
     
     if (existingId) {
