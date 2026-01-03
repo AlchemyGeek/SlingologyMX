@@ -66,6 +66,20 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
     }
   };
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ status: newStatus as typeof TRANSACTION_STATUSES[number] })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Status updated");
+      onUpdate();
+    } catch (error: any) {
+      toast.error("Failed to update status");
+    }
+  };
+
   const hasActiveFilters = searchTerm !== "" || categoryFilter !== "all" || statusFilter !== "all" || sortBy !== "date";
 
   const clearFilters = () => {
@@ -166,6 +180,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
                 <TableHead>Date</TableHead>
                 <TableHead>Title</TableHead>
                 {!isMobile && <TableHead>Category</TableHead>}
+                {!isMobile && <TableHead>Intent</TableHead>}
                 <TableHead className="text-right">Amount</TableHead>
                 {!isMobile && <TableHead>Status</TableHead>}
                 <TableHead className="w-[100px]">Actions</TableHead>
@@ -174,7 +189,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
             <TableBody>
               {filteredTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isMobile ? 4 : 6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={isMobile ? 4 : 7} className="text-center text-muted-foreground">
                     No transactions match your filters
                   </TableCell>
                 </TableRow>
@@ -194,15 +209,30 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
                         {transaction.category}
                       </TableCell>
                     )}
+                    {!isMobile && (
+                      <TableCell className="max-w-[120px] truncate" title={transaction.intent}>
+                        {transaction.intent}
+                      </TableCell>
+                    )}
                     <TableCell className={`text-right font-medium ${getDirectionColor(transaction.direction)}`}>
                       {transaction.direction === "Credit" ? "+" : "-"}
                       {transaction.currency} {Number(transaction.amount).toFixed(2)}
                     </TableCell>
                     {!isMobile && (
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(transaction.status)}>
-                          {transaction.status}
-                        </Badge>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={transaction.status}
+                          onValueChange={(value) => handleStatusChange(transaction.id, value)}
+                        >
+                          <SelectTrigger className="h-8 w-[110px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRANSACTION_STATUSES.map((status) => (
+                              <SelectItem key={status} value={status}>{status}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                     )}
                     <TableCell>
