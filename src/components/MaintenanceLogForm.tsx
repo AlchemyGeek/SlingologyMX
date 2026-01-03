@@ -1249,12 +1249,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="total_cost">
-              Total Cost ($)
-              {!isTotalCostOverridden && (formData.parts_cost || formData.labor_cost || formData.other_cost) && (
-                <span className="text-xs text-muted-foreground ml-2">(auto-calculated)</span>
-              )}
-            </Label>
+            <Label htmlFor="total_cost">Total Cost ($)</Label>
             <Input
               id="total_cost"
               type="number"
