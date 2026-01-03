@@ -30,6 +30,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import MaintenanceDirectiveCompliance from "./MaintenanceDirectiveCompliance";
+import { 
+  createMaintenanceTransactions, 
+  updateMaintenanceTransactions 
+} from "@/hooks/useMaintenanceTransactions";
 
 interface DirectiveComplianceLink {
   id?: string;
@@ -849,6 +853,32 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           .from("maintenance_directive_compliance")
           .delete()
           .eq("maintenance_log_id", editingLog.id);
+      }
+      
+      // Handle transactions for maintenance costs
+      if (logId) {
+        const maintenanceLogData = {
+          id: logId,
+          entry_title: formData.entry_title,
+          date_performed: format(formData.date_performed, "yyyy-MM-dd"),
+          parts_cost: formData.parts_cost ? parseFloat(formData.parts_cost) : null,
+          labor_cost: formData.labor_cost ? parseFloat(formData.labor_cost) : null,
+          other_cost: formData.other_cost ? parseFloat(formData.other_cost) : null,
+          total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
+          hobbs_at_event: formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null,
+          tach_at_event: formData.tach_at_event ? parseFloat(formData.tach_at_event) : null,
+        };
+        
+        try {
+          if (editingLog) {
+            await updateMaintenanceTransactions(userId, aircraftId, maintenanceLogData);
+          } else {
+            await createMaintenanceTransactions(userId, aircraftId, maintenanceLogData);
+          }
+        } catch (txError) {
+          console.error("Error handling maintenance transactions:", txError);
+          // Don't fail the whole operation if transaction handling fails
+        }
       }
       
       // Check if any counter values are higher than global counters
