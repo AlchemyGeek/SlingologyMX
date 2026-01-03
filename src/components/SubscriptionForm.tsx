@@ -12,15 +12,21 @@ import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Calculate the next occurrence date based on initial_date and recurrence
-const getNextOccurrence = (initialDate: Date, recurrence: string): Date => {
+// Returns null if the next occurrence is past the final_date
+const getNextOccurrence = (initialDate: Date, recurrence: string, finalDate?: Date | null): Date | null => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   let current = new Date(initialDate);
   current.setHours(0, 0, 0, 0);
   
-  // If initial date is in the future, use it
+  // If initial date is in the future, check against final date
   if (current >= today) {
+    if (finalDate) {
+      const final = new Date(finalDate);
+      final.setHours(0, 0, 0, 0);
+      return current <= final ? current : null;
+    }
     return current;
   }
   
@@ -48,6 +54,13 @@ const getNextOccurrence = (initialDate: Date, recurrence: string): Date => {
       default:
         return current;
     }
+  }
+  
+  // Check if the calculated next occurrence is past the final date
+  if (finalDate) {
+    const final = new Date(finalDate);
+    final.setHours(0, 0, 0, 0);
+    return current <= final ? current : null;
   }
   
   return current;
@@ -144,37 +157,46 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           .maybeSingle();
 
         if (isRecurring && formData.initial_date) {
-          // Calculate the next occurrence date for notifications
-          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence);
-          const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+          // Calculate the next occurrence date for notifications (respecting final_date)
+          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence, formData.final_date);
           
-          if (existingNotif) {
-            // Update existing notification (might fail if user deleted it, that's ok)
-            await supabase
-              .from("notifications")
-              .update({
+          if (nextOccurrence) {
+            const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+            
+            if (existingNotif) {
+              // Update existing notification (might fail if user deleted it, that's ok)
+              await supabase
+                .from("notifications")
+                .update({
+                  description: formData.subscription_name,
+                  notes: formData.notes || null,
+                  type: "Subscription" as const,
+                  initial_date: nextOccurrenceStr,
+                  recurrence: "None" as const,
+                })
+                .eq("subscription_id", editingSubscription.id);
+            } else {
+              // Create new notification (subscription changed from non-recurring to recurring)
+              const { error: notifError } = await supabase.from("notifications").insert([{
+                user_id: userId,
+                aircraft_id: aircraftId,
                 description: formData.subscription_name,
                 notes: formData.notes || null,
                 type: "Subscription" as const,
                 initial_date: nextOccurrenceStr,
                 recurrence: "None" as const,
-              })
-              .eq("subscription_id", editingSubscription.id);
-          } else {
-            // Create new notification (subscription changed from non-recurring to recurring)
-            const { error: notifError } = await supabase.from("notifications").insert([{
-              user_id: userId,
-              aircraft_id: aircraftId,
-              description: formData.subscription_name,
-              notes: formData.notes || null,
-              type: "Subscription" as const,
-              initial_date: nextOccurrenceStr,
-              recurrence: "None" as const,
-              subscription_id: editingSubscription.id,
-            }]);
+                subscription_id: editingSubscription.id,
+              }]);
 
-            if (notifError) throw notifError;
-            toast.info("A renewal reminder notification has been created for this commitment.");
+              if (notifError) throw notifError;
+              toast.info("A renewal reminder notification has been created for this commitment.");
+            }
+          } else if (existingNotif) {
+            // Next occurrence is past final date, delete existing notification
+            await supabase
+              .from("notifications")
+              .delete()
+              .eq("subscription_id", editingSubscription.id);
           }
         } else if (existingNotif) {
           // Delete notification if subscription changed to non-recurring
@@ -198,26 +220,31 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
 
         // Only create notification for recurring subscriptions
         if (isRecurring && formData.initial_date) {
-          // Calculate the next occurrence date for notifications
-          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence);
-          const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+          // Calculate the next occurrence date for notifications (respecting final_date)
+          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence, formData.final_date);
           
-          const notificationData = {
-            user_id: userId,
-            aircraft_id: aircraftId,
-            description: formData.subscription_name,
-            notes: formData.notes || null,
-            type: "Subscription" as const,
-            initial_date: nextOccurrenceStr,
-            recurrence: "None" as const,
-            subscription_id: newSubscription.id,
-          };
+          if (nextOccurrence) {
+            const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+            
+            const notificationData = {
+              user_id: userId,
+              aircraft_id: aircraftId,
+              description: formData.subscription_name,
+              notes: formData.notes || null,
+              type: "Subscription" as const,
+              initial_date: nextOccurrenceStr,
+              recurrence: "None" as const,
+              subscription_id: newSubscription.id,
+            };
 
-          const { error: notifError } = await supabase.from("notifications").insert([notificationData]);
+            const { error: notifError } = await supabase.from("notifications").insert([notificationData]);
 
-          if (notifError) throw notifError;
+            if (notifError) throw notifError;
 
-          toast.success("Commitment created! A renewal reminder notification has been added.");
+            toast.success("Commitment created! A renewal reminder notification has been added.");
+          } else {
+            toast.success("Commitment created! No notification added as the next occurrence is past the final date.");
+          }
         } else {
           toast.success("Commitment created successfully!");
         }
