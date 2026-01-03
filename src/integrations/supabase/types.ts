@@ -1209,6 +1209,7 @@ export type Database = {
           final_date: string | null
           id: string
           initial_date: string
+          last_transaction_date: string | null
           notes: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           subscription_name: string
@@ -1223,6 +1224,7 @@ export type Database = {
           final_date?: string | null
           id?: string
           initial_date: string
+          last_transaction_date?: string | null
           notes?: string | null
           recurrence: Database["public"]["Enums"]["recurrence_type"]
           subscription_name: string
@@ -1237,6 +1239,7 @@ export type Database = {
           final_date?: string | null
           id?: string
           initial_date?: string
+          last_transaction_date?: string | null
           notes?: string | null
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
           subscription_name?: string
@@ -1432,6 +1435,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_commitment_transactions: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
