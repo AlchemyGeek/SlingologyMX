@@ -1627,7 +1627,7 @@ export type Database = {
         | "Training"
         | "Travel"
         | "Other"
-      transaction_source: "Manual" | "Commitment" | "Imported"
+      transaction_source: "Manual" | "Commitment" | "Imported" | "Maintenance"
       transaction_status: "Pending" | "Posted" | "Skipped" | "Voided"
     }
     CompositeTypes: {
@@ -1950,7 +1950,7 @@ export const Constants = {
         "Travel",
         "Other",
       ],
-      transaction_source: ["Manual", "Commitment", "Imported"],
+      transaction_source: ["Manual", "Commitment", "Imported", "Maintenance"],
       transaction_status: ["Pending", "Posted", "Skipped", "Voided"],
     },
   },
