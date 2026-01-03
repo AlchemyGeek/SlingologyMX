@@ -1593,27 +1593,18 @@ export type Database = {
         | "Trip"
         | "Other"
       subscription_type:
-        | "EFB & Flight Planning"
-        | "Avionics Subscriptions"
-        | "Aircraft Maintenance, Tracking, & Record Services"
-        | "Proficiency & Safety Tools"
-        | "Aviation Community Memberships"
-        | "Weather Tools"
-        | "Magazine Subscription"
-        | "Aircraft Operations & Financial Tools"
-        | "Hardware-Related Annual Fees"
-        | "Insurance Related Add-Ons"
-        | "Other"
         | "Facilities & Storage"
         | "Insurance"
-        | "Navigation, Charts & Flight Planning"
         | "Avionics Data & Services"
+        | "Navigation, Charts & Flight Planning"
+        | "Weather Services"
         | "Maintenance, Compliance & Records"
-        | "Training, Proficiency & Safety"
+        | "Hardware Services & Fees"
+        | "Training & Proficiency"
         | "Memberships & Associations"
         | "Publications & Media"
         | "Operations & Administration"
-        | "Hardware-Related Services"
+        | "Other"
       transaction_category:
         | "Fuel"
         | "Oil & Consumables"
@@ -1922,27 +1913,18 @@ export const Constants = {
         "Other",
       ],
       subscription_type: [
-        "EFB & Flight Planning",
-        "Avionics Subscriptions",
-        "Aircraft Maintenance, Tracking, & Record Services",
-        "Proficiency & Safety Tools",
-        "Aviation Community Memberships",
-        "Weather Tools",
-        "Magazine Subscription",
-        "Aircraft Operations & Financial Tools",
-        "Hardware-Related Annual Fees",
-        "Insurance Related Add-Ons",
-        "Other",
         "Facilities & Storage",
         "Insurance",
-        "Navigation, Charts & Flight Planning",
         "Avionics Data & Services",
+        "Navigation, Charts & Flight Planning",
+        "Weather Services",
         "Maintenance, Compliance & Records",
-        "Training, Proficiency & Safety",
+        "Hardware Services & Fees",
+        "Training & Proficiency",
         "Memberships & Associations",
         "Publications & Media",
         "Operations & Administration",
-        "Hardware-Related Services",
+        "Other",
       ],
       transaction_category: [
         "Fuel",
