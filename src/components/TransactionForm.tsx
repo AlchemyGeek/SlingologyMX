@@ -303,31 +303,31 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Analysis Settings</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="include_in_cash_flow" className="cursor-pointer">Include in Cash Flow</Label>
+            <div className="flex items-center gap-3">
               <Switch
                 id="include_in_cash_flow"
                 checked={formData.include_in_cash_flow}
                 onCheckedChange={(checked) => setFormData({ ...formData, include_in_cash_flow: checked })}
               />
+              <Label htmlFor="include_in_cash_flow" className="cursor-pointer">Include in Cash Flow</Label>
             </div>
 
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="include_in_ownership_total" className="cursor-pointer">Include in Ownership Total</Label>
+            <div className="flex items-center gap-3">
               <Switch
                 id="include_in_ownership_total"
                 checked={formData.include_in_ownership_total}
                 onCheckedChange={(checked) => setFormData({ ...formData, include_in_ownership_total: checked })}
               />
+              <Label htmlFor="include_in_ownership_total" className="cursor-pointer">Include in Ownership Total</Label>
             </div>
 
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="include_in_cost_per_hour" className="cursor-pointer">Include in Cost-Per-Hour</Label>
+            <div className="flex items-center gap-3">
               <Switch
                 id="include_in_cost_per_hour"
                 checked={formData.include_in_cost_per_hour}
                 onCheckedChange={(checked) => setFormData({ ...formData, include_in_cost_per_hour: checked })}
               />
+              <Label htmlFor="include_in_cost_per_hour" className="cursor-pointer">Include in Cost-Per-Hour</Label>
             </div>
           </div>
         </div>
