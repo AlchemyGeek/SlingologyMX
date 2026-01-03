@@ -1272,7 +1272,6 @@ export type Database = {
           allocation_start_date: string | null
           amount: number
           attachment_urls: Json | null
-          block_time_hours: number | null
           category: Database["public"]["Enums"]["transaction_category"]
           counter_end_value: number | null
           counter_start_value: number | null
@@ -1281,11 +1280,8 @@ export type Database = {
             | null
           created_at: string | null
           currency: string
-          cycles: number | null
           direction: Database["public"]["Enums"]["transaction_direction"]
-          flight_time_hours: number | null
           generated_for_period: string | null
-          hobbs_hours: number | null
           id: string
           include_in_cash_flow: boolean
           include_in_cost_per_hour: boolean
@@ -1296,7 +1292,6 @@ export type Database = {
           reference_type: Database["public"]["Enums"]["reference_type"] | null
           source: Database["public"]["Enums"]["transaction_source"]
           status: Database["public"]["Enums"]["transaction_status"]
-          tach_hours: number | null
           tags: string[] | null
           title: string
           transaction_date: string
@@ -1317,7 +1312,6 @@ export type Database = {
           allocation_start_date?: string | null
           amount: number
           attachment_urls?: Json | null
-          block_time_hours?: number | null
           category: Database["public"]["Enums"]["transaction_category"]
           counter_end_value?: number | null
           counter_start_value?: number | null
@@ -1326,11 +1320,8 @@ export type Database = {
             | null
           created_at?: string | null
           currency?: string
-          cycles?: number | null
           direction: Database["public"]["Enums"]["transaction_direction"]
-          flight_time_hours?: number | null
           generated_for_period?: string | null
-          hobbs_hours?: number | null
           id?: string
           include_in_cash_flow?: boolean
           include_in_cost_per_hour?: boolean
@@ -1341,7 +1332,6 @@ export type Database = {
           reference_type?: Database["public"]["Enums"]["reference_type"] | null
           source?: Database["public"]["Enums"]["transaction_source"]
           status?: Database["public"]["Enums"]["transaction_status"]
-          tach_hours?: number | null
           tags?: string[] | null
           title: string
           transaction_date: string
@@ -1362,7 +1352,6 @@ export type Database = {
           allocation_start_date?: string | null
           amount?: number
           attachment_urls?: Json | null
-          block_time_hours?: number | null
           category?: Database["public"]["Enums"]["transaction_category"]
           counter_end_value?: number | null
           counter_start_value?: number | null
@@ -1371,11 +1360,8 @@ export type Database = {
             | null
           created_at?: string | null
           currency?: string
-          cycles?: number | null
           direction?: Database["public"]["Enums"]["transaction_direction"]
-          flight_time_hours?: number | null
           generated_for_period?: string | null
-          hobbs_hours?: number | null
           id?: string
           include_in_cash_flow?: boolean
           include_in_cost_per_hour?: boolean
@@ -1386,7 +1372,6 @@ export type Database = {
           reference_type?: Database["public"]["Enums"]["reference_type"] | null
           source?: Database["public"]["Enums"]["transaction_source"]
           status?: Database["public"]["Enums"]["transaction_status"]
-          tach_hours?: number | null
           tags?: string[] | null
           title?: string
           transaction_date?: string
