@@ -7,6 +7,7 @@ import MaintenanceLogList from "./MaintenanceLogList";
 import MaintenanceLogForm from "./MaintenanceLogForm";
 import MaintenanceLogDetail from "./MaintenanceLogDetail";
 import { AircraftCounters } from "@/hooks/useAircraftCounters";
+import { voidMaintenanceTransactions } from "@/hooks/useMaintenanceTransactions";
 
 interface MaintenanceLog {
   id: string;
@@ -128,6 +129,9 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
 
   const handleDelete = async (logId: string) => {
     try {
+      // Void associated transactions before deleting the maintenance log
+      await voidMaintenanceTransactions(logId, userId);
+      
       // Delete linked notifications that haven't been modified by user
       await supabase
         .from("notifications")
