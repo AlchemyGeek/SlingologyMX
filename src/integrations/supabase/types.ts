@@ -1254,6 +1254,144 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          aircraft_id: string
+          allocate_over_time: boolean
+          allocation_end_date: string | null
+          allocation_method:
+            | Database["public"]["Enums"]["allocation_method"]
+            | null
+          allocation_period_unit:
+            | Database["public"]["Enums"]["allocation_period_unit"]
+            | null
+          allocation_period_value: number | null
+          allocation_start_date: string | null
+          amount: number
+          attachment_urls: Json | null
+          block_time_hours: number | null
+          category: Database["public"]["Enums"]["transaction_category"]
+          counter_end_value: number | null
+          counter_start_value: number | null
+          counter_type_for_hour_allocation:
+            | Database["public"]["Enums"]["counter_type_for_hour_allocation"]
+            | null
+          created_at: string | null
+          currency: string
+          cycles: number | null
+          direction: Database["public"]["Enums"]["transaction_direction"]
+          flight_time_hours: number | null
+          generated_for_period: string | null
+          hobbs_hours: number | null
+          id: string
+          include_in_cash_flow: boolean
+          include_in_cost_per_hour: boolean
+          include_in_ownership_total: boolean
+          intent: Database["public"]["Enums"]["transaction_intent"]
+          notes: string | null
+          reference_id: string | null
+          reference_type: Database["public"]["Enums"]["reference_type"] | null
+          source: Database["public"]["Enums"]["transaction_source"]
+          status: Database["public"]["Enums"]["transaction_status"]
+          tach_hours: number | null
+          tags: string[] | null
+          title: string
+          transaction_date: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          aircraft_id: string
+          allocate_over_time?: boolean
+          allocation_end_date?: string | null
+          allocation_method?:
+            | Database["public"]["Enums"]["allocation_method"]
+            | null
+          allocation_period_unit?:
+            | Database["public"]["Enums"]["allocation_period_unit"]
+            | null
+          allocation_period_value?: number | null
+          allocation_start_date?: string | null
+          amount: number
+          attachment_urls?: Json | null
+          block_time_hours?: number | null
+          category: Database["public"]["Enums"]["transaction_category"]
+          counter_end_value?: number | null
+          counter_start_value?: number | null
+          counter_type_for_hour_allocation?:
+            | Database["public"]["Enums"]["counter_type_for_hour_allocation"]
+            | null
+          created_at?: string | null
+          currency?: string
+          cycles?: number | null
+          direction: Database["public"]["Enums"]["transaction_direction"]
+          flight_time_hours?: number | null
+          generated_for_period?: string | null
+          hobbs_hours?: number | null
+          id?: string
+          include_in_cash_flow?: boolean
+          include_in_cost_per_hour?: boolean
+          include_in_ownership_total?: boolean
+          intent: Database["public"]["Enums"]["transaction_intent"]
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: Database["public"]["Enums"]["reference_type"] | null
+          source?: Database["public"]["Enums"]["transaction_source"]
+          status?: Database["public"]["Enums"]["transaction_status"]
+          tach_hours?: number | null
+          tags?: string[] | null
+          title: string
+          transaction_date: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          aircraft_id?: string
+          allocate_over_time?: boolean
+          allocation_end_date?: string | null
+          allocation_method?:
+            | Database["public"]["Enums"]["allocation_method"]
+            | null
+          allocation_period_unit?:
+            | Database["public"]["Enums"]["allocation_period_unit"]
+            | null
+          allocation_period_value?: number | null
+          allocation_start_date?: string | null
+          amount?: number
+          attachment_urls?: Json | null
+          block_time_hours?: number | null
+          category?: Database["public"]["Enums"]["transaction_category"]
+          counter_end_value?: number | null
+          counter_start_value?: number | null
+          counter_type_for_hour_allocation?:
+            | Database["public"]["Enums"]["counter_type_for_hour_allocation"]
+            | null
+          created_at?: string | null
+          currency?: string
+          cycles?: number | null
+          direction?: Database["public"]["Enums"]["transaction_direction"]
+          flight_time_hours?: number | null
+          generated_for_period?: string | null
+          hobbs_hours?: number | null
+          id?: string
+          include_in_cash_flow?: boolean
+          include_in_cost_per_hour?: boolean
+          include_in_ownership_total?: boolean
+          intent?: Database["public"]["Enums"]["transaction_intent"]
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: Database["public"]["Enums"]["reference_type"] | null
+          source?: Database["public"]["Enums"]["transaction_source"]
+          status?: Database["public"]["Enums"]["transaction_status"]
+          tach_hours?: number | null
+          tags?: string[] | null
+          title?: string
+          transaction_date?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1303,6 +1441,8 @@ export type Database = {
       }
     }
     Enums: {
+      allocation_method: "Straight-line" | "By Flight Hours" | "Custom"
+      allocation_period_unit: "Days" | "Months"
       app_role: "admin" | "user"
       applicability_status: "Applies" | "Does Not Apply" | "Unsure"
       bug_category:
@@ -1340,6 +1480,13 @@ export type Database = {
       compliance_type: "None" | "AD" | "SB" | "SL" | "KAS" | "ASB" | "Other"
       component_type: "Airframe" | "Propeller" | "Avionics" | "Other"
       counter_type: "Hobbs" | "Tach" | "Airframe TT" | "Engine TT" | "Prop TT"
+      counter_type_for_hour_allocation:
+        | "Tach"
+        | "Hobbs"
+        | "EngineHours"
+        | "AirframeHours"
+        | "FlightTime"
+        | "BlockTime"
       db_compliance_status:
         | "Not Reviewed"
         | "Not Complied"
@@ -1433,6 +1580,14 @@ export type Database = {
         | "Semi-Annual"
         | "Yearly"
         | "None"
+      reference_type:
+        | "Commitment"
+        | "Maintenance"
+        | "Directive"
+        | "Compliance"
+        | "Equipment"
+        | "Trip"
+        | "Other"
       subscription_type:
         | "EFB & Flight Planning"
         | "Avionics Subscriptions"
@@ -1455,6 +1610,30 @@ export type Database = {
         | "Publications & Media"
         | "Operations & Administration"
         | "Hardware-Related Services"
+      transaction_category:
+        | "Fuel"
+        | "Oil & Consumables"
+        | "Hangar / Tie-Down"
+        | "Insurance"
+        | "Avionics"
+        | "Maintenance Labor"
+        | "Maintenance Parts"
+        | "Training"
+        | "Travel"
+        | "Tools & Equipment"
+        | "Other"
+      transaction_direction: "Debit" | "Credit"
+      transaction_intent:
+        | "Ownership"
+        | "Operation"
+        | "Maintenance"
+        | "Compliance"
+        | "Capital"
+        | "Training"
+        | "Travel"
+        | "Other"
+      transaction_source: "Manual" | "Commitment" | "Imported"
+      transaction_status: "Pending" | "Posted" | "Skipped" | "Voided"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1582,6 +1761,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      allocation_method: ["Straight-line", "By Flight Hours", "Custom"],
+      allocation_period_unit: ["Days", "Months"],
       app_role: ["admin", "user"],
       applicability_status: ["Applies", "Does Not Apply", "Unsure"],
       bug_category: [
@@ -1622,6 +1803,14 @@ export const Constants = {
       compliance_type: ["None", "AD", "SB", "SL", "KAS", "ASB", "Other"],
       component_type: ["Airframe", "Propeller", "Avionics", "Other"],
       counter_type: ["Hobbs", "Tach", "Airframe TT", "Engine TT", "Prop TT"],
+      counter_type_for_hour_allocation: [
+        "Tach",
+        "Hobbs",
+        "EngineHours",
+        "AirframeHours",
+        "FlightTime",
+        "BlockTime",
+      ],
       db_compliance_status: [
         "Not Reviewed",
         "Not Complied",
@@ -1719,6 +1908,15 @@ export const Constants = {
         "Yearly",
         "None",
       ],
+      reference_type: [
+        "Commitment",
+        "Maintenance",
+        "Directive",
+        "Compliance",
+        "Equipment",
+        "Trip",
+        "Other",
+      ],
       subscription_type: [
         "EFB & Flight Planning",
         "Avionics Subscriptions",
@@ -1742,6 +1940,32 @@ export const Constants = {
         "Operations & Administration",
         "Hardware-Related Services",
       ],
+      transaction_category: [
+        "Fuel",
+        "Oil & Consumables",
+        "Hangar / Tie-Down",
+        "Insurance",
+        "Avionics",
+        "Maintenance Labor",
+        "Maintenance Parts",
+        "Training",
+        "Travel",
+        "Tools & Equipment",
+        "Other",
+      ],
+      transaction_direction: ["Debit", "Credit"],
+      transaction_intent: [
+        "Ownership",
+        "Operation",
+        "Maintenance",
+        "Compliance",
+        "Capital",
+        "Training",
+        "Travel",
+        "Other",
+      ],
+      transaction_source: ["Manual", "Commitment", "Imported"],
+      transaction_status: ["Pending", "Posted", "Skipped", "Voided"],
     },
   },
 } as const
