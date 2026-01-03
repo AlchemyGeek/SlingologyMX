@@ -7,9 +7,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
-import { format } from "date-fns";
+import { format, addWeeks, addMonths } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
+
+// Calculate the next occurrence date based on initial_date and recurrence
+const getNextOccurrence = (initialDate: Date, recurrence: string): Date => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let current = new Date(initialDate);
+  current.setHours(0, 0, 0, 0);
+  
+  // If initial date is in the future, use it
+  if (current >= today) {
+    return current;
+  }
+  
+  // Otherwise, calculate the next occurrence
+  while (current < today) {
+    switch (recurrence) {
+      case "Weekly":
+        current = addWeeks(current, 1);
+        break;
+      case "Bi-Monthly":
+        current = addWeeks(current, 2);
+        break;
+      case "Monthly":
+        current = addMonths(current, 1);
+        break;
+      case "Quarterly":
+        current = addMonths(current, 3);
+        break;
+      case "Semi-Annual":
+        current = addMonths(current, 6);
+        break;
+      case "Yearly":
+        current = addMonths(current, 12);
+        break;
+      default:
+        return current;
+    }
+  }
+  
+  return current;
+};
 
 interface SubscriptionFormProps {
   userId: string;
@@ -101,7 +143,11 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           .eq("subscription_id", editingSubscription.id)
           .maybeSingle();
 
-        if (isRecurring) {
+        if (isRecurring && formData.initial_date) {
+          // Calculate the next occurrence date for notifications
+          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence);
+          const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+          
           if (existingNotif) {
             // Update existing notification (might fail if user deleted it, that's ok)
             await supabase
@@ -110,7 +156,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
                 description: formData.subscription_name,
                 notes: formData.notes || null,
                 type: "Subscription" as const,
-                initial_date: initialDateStr,
+                initial_date: nextOccurrenceStr,
                 recurrence: "None" as const,
               })
               .eq("subscription_id", editingSubscription.id);
@@ -122,7 +168,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
               description: formData.subscription_name,
               notes: formData.notes || null,
               type: "Subscription" as const,
-              initial_date: initialDateStr,
+              initial_date: nextOccurrenceStr,
               recurrence: "None" as const,
               subscription_id: editingSubscription.id,
             }]);
@@ -151,14 +197,18 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
         if (subError) throw subError;
 
         // Only create notification for recurring subscriptions
-        if (isRecurring) {
+        if (isRecurring && formData.initial_date) {
+          // Calculate the next occurrence date for notifications
+          const nextOccurrence = getNextOccurrence(formData.initial_date, formData.recurrence);
+          const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+          
           const notificationData = {
             user_id: userId,
             aircraft_id: aircraftId,
             description: formData.subscription_name,
             notes: formData.notes || null,
             type: "Subscription" as const,
-            initial_date: initialDateStr,
+            initial_date: nextOccurrenceStr,
             recurrence: "None" as const,
             subscription_id: newSubscription.id,
           };
