@@ -109,6 +109,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const [showCounterUpdateDialog, setShowCounterUpdateDialog] = useState(false);
   const [pendingCounterUpdates, setPendingCounterUpdates] = useState<CounterUpdates>({});
   const [isUpdatingCounters, setIsUpdatingCounters] = useState(false);
+  const [isTotalCostOverridden, setIsTotalCostOverridden] = useState(!!editingLog?.total_cost);
 
   useEffect(() => {
     if (editingLog) {
@@ -182,6 +183,23 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       }
     }
   }, [formData.date_performed, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
+
+  // Auto-calculate total_cost when individual costs change (unless user has overridden)
+  useEffect(() => {
+    if (!isTotalCostOverridden) {
+      const parts = parseFloat(formData.parts_cost) || 0;
+      const labor = parseFloat(formData.labor_cost) || 0;
+      const other = parseFloat(formData.other_cost) || 0;
+      const total = parts + labor + other;
+      
+      // Only update if there's at least one cost entered
+      if (parts > 0 || labor > 0 || other > 0) {
+        setFormData(prev => ({ ...prev, total_cost: total.toFixed(2) }));
+      } else {
+        setFormData(prev => ({ ...prev, total_cost: "" }));
+      }
+    }
+  }, [formData.parts_cost, formData.labor_cost, formData.other_cost, isTotalCostOverridden]);
 
 
   const handleAddUrl = () => {
@@ -1231,15 +1249,32 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="total_cost">Total Cost ($)</Label>
+            <Label htmlFor="total_cost">
+              Total Cost ($)
+              {!isTotalCostOverridden && (formData.parts_cost || formData.labor_cost || formData.other_cost) && (
+                <span className="text-xs text-muted-foreground ml-2">(auto-calculated)</span>
+              )}
+            </Label>
             <Input
               id="total_cost"
               type="number"
               step="0.01"
               max="999999.99"
               value={formData.total_cost}
-              onChange={(e) => setFormData({ ...formData, total_cost: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, total_cost: e.target.value });
+                setIsTotalCostOverridden(true);
+              }}
             />
+            {isTotalCostOverridden && (
+              <button
+                type="button"
+                className="text-xs text-primary hover:underline"
+                onClick={() => setIsTotalCostOverridden(false)}
+              >
+                Reset to auto-calculate
+              </button>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="vendor_name">Vendor Name</Label>
