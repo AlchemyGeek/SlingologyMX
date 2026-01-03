@@ -3,13 +3,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Search, X } from "lucide-react";
+import { Trash2, Pencil, Search, X, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Constants } from "@/integrations/supabase/types";
+import * as XLSX from "xlsx";
 
 const TRANSACTION_CATEGORIES = Constants.public.Enums.transaction_category;
 const TRANSACTION_STATUSES = Constants.public.Enums.transaction_status;
@@ -80,13 +80,45 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
     }
   };
 
-  const hasActiveFilters = searchTerm !== "" || categoryFilter !== "all" || statusFilter !== "all" || sortBy !== "date";
+  const handleExportExcel = () => {
+    if (filteredTransactions.length === 0) {
+      toast.error("No transactions to export");
+      return;
+    }
 
-  const clearFilters = () => {
-    setSearchTerm("");
-    setCategoryFilter("all");
-    setStatusFilter("all");
-    setSortBy("date");
+    const exportData = filteredTransactions.map((t, index) => ({
+      "ID": `TXN-${parseLocalDate(t.transaction_date).toISOString().slice(2, 10).replace(/-/g, "")}-${String(index + 1).padStart(3, "0")}`,
+      "Date": parseLocalDate(t.transaction_date).toLocaleDateString(),
+      "Title": t.title,
+      "Amount": Number(t.amount).toFixed(2),
+      "Currency": t.currency?.trim() || "USD",
+      "Direction": t.direction,
+      "Intent": t.intent,
+      "Category": t.category,
+      "Status": t.status,
+      "Source": t.source,
+      "Tags": t.tags?.join(", ") || "",
+      "Notes": t.notes || "",
+      "Include in Cash Flow": t.include_in_cash_flow ? "Yes" : "No",
+      "Include in Ownership Total": t.include_in_ownership_total ? "Yes" : "No",
+      "Include in Cost-Per-Hour": t.include_in_cost_per_hour ? "Yes" : "No",
+      "Allocate Over Time": t.allocate_over_time ? "Yes" : "No",
+      "Allocation Method": t.allocation_method || "",
+      "Allocation Period": t.allocation_period_value && t.allocation_period_unit 
+        ? `${t.allocation_period_value} ${t.allocation_period_unit}` 
+        : "",
+      "Hobbs Hours": t.hobbs_hours ?? "",
+      "Tach Hours": t.tach_hours ?? "",
+      "Flight Time Hours": t.flight_time_hours ?? "",
+      "Block Time Hours": t.block_time_hours ?? "",
+      "Created At": t.created_at ? new Date(t.created_at).toLocaleString() : "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    XLSX.writeFile(workbook, `transactions-export-${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast.success(`Exported ${filteredTransactions.length} transactions`);
   };
 
   const getDirectionColor = (direction: string) => {
@@ -101,6 +133,15 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
       case "Skipped": return "outline";
       default: return "secondary";
     }
+  };
+
+  const hasActiveFilters = searchTerm !== "" || categoryFilter !== "all" || statusFilter !== "all" || sortBy !== "date";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("all");
+    setStatusFilter("all");
+    setSortBy("date");
   };
 
   if (loading) {
@@ -162,6 +203,10 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
             <X className="h-4 w-4" />
           </Button>
         )}
+        <Button variant="outline" size="sm" onClick={handleExportExcel} title="Export to Excel">
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
       </div>
 
       {/* Results Count */}
