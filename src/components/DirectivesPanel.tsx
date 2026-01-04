@@ -202,7 +202,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
           </div>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Directive
+            New Directive
           </Button>
         </div>
       </CardHeader>
