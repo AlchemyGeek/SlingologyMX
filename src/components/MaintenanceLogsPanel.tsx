@@ -209,7 +209,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
         <h2 className="text-2xl font-semibold">Maintenance Logs</h2>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Log Entry
+          New Maintenance Log
         </Button>
       </div>
       <MaintenanceLogList
