@@ -113,7 +113,13 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const [showCounterUpdateDialog, setShowCounterUpdateDialog] = useState(false);
   const [pendingCounterUpdates, setPendingCounterUpdates] = useState<CounterUpdates>({});
   const [isUpdatingCounters, setIsUpdatingCounters] = useState(false);
-  const [isTotalCostOverridden, setIsTotalCostOverridden] = useState(!!editingLog?.total_cost);
+  const [isItemizedCost, setIsItemizedCost] = useState(
+    editingLog ? (
+      (editingLog.parts_cost !== null && editingLog.parts_cost > 0) ||
+      (editingLog.labor_cost !== null && editingLog.labor_cost > 0) ||
+      (editingLog.other_cost !== null && editingLog.other_cost > 0)
+    ) : false
+  );
 
   useEffect(() => {
     if (editingLog) {
@@ -188,22 +194,28 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     }
   }, [formData.date_performed, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
 
-  // Auto-calculate total_cost when individual costs change (unless user has overridden)
-  useEffect(() => {
-    if (!isTotalCostOverridden) {
-      const parts = parseFloat(formData.parts_cost) || 0;
-      const labor = parseFloat(formData.labor_cost) || 0;
-      const other = parseFloat(formData.other_cost) || 0;
-      const total = parts + labor + other;
-      
-      // Only update if there's at least one cost entered
-      if (parts > 0 || labor > 0 || other > 0) {
-        setFormData(prev => ({ ...prev, total_cost: total.toFixed(2) }));
+  // Validate itemized costs sum equals total cost
+  const getItemizedCostError = (): string | null => {
+    if (!isItemizedCost) return null;
+    
+    const parts = parseFloat(formData.parts_cost) || 0;
+    const labor = parseFloat(formData.labor_cost) || 0;
+    const other = parseFloat(formData.other_cost) || 0;
+    const total = parseFloat(formData.total_cost) || 0;
+    const sum = parts + labor + other;
+    
+    if (total > 0 && Math.abs(sum - total) > 0.01) {
+      const diff = sum - total;
+      if (diff > 0) {
+        return `Itemized costs exceed total by $${diff.toFixed(2)}`;
       } else {
-        setFormData(prev => ({ ...prev, total_cost: "" }));
+        return `Itemized costs are $${Math.abs(diff).toFixed(2)} less than total`;
       }
     }
-  }, [formData.parts_cost, formData.labor_cost, formData.other_cost, isTotalCostOverridden]);
+    return null;
+  };
+
+  const itemizedCostError = getItemizedCostError();
 
 
   const handleAddUrl = () => {
@@ -328,6 +340,20 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       return;
     }
 
+    // Validate itemized costs sum equals total when itemized is enabled
+    if (isItemizedCost && formData.total_cost) {
+      const parts = parseFloat(formData.parts_cost) || 0;
+      const labor = parseFloat(formData.labor_cost) || 0;
+      const other = parseFloat(formData.other_cost) || 0;
+      const total = parseFloat(formData.total_cost) || 0;
+      const sum = parts + labor + other;
+      
+      if (Math.abs(sum - total) > 0.01) {
+        toast.error("Itemized costs must equal the total cost");
+        return;
+      }
+    }
+
     const logData = {
       user_id: userId,
       aircraft_id: aircraftId,
@@ -350,9 +376,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       performed_by_type: formData.performed_by_type,
       performed_by_name: formData.performed_by_name,
       organization: formData.organization || null,
-      parts_cost: formData.parts_cost ? parseFloat(formData.parts_cost) : null,
-      labor_cost: formData.labor_cost ? parseFloat(formData.labor_cost) : null,
-      other_cost: formData.other_cost ? parseFloat(formData.other_cost) : null,
+      parts_cost: isItemizedCost && formData.parts_cost ? parseFloat(formData.parts_cost) : null,
+      labor_cost: isItemizedCost && formData.labor_cost ? parseFloat(formData.labor_cost) : null,
+      other_cost: isItemizedCost && formData.other_cost ? parseFloat(formData.other_cost) : null,
       total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
       vendor_name: formData.vendor_name || null,
       invoice_number: formData.invoice_number || null,
@@ -861,9 +887,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           id: logId,
           entry_title: formData.entry_title,
           date_performed: format(formData.date_performed, "yyyy-MM-dd"),
-          parts_cost: formData.parts_cost ? parseFloat(formData.parts_cost) : null,
-          labor_cost: formData.labor_cost ? parseFloat(formData.labor_cost) : null,
-          other_cost: formData.other_cost ? parseFloat(formData.other_cost) : null,
+          parts_cost: isItemizedCost && formData.parts_cost ? parseFloat(formData.parts_cost) : null,
+          labor_cost: isItemizedCost && formData.labor_cost ? parseFloat(formData.labor_cost) : null,
+          other_cost: isItemizedCost && formData.other_cost ? parseFloat(formData.other_cost) : null,
           total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
           hobbs_at_event: formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null,
           tach_at_event: formData.tach_at_event ? parseFloat(formData.tach_at_event) : null,
@@ -1241,43 +1267,10 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         </div>
       </div>
 
-      {/* Cost Metadata */}
+      {/* Cost */}
       <div className="space-y-4 border-b pb-4">
-        <h3 className="text-lg font-medium">Cost Metadata</h3>
+        <h3 className="text-lg font-medium">Cost</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="parts_cost">Parts Cost ($)</Label>
-            <Input
-              id="parts_cost"
-              type="number"
-              step="0.01"
-              max="999999.99"
-              value={formData.parts_cost}
-              onChange={(e) => setFormData({ ...formData, parts_cost: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="labor_cost">Labor Cost ($)</Label>
-            <Input
-              id="labor_cost"
-              type="number"
-              step="0.01"
-              max="999999.99"
-              value={formData.labor_cost}
-              onChange={(e) => setFormData({ ...formData, labor_cost: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="other_cost">Other Cost ($)</Label>
-            <Input
-              id="other_cost"
-              type="number"
-              step="0.01"
-              max="999999.99"
-              value={formData.other_cost}
-              onChange={(e) => setFormData({ ...formData, other_cost: e.target.value })}
-            />
-          </div>
           <div className="space-y-2">
             <Label htmlFor="total_cost">Total Cost ($)</Label>
             <Input
@@ -1286,21 +1279,72 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               step="0.01"
               max="999999.99"
               value={formData.total_cost}
-              onChange={(e) => {
-                setFormData({ ...formData, total_cost: e.target.value });
-                setIsTotalCostOverridden(true);
+              onChange={(e) => setFormData({ ...formData, total_cost: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center space-x-3 pt-6">
+            <Switch
+              id="itemized_cost"
+              checked={isItemizedCost}
+              onCheckedChange={(checked) => {
+                setIsItemizedCost(checked);
+                if (!checked) {
+                  // Clear itemized fields when turning off
+                  setFormData(prev => ({
+                    ...prev,
+                    parts_cost: "",
+                    labor_cost: "",
+                    other_cost: "",
+                  }));
+                }
               }}
             />
-            {isTotalCostOverridden && (
-              <button
-                type="button"
-                className="text-xs text-primary hover:underline"
-                onClick={() => setIsTotalCostOverridden(false)}
-              >
-                Reset to auto-calculate
-              </button>
-            )}
+            <Label htmlFor="itemized_cost">Itemized</Label>
           </div>
+          
+          {isItemizedCost && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="parts_cost">Parts Cost ($)</Label>
+                <Input
+                  id="parts_cost"
+                  type="number"
+                  step="0.01"
+                  max="999999.99"
+                  value={formData.parts_cost}
+                  onChange={(e) => setFormData({ ...formData, parts_cost: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="labor_cost">Labor Cost ($)</Label>
+                <Input
+                  id="labor_cost"
+                  type="number"
+                  step="0.01"
+                  max="999999.99"
+                  value={formData.labor_cost}
+                  onChange={(e) => setFormData({ ...formData, labor_cost: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="other_cost">Other Cost ($)</Label>
+                <Input
+                  id="other_cost"
+                  type="number"
+                  step="0.01"
+                  max="999999.99"
+                  value={formData.other_cost}
+                  onChange={(e) => setFormData({ ...formData, other_cost: e.target.value })}
+                />
+              </div>
+              {itemizedCostError && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-destructive">{itemizedCostError}</p>
+                </div>
+              )}
+            </>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="vendor_name">Vendor Name</Label>
             <Input
