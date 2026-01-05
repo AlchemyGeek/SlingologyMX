@@ -115,6 +115,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const [urlDescInput, setUrlDescInput] = useState("");
   const [showCounterUpdateDialog, setShowCounterUpdateDialog] = useState(false);
   const [pendingCounterUpdates, setPendingCounterUpdates] = useState<CounterUpdates>({});
+  const [originalCounterValues, setOriginalCounterValues] = useState<CounterUpdates | null>(null);
   const [isUpdatingCounters, setIsUpdatingCounters] = useState(false);
   const [isItemizedCost, setIsItemizedCost] = useState(
     editingLog ? (
@@ -1011,14 +1012,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             ? Number(editingLog.engine_total_time) : null;
           const origProp = editingLog.prop_total_time !== null && editingLog.prop_total_time !== undefined 
             ? Number(editingLog.prop_total_time) : null;
-
-          console.log("Counter comparison for edit:", {
-            hobbs, origHobbs, hobbsChanged: hobbs !== null && hobbs !== origHobbs,
-            tach, origTach, tachChanged: tach !== null && tach !== origTach,
-            airframe, origAirframe, airframeChanged: airframe !== null && airframe !== origAirframe,
-            engine, origEngine, engineChanged: engine !== null && engine !== origEngine,
-            prop, origProp, propChanged: prop !== null && prop !== origProp,
-          });
           
           if (hobbs !== null && hobbs !== origHobbs) updates.hobbs = hobbs;
           if (tach !== null && tach !== origTach) updates.tach = tach;
@@ -1026,7 +1019,16 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           if (engine !== null && engine !== origEngine) updates.engine_total_time = engine;
           if (prop !== null && prop !== origProp) updates.prop_total_time = prop;
           
-          console.log("Updates object:", updates, "Has updates:", Object.keys(updates).length > 0);
+          // Store original values for display in the dialog
+          if (Object.keys(updates).length > 0) {
+            setOriginalCounterValues({
+              hobbs: origHobbs ?? undefined,
+              tach: origTach ?? undefined,
+              airframe_total_time: origAirframe ?? undefined,
+              engine_total_time: origEngine ?? undefined,
+              prop_total_time: origProp ?? undefined,
+            });
+          }
         } else {
           // For new records: prompt if values exceed global counters
           if (hobbs !== null && hobbs > defaultCounters.hobbs) updates.hobbs = hobbs;
@@ -1034,6 +1036,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           if (airframe !== null && airframe > defaultCounters.airframe_total_time) updates.airframe_total_time = airframe;
           if (engine !== null && engine > defaultCounters.engine_total_time) updates.engine_total_time = engine;
           if (prop !== null && prop > defaultCounters.prop_total_time) updates.prop_total_time = prop;
+          
+          // Clear original values for new records (will use defaultCounters)
+          setOriginalCounterValues(null);
         }
         
         if (Object.keys(updates).length > 0) {
@@ -1598,22 +1603,35 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <AlertDialogHeader>
           <AlertDialogTitle>Update Global Counters?</AlertDialogTitle>
           <AlertDialogDescription>
-            Some counter values in this maintenance record are higher than your current global counters. Would you like to update the global counters to match?
+            {editingLog 
+              ? "Counter values in this maintenance record have changed. Would you like to update the global counters to reflect this change?"
+              : "Some counter values in this maintenance record are higher than your current global counters. Would you like to update the global counters to match?"
+            }
             <div className="mt-3 space-y-1 text-sm">
               {pendingCounterUpdates.hobbs !== undefined && (
-                <div>Hobbs: {defaultCounters?.hobbs.toFixed(1)} → {pendingCounterUpdates.hobbs.toFixed(1)}</div>
+                <div>Hobbs: {(editingLog && originalCounterValues?.hobbs !== undefined 
+                  ? originalCounterValues.hobbs 
+                  : defaultCounters?.hobbs ?? 0).toFixed(1)} → {pendingCounterUpdates.hobbs.toFixed(1)}</div>
               )}
               {pendingCounterUpdates.tach !== undefined && (
-                <div>Tach: {defaultCounters?.tach.toFixed(1)} → {pendingCounterUpdates.tach.toFixed(1)}</div>
+                <div>Tach: {(editingLog && originalCounterValues?.tach !== undefined 
+                  ? originalCounterValues.tach 
+                  : defaultCounters?.tach ?? 0).toFixed(1)} → {pendingCounterUpdates.tach.toFixed(1)}</div>
               )}
               {pendingCounterUpdates.airframe_total_time !== undefined && (
-                <div>Airframe TT: {defaultCounters?.airframe_total_time.toFixed(1)} → {pendingCounterUpdates.airframe_total_time.toFixed(1)}</div>
+                <div>Airframe TT: {(editingLog && originalCounterValues?.airframe_total_time !== undefined 
+                  ? originalCounterValues.airframe_total_time 
+                  : defaultCounters?.airframe_total_time ?? 0).toFixed(1)} → {pendingCounterUpdates.airframe_total_time.toFixed(1)}</div>
               )}
               {pendingCounterUpdates.engine_total_time !== undefined && (
-                <div>Engine TT: {defaultCounters?.engine_total_time.toFixed(1)} → {pendingCounterUpdates.engine_total_time.toFixed(1)}</div>
+                <div>Engine TT: {(editingLog && originalCounterValues?.engine_total_time !== undefined 
+                  ? originalCounterValues.engine_total_time 
+                  : defaultCounters?.engine_total_time ?? 0).toFixed(1)} → {pendingCounterUpdates.engine_total_time.toFixed(1)}</div>
               )}
               {pendingCounterUpdates.prop_total_time !== undefined && (
-                <div>Prop TT: {defaultCounters?.prop_total_time.toFixed(1)} → {pendingCounterUpdates.prop_total_time.toFixed(1)}</div>
+                <div>Prop TT: {(editingLog && originalCounterValues?.prop_total_time !== undefined 
+                  ? originalCounterValues.prop_total_time 
+                  : defaultCounters?.prop_total_time ?? 0).toFixed(1)} → {pendingCounterUpdates.prop_total_time.toFixed(1)}</div>
               )}
             </div>
           </AlertDialogDescription>
