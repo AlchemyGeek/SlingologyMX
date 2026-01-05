@@ -1013,11 +1013,22 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           const origProp = editingLog.prop_total_time !== null && editingLog.prop_total_time !== undefined 
             ? Number(editingLog.prop_total_time) : null;
           
-          if (hobbs !== null && hobbs !== origHobbs) updates.hobbs = hobbs;
-          if (tach !== null && tach !== origTach) updates.tach = tach;
-          if (airframe !== null && airframe !== origAirframe) updates.airframe_total_time = airframe;
-          if (engine !== null && engine !== origEngine) updates.engine_total_time = engine;
-          if (prop !== null && prop !== origProp) updates.prop_total_time = prop;
+          // Check each counter for changes - include if value changed OR if going from null to value (or vice versa)
+          if (hobbs !== origHobbs) {
+            if (hobbs !== null) updates.hobbs = hobbs;
+          }
+          if (tach !== origTach) {
+            if (tach !== null) updates.tach = tach;
+          }
+          if (airframe !== origAirframe) {
+            if (airframe !== null) updates.airframe_total_time = airframe;
+          }
+          if (engine !== origEngine) {
+            if (engine !== null) updates.engine_total_time = engine;
+          }
+          if (prop !== origProp) {
+            if (prop !== null) updates.prop_total_time = prop;
+          }
           
           // Store original values for display in the dialog
           if (Object.keys(updates).length > 0) {
