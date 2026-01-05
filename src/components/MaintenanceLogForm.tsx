@@ -123,8 +123,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   );
   const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
 
-  // Syncable counters (excludes Hobbs)
-  const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
+  // All syncable counters including Hobbs
+  const syncableCounterFields = ["hobbs_at_event", "tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
   type SyncableCounterField = typeof syncableCounterFields[number];
 
   const handleCounterChange = (field: string, value: string) => {
@@ -1105,7 +1105,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           <h3 className="text-lg font-medium">Time & Usage</h3>
           <div className="flex items-center gap-2">
             <Label htmlFor="counter-sync-toggle" className="text-sm text-muted-foreground">
-              Sync counters (Tach, Airframe, Engine, Prop)
+              Sync all counters
             </Label>
             <Switch
               id="counter-sync-toggle"
@@ -1131,7 +1131,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               step="0.1"
               max="9999.9"
               value={formData.hobbs_at_event}
-              onChange={(e) => setFormData({ ...formData, hobbs_at_event: e.target.value })}
+              onChange={(e) => handleCounterChange("hobbs_at_event", e.target.value)}
               required
             />
           </div>
