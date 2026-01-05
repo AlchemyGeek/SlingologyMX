@@ -262,7 +262,7 @@ const Dashboard = () => {
             aircraftId={selectedAircraft?.id || ""}
             counters={counters}
             onUpdateGlobalCounters={async (updates, changeDate, allCounterValues) => {
-              await updateAllCounters(updates, "Maintenance Record", changeDate, allCounterValues);
+              await updateAllCounters(updates, "Maintenance", changeDate, allCounterValues);
               refetch();
             }}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
