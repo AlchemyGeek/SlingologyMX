@@ -34,6 +34,7 @@ import {
   createMaintenanceTransactions, 
   updateMaintenanceTransactions 
 } from "@/hooks/useMaintenanceTransactions";
+import { validateCounterUpdates } from "@/lib/counterValidation";
 
 interface DirectiveComplianceLink {
   id?: string;
@@ -72,7 +73,7 @@ interface MaintenanceLogFormProps {
   defaultCounters?: DefaultCounters;
   onSuccess: () => void;
   onCancel: () => void;
-  onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
+  onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date) => Promise<void>;
 }
 
 const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
@@ -942,7 +943,22 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     
     setIsUpdatingCounters(true);
     try {
-      await onUpdateGlobalCounters(pendingCounterUpdates);
+      // Validate counter updates based on maintenance date
+      const validation = await validateCounterUpdates(
+        aircraftId,
+        formData.date_performed,
+        pendingCounterUpdates
+      );
+      
+      if (!validation.isValid) {
+        // Show all validation errors
+        validation.errors.forEach(error => toast.error(error, { duration: 6000 }));
+        setIsUpdatingCounters(false);
+        return; // Don't close dialog, let user decide to skip or fix
+      }
+      
+      // Pass the maintenance date to use for the history entry
+      await onUpdateGlobalCounters(pendingCounterUpdates, formData.date_performed);
       toast.success("Global counters updated");
     } catch (error) {
       console.error("Error updating global counters:", error);
