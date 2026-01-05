@@ -1000,17 +1000,33 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         
         if (editingLog) {
           // For edits: prompt if any counter value changed from the original
-          const origHobbs = editingLog.hobbs_at_event ?? null;
-          const origTach = editingLog.tach_at_event ?? null;
-          const origAirframe = editingLog.airframe_total_time ?? null;
-          const origEngine = editingLog.engine_total_time ?? null;
-          const origProp = editingLog.prop_total_time ?? null;
+          // Use Number() to ensure consistent type conversion for comparison
+          const origHobbs = editingLog.hobbs_at_event !== null && editingLog.hobbs_at_event !== undefined 
+            ? Number(editingLog.hobbs_at_event) : null;
+          const origTach = editingLog.tach_at_event !== null && editingLog.tach_at_event !== undefined 
+            ? Number(editingLog.tach_at_event) : null;
+          const origAirframe = editingLog.airframe_total_time !== null && editingLog.airframe_total_time !== undefined 
+            ? Number(editingLog.airframe_total_time) : null;
+          const origEngine = editingLog.engine_total_time !== null && editingLog.engine_total_time !== undefined 
+            ? Number(editingLog.engine_total_time) : null;
+          const origProp = editingLog.prop_total_time !== null && editingLog.prop_total_time !== undefined 
+            ? Number(editingLog.prop_total_time) : null;
+
+          console.log("Counter comparison for edit:", {
+            hobbs, origHobbs, hobbsChanged: hobbs !== null && hobbs !== origHobbs,
+            tach, origTach, tachChanged: tach !== null && tach !== origTach,
+            airframe, origAirframe, airframeChanged: airframe !== null && airframe !== origAirframe,
+            engine, origEngine, engineChanged: engine !== null && engine !== origEngine,
+            prop, origProp, propChanged: prop !== null && prop !== origProp,
+          });
           
           if (hobbs !== null && hobbs !== origHobbs) updates.hobbs = hobbs;
           if (tach !== null && tach !== origTach) updates.tach = tach;
           if (airframe !== null && airframe !== origAirframe) updates.airframe_total_time = airframe;
           if (engine !== null && engine !== origEngine) updates.engine_total_time = engine;
           if (prop !== null && prop !== origProp) updates.prop_total_time = prop;
+          
+          console.log("Updates object:", updates, "Has updates:", Object.keys(updates).length > 0);
         } else {
           // For new records: prompt if values exceed global counters
           if (hobbs !== null && hobbs > defaultCounters.hobbs) updates.hobbs = hobbs;
