@@ -121,6 +121,37 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       (editingLog.other_cost !== null && editingLog.other_cost > 0)
     ) : false
   );
+  const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
+
+  // Syncable counters (excludes Hobbs)
+  const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
+  type SyncableCounterField = typeof syncableCounterFields[number];
+
+  const handleCounterChange = (field: string, value: string) => {
+    const numValue = value ? parseFloat(value) : 0;
+    const currentValue = formData[field as keyof typeof formData] ? parseFloat(formData[field as keyof typeof formData] as string) : 0;
+    
+    // Check if this is a syncable counter and sync is enabled
+    const isSyncable = syncableCounterFields.includes(field as SyncableCounterField);
+    
+    if (counterSyncEnabled && isSyncable && !isNaN(numValue) && !isNaN(currentValue)) {
+      const diff = numValue - currentValue;
+      
+      // Apply the same difference to all syncable counters
+      const updates: Partial<typeof formData> = { [field]: value };
+      syncableCounterFields.forEach(syncField => {
+        if (syncField !== field) {
+          const syncCurrentValue = formData[syncField] ? parseFloat(formData[syncField] as string) : 0;
+          const newSyncValue = Math.max(0, syncCurrentValue + diff);
+          updates[syncField] = newSyncValue.toFixed(1);
+        }
+      });
+      
+      setFormData(prev => ({ ...prev, ...updates }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
 
   useEffect(() => {
     if (editingLog) {
@@ -1070,7 +1101,19 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
 
       {/* Time & Usage */}
       <div className="space-y-4 border-b pb-4">
-        <h3 className="text-lg font-medium">Time & Usage</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Time & Usage</h3>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="counter-sync-toggle" className="text-sm text-muted-foreground">
+              Sync counters (Tach, Airframe, Engine, Prop)
+            </Label>
+            <Switch
+              id="counter-sync-toggle"
+              checked={counterSyncEnabled}
+              onCheckedChange={setCounterSyncEnabled}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Date Performed <span className="text-destructive">*</span></Label>
@@ -1100,7 +1143,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               step="0.1"
               max="9999.9"
               value={formData.tach_at_event}
-              onChange={(e) => setFormData({ ...formData, tach_at_event: e.target.value })}
+              onChange={(e) => handleCounterChange("tach_at_event", e.target.value)}
               required
             />
           </div>
@@ -1113,7 +1156,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               max="19999.9"
               required
               value={formData.airframe_total_time}
-              onChange={(e) => setFormData({ ...formData, airframe_total_time: e.target.value })}
+              onChange={(e) => handleCounterChange("airframe_total_time", e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -1124,7 +1167,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               step="0.1"
               max="19999.9"
               value={formData.engine_total_time}
-              onChange={(e) => setFormData({ ...formData, engine_total_time: e.target.value })}
+              onChange={(e) => handleCounterChange("engine_total_time", e.target.value)}
               required
             />
           </div>
@@ -1137,7 +1180,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               max="19999.9"
               required
               value={formData.prop_total_time}
-              onChange={(e) => setFormData({ ...formData, prop_total_time: e.target.value })}
+              onChange={(e) => handleCounterChange("prop_total_time", e.target.value)}
             />
           </div>
         </div>
