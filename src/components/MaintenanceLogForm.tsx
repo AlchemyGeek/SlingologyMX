@@ -908,7 +908,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         }
       }
       
-      // Check if any counter values are higher than global counters
+      // Check if counter values should trigger global counter update prompt
       if (defaultCounters && onUpdateGlobalCounters) {
         const updates: CounterUpdates = {};
         
@@ -918,11 +918,27 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         const engine = formData.engine_total_time ? parseFloat(formData.engine_total_time) : null;
         const prop = formData.prop_total_time ? parseFloat(formData.prop_total_time) : null;
         
-        if (hobbs !== null && hobbs > defaultCounters.hobbs) updates.hobbs = hobbs;
-        if (tach !== null && tach > defaultCounters.tach) updates.tach = tach;
-        if (airframe !== null && airframe > defaultCounters.airframe_total_time) updates.airframe_total_time = airframe;
-        if (engine !== null && engine > defaultCounters.engine_total_time) updates.engine_total_time = engine;
-        if (prop !== null && prop > defaultCounters.prop_total_time) updates.prop_total_time = prop;
+        if (editingLog) {
+          // For edits: prompt if any counter value changed from the original
+          const origHobbs = editingLog.hobbs_at_event ?? null;
+          const origTach = editingLog.tach_at_event ?? null;
+          const origAirframe = editingLog.airframe_total_time ?? null;
+          const origEngine = editingLog.engine_total_time ?? null;
+          const origProp = editingLog.prop_total_time ?? null;
+          
+          if (hobbs !== null && hobbs !== origHobbs) updates.hobbs = hobbs;
+          if (tach !== null && tach !== origTach) updates.tach = tach;
+          if (airframe !== null && airframe !== origAirframe) updates.airframe_total_time = airframe;
+          if (engine !== null && engine !== origEngine) updates.engine_total_time = engine;
+          if (prop !== null && prop !== origProp) updates.prop_total_time = prop;
+        } else {
+          // For new records: prompt if values exceed global counters
+          if (hobbs !== null && hobbs > defaultCounters.hobbs) updates.hobbs = hobbs;
+          if (tach !== null && tach > defaultCounters.tach) updates.tach = tach;
+          if (airframe !== null && airframe > defaultCounters.airframe_total_time) updates.airframe_total_time = airframe;
+          if (engine !== null && engine > defaultCounters.engine_total_time) updates.engine_total_time = engine;
+          if (prop !== null && prop > defaultCounters.prop_total_time) updates.prop_total_time = prop;
+        }
         
         if (Object.keys(updates).length > 0) {
           setPendingCounterUpdates(updates);
