@@ -127,29 +127,34 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const syncableCounterFields = ["hobbs_at_event", "tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
   type SyncableCounterField = typeof syncableCounterFields[number];
 
-  const handleCounterChange = (field: string, value: string) => {
-    const numValue = value ? parseFloat(value) : 0;
-    const currentValue = formData[field as keyof typeof formData] ? parseFloat(formData[field as keyof typeof formData] as string) : 0;
-    
-    // Check if this is a syncable counter and sync is enabled
+  const handleCounterChange = (field: string, newValue: string) => {
     const isSyncable = syncableCounterFields.includes(field as SyncableCounterField);
     
-    if (counterSyncEnabled && isSyncable && !isNaN(numValue) && !isNaN(currentValue)) {
-      const diff = numValue - currentValue;
-      
-      // Apply the same difference to all syncable counters
-      const updates: Partial<typeof formData> = { [field]: value };
-      syncableCounterFields.forEach(syncField => {
-        if (syncField !== field) {
-          const syncCurrentValue = formData[syncField] ? parseFloat(formData[syncField] as string) : 0;
-          const newSyncValue = Math.max(0, syncCurrentValue + diff);
-          updates[syncField] = newSyncValue.toFixed(1);
+    if (counterSyncEnabled && isSyncable) {
+      setFormData(prev => {
+        const currentValue = prev[field as keyof typeof prev] ? parseFloat(prev[field as keyof typeof prev] as string) : 0;
+        const numValue = newValue ? parseFloat(newValue) : 0;
+        
+        if (isNaN(numValue) || isNaN(currentValue)) {
+          return { ...prev, [field]: newValue };
         }
+        
+        const diff = numValue - currentValue;
+        
+        // Apply the same difference to all syncable counters
+        const updates: Partial<typeof prev> = { [field]: newValue };
+        syncableCounterFields.forEach(syncField => {
+          if (syncField !== field) {
+            const syncCurrentValue = prev[syncField] ? parseFloat(prev[syncField] as string) : 0;
+            const newSyncValue = Math.max(0, syncCurrentValue + diff);
+            updates[syncField] = newSyncValue.toFixed(1);
+          }
+        });
+        
+        return { ...prev, ...updates };
       });
-      
-      setFormData(prev => ({ ...prev, ...updates }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData(prev => ({ ...prev, [field]: newValue }));
     }
   };
 
