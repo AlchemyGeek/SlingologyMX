@@ -55,6 +55,7 @@ interface RecordCounts {
   directive_history: number;
   maintenance_directive_compliance: number;
   equipment: number;
+  transactions: number;
 }
 
 const tableDisplayNames: Record<string, string> = {
@@ -68,6 +69,7 @@ const tableDisplayNames: Record<string, string> = {
   directive_history: "Directive History",
   maintenance_directive_compliance: "Compliance Records",
   equipment: "Equipment",
+  transactions: "Transactions",
 };
 
 const DataManagement = () => {
@@ -140,6 +142,7 @@ const DataManagement = () => {
         directiveHistoryRes,
         complianceRes,
         equipmentRes,
+        transactionsRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -151,6 +154,7 @@ const DataManagement = () => {
         supabase.from("directive_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Remove user_id from exported data (will be replaced on import)
@@ -171,6 +175,7 @@ const DataManagement = () => {
           directive_history: sanitizeRecords(directiveHistoryRes.data || []),
           maintenance_directive_compliance: sanitizeRecords(complianceRes.data || []),
           equipment: sanitizeRecords(equipmentRes.data || []),
+          transactions: sanitizeRecords(transactionsRes.data || []),
         },
       };
 
@@ -186,6 +191,7 @@ const DataManagement = () => {
         directive_history: exportData.tables.directive_history.length,
         maintenance_directive_compliance: exportData.tables.maintenance_directive_compliance.length,
         equipment: exportData.tables.equipment.length,
+        transactions: exportData.tables.transactions.length,
       };
       setExportCounts(counts);
 
@@ -227,6 +233,7 @@ const DataManagement = () => {
         directiveHistoryRes,
         complianceRes,
         equipmentRes,
+        transactionsRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -238,6 +245,7 @@ const DataManagement = () => {
         supabase.from("directive_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Helper to create human-readable ID from UUID and created_at date
@@ -259,6 +267,7 @@ const DataManagement = () => {
         directiveHistory: {},
         compliance: {},
         equipment: {},
+        transactions: {},
       };
 
       // Sort records by created_at for consistent numbering and build mappings
@@ -275,6 +284,7 @@ const DataManagement = () => {
       const directiveHistory = (directiveHistoryRes.data || []).sort(sortByCreated);
       const compliance = (complianceRes.data || []).sort(sortByCreated);
       const equipment = (equipmentRes.data || []).sort(sortByCreated);
+      const transactions = (transactionsRes.data || []).sort(sortByCreated);
 
       // Build ID maps
       counters.forEach((r, i) => { idMaps.counters[r.id] = createHumanId("CTR", r.id, r.created_at, i); });
@@ -287,6 +297,7 @@ const DataManagement = () => {
       directiveHistory.forEach((r, i) => { idMaps.directiveHistory[r.id] = createHumanId("DHI", r.id, r.created_at, i); });
       compliance.forEach((r, i) => { idMaps.compliance[r.id] = createHumanId("CMP", r.id, r.created_at, i); });
       equipment.forEach((r, i) => { idMaps.equipment[r.id] = createHumanId("EQP", r.id, r.created_at, i); });
+      transactions.forEach((r, i) => { idMaps.transactions[r.id] = createHumanId("TXN", r.id, r.created_at, i); });
 
       // Transform records: replace UUIDs with human-readable IDs
       const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
@@ -311,6 +322,12 @@ const DataManagement = () => {
         if (transformed.equipment_id && idMaps.equipment[transformed.equipment_id]) {
           transformed.equipment_id = idMaps.equipment[transformed.equipment_id];
         }
+        if (transformed.reference_id && idMaps.subscriptions[transformed.reference_id]) {
+          transformed.reference_id = idMaps.subscriptions[transformed.reference_id];
+        }
+        if (transformed.reference_id && idMaps.maintenanceLogs[transformed.reference_id]) {
+          transformed.reference_id = idMaps.maintenanceLogs[transformed.reference_id];
+        }
 
         return transformed;
       };
@@ -326,6 +343,7 @@ const DataManagement = () => {
         "Directive History": directiveHistory.map(r => transformRecord(r, idMaps.directiveHistory)),
         "Compliance Records": compliance.map(r => transformRecord(r, idMaps.compliance)),
         "Equipment": equipment.map(r => transformRecord(r, idMaps.equipment)),
+        "Transactions": transactions.map(r => transformRecord(r, idMaps.transactions)),
       };
 
       // Create workbook with separate worksheets
@@ -391,6 +409,7 @@ const DataManagement = () => {
           directive_history: data.tables.directive_history?.length || 0,
           maintenance_directive_compliance: data.tables.maintenance_directive_compliance?.length || 0,
           equipment: data.tables.equipment?.length || 0,
+          transactions: data.tables.transactions?.length || 0,
         };
         setImportCounts(counts);
         setImportResult(null);
@@ -422,6 +441,7 @@ const DataManagement = () => {
         directive_history: 0,
         maintenance_directive_compliance: 0,
         equipment: 0,
+        transactions: 0,
       };
 
       const skipped: RecordCounts = {
@@ -435,6 +455,7 @@ const DataManagement = () => {
         directive_history: 0,
         maintenance_directive_compliance: 0,
         equipment: 0,
+        transactions: 0,
       };
 
       // ID mapping for cross-user imports (old ID -> new ID)
@@ -455,6 +476,7 @@ const DataManagement = () => {
         "aircraft_directive_status",
         "directive_history",
         "maintenance_directive_compliance",
+        "transactions",
       ] as const;
 
       // Helper to update progress
@@ -854,6 +876,54 @@ const DataManagement = () => {
           } else {
             console.error("Insert maintenance_directive_compliance error:", error);
             skipped.maintenance_directive_compliance++;
+          }
+        }
+      }
+
+      // 10. Transactions - check by title and transaction_date
+      const transactionsData = importPreview.tables.transactions || [];
+      for (let i = 0; i < transactionsData.length; i++) {
+        const record = transactionsData[i];
+        updateProgress("transactions", i, transactionsData.length, 10);
+        
+        // Check for duplicate based on title and transaction_date within same aircraft
+        const { data: existing } = await supabase
+          .from("transactions")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
+          .eq("title", record.title)
+          .eq("transaction_date", record.transaction_date)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
+          skipped.transactions++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, aircraft_id: _oldAircraftId, reference_id, ...recordWithoutId } = record;
+          
+          // Map reference_id based on reference_type
+          let mappedReferenceId = null;
+          if (reference_id) {
+            mappedReferenceId = idMap[reference_id] || null;
+          }
+
+          const { error } = await supabase
+            .from("transactions")
+            .insert({ 
+              ...recordWithoutId, 
+              id: newId, 
+              user_id: user.id, 
+              aircraft_id: selectedAircraftId,
+              reference_id: mappedReferenceId 
+            });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.transactions++;
+          } else {
+            console.error("Insert transactions error:", error);
+            skipped.transactions++;
           }
         }
       }
