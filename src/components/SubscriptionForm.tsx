@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
 import { format, addWeeks, addMonths } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
+import { getCurrencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
 
 // Calculate the next occurrence date based on initial_date and recurrence
@@ -72,6 +73,7 @@ interface SubscriptionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   editingSubscription?: any;
+  userCurrency?: string;
 }
 
 const SUBSCRIPTION_TYPES = [
@@ -89,7 +91,7 @@ const SUBSCRIPTION_TYPES = [
   "Other",
 ] as const;
 
-const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubscription }: SubscriptionFormProps) => {
+const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubscription, userCurrency = "USD" }: SubscriptionFormProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     subscription_name: editingSubscription?.subscription_name || "",
@@ -305,7 +307,7 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cost">Cost ($)</Label>
+            <Label htmlFor="cost">Cost ({getCurrencySymbol(userCurrency)})</Label>
             <Input
               id="cost"
               type="number"

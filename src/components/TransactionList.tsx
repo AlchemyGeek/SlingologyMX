@@ -7,6 +7,7 @@ import { Trash2, Pencil, Search, X, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Constants } from "@/integrations/supabase/types";
 import * as XLSX from "xlsx";
@@ -20,9 +21,10 @@ interface TransactionListProps {
   onUpdate: () => void;
   onEdit: (transaction: any) => void;
   onSelect: (transaction: any) => void;
+  userCurrency?: string;
 }
 
-const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: TransactionListProps) => {
+const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD" }: TransactionListProps) => {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -261,7 +263,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect }: 
                     )}
                     <TableCell className={`text-right font-medium ${getDirectionColor(transaction.direction)}`}>
                       {transaction.direction === "Credit" ? "+" : "-"}
-                      {transaction.currency} {Number(transaction.amount).toFixed(2)}
+                      {formatCurrency(Number(transaction.amount), transaction.currency?.trim() || userCurrency)}
                     </TableCell>
                     {!isMobile && (
                       <TableCell onClick={(e) => e.stopPropagation()}>

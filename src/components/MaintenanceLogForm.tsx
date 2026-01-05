@@ -35,6 +35,7 @@ import {
   updateMaintenanceTransactions 
 } from "@/hooks/useMaintenanceTransactions";
 import { validateCounterUpdates } from "@/lib/counterValidation";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface DirectiveComplianceLink {
   id?: string;
@@ -74,9 +75,10 @@ interface MaintenanceLogFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date) => Promise<void>;
+  userCurrency?: string;
 }
 
-const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters }: MaintenanceLogFormProps) => {
+const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters, userCurrency = "USD" }: MaintenanceLogFormProps) => {
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
@@ -240,13 +242,14 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     const other = parseFloat(formData.other_cost) || 0;
     const total = parseFloat(formData.total_cost) || 0;
     const sum = parts + labor + other;
+    const currencySymbol = getCurrencySymbol(userCurrency);
     
     if (total > 0 && Math.abs(sum - total) > 0.01) {
       const diff = sum - total;
       if (diff > 0) {
-        return `Itemized costs exceed total by $${diff.toFixed(2)}`;
+        return `Itemized costs exceed total by ${currencySymbol}${diff.toFixed(2)}`;
       } else {
-        return `Itemized costs are $${Math.abs(diff).toFixed(2)} less than total`;
+        return `Itemized costs are ${currencySymbol}${Math.abs(diff).toFixed(2)} less than total`;
       }
     }
     return null;
@@ -1352,7 +1355,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <h3 className="text-lg font-medium">Cost</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="total_cost">Total Cost ($)</Label>
+            <Label htmlFor="total_cost">Total Cost ({getCurrencySymbol(userCurrency)})</Label>
             <Input
               id="total_cost"
               type="number"
@@ -1385,7 +1388,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           {isItemizedCost && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="parts_cost">Parts Cost ($)</Label>
+                <Label htmlFor="parts_cost">Parts Cost ({getCurrencySymbol(userCurrency)})</Label>
                 <Input
                   id="parts_cost"
                   type="number"
@@ -1396,7 +1399,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="labor_cost">Labor Cost ($)</Label>
+                <Label htmlFor="labor_cost">Labor Cost ({getCurrencySymbol(userCurrency)})</Label>
                 <Input
                   id="labor_cost"
                   type="number"
@@ -1407,7 +1410,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="other_cost">Other Cost ($)</Label>
+                <Label htmlFor="other_cost">Other Cost ({getCurrencySymbol(userCurrency)})</Label>
                 <Input
                   id="other_cost"
                   type="number"

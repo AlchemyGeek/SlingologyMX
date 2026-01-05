@@ -7,6 +7,7 @@ import { Trash2, Pencil, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const SUBSCRIPTION_TYPES = [
@@ -29,9 +30,10 @@ interface SubscriptionListProps {
   onUpdate: () => void;
   onEdit: (subscription: any) => void;
   onSelect: (subscription: any) => void;
+  userCurrency?: string;
 }
 
-const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }: SubscriptionListProps) => {
+const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD" }: SubscriptionListProps) => {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -174,7 +176,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect }
                         {subscription.type}
                       </TableCell>
                     )}
-                    {!isMobile && <TableCell>${subscription.cost}</TableCell>}
+                    {!isMobile && <TableCell>{formatCurrency(subscription.cost || 0, userCurrency)}</TableCell>}
                     <TableCell>{parseLocalDate(subscription.initial_date).toLocaleDateString()}</TableCell>
                     {!isMobile && <TableCell>{subscription.recurrence}</TableCell>}
                     <TableCell>

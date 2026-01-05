@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Calendar, DollarSign, Tag, Pencil, Trash2, TrendingUp, TrendingDown, Clock } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 
 interface TransactionDetailProps {
@@ -22,9 +23,10 @@ interface TransactionDetailProps {
   onClose: () => void;
   onEdit?: (transaction: any) => void;
   onDelete?: (transactionId: string) => void;
+  userCurrency?: string;
 }
 
-const TransactionDetail = ({ transaction, onClose, onEdit, onDelete }: TransactionDetailProps) => {
+const TransactionDetail = ({ transaction, onClose, onEdit, onDelete, userCurrency = "USD" }: TransactionDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = () => {
@@ -91,7 +93,7 @@ const TransactionDetail = ({ transaction, onClose, onEdit, onDelete }: Transacti
                 {getDirectionIcon(transaction.direction)}
                 <span className={`text-2xl font-bold ${transaction.direction === "Credit" ? "text-green-600" : ""}`}>
                   {transaction.direction === "Credit" ? "+" : "-"}
-                  {transaction.currency} {Number(transaction.amount).toFixed(2)}
+                  {formatCurrency(Number(transaction.amount), transaction.currency?.trim() || userCurrency)}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">{transaction.direction}</p>

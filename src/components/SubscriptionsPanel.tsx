@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import SubscriptionForm from "./SubscriptionForm";
 import SubscriptionList from "./SubscriptionList";
 import SubscriptionDetail from "./SubscriptionDetail";
+import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { toast } from "sonner";
 
 interface SubscriptionsPanelProps {
@@ -21,6 +22,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currency: userCurrency } = useUserCurrency(userId);
 
   const fetchSubscriptions = async () => {
     if (!aircraftId) return;
@@ -97,6 +99,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
             onClose={handleCloseDetail}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            userCurrency={userCurrency}
           />
         </CardContent>
       </Card>
@@ -125,6 +128,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
             onSuccess={handleSubscriptionCreated}
             onCancel={handleCancelForm}
             editingSubscription={editingSubscription}
+            userCurrency={userCurrency}
           />
         ) : (
           <SubscriptionList
@@ -137,6 +141,7 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
             }}
             onEdit={handleEdit}
             onSelect={handleSelect}
+            userCurrency={userCurrency}
           />
         )}
       </CardContent>

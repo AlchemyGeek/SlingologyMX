@@ -7,6 +7,7 @@ import MaintenanceLogList from "./MaintenanceLogList";
 import MaintenanceLogForm from "./MaintenanceLogForm";
 import MaintenanceLogDetail from "./MaintenanceLogDetail";
 import { AircraftCounters } from "@/hooks/useAircraftCounters";
+import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { voidMaintenanceTransactions } from "@/hooks/useMaintenanceTransactions";
 
 interface MaintenanceLog {
@@ -67,6 +68,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
   const [editingLog, setEditingLog] = useState<MaintenanceLog | null>(null);
   const [loading, setLoading] = useState(true);
+  const { currency: userCurrency } = useUserCurrency(userId);
 
   const fetchLogs = async () => {
     try {
@@ -185,6 +187,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
         onClose={handleCloseDetail}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        userCurrency={userCurrency}
       />
     );
   }
@@ -199,6 +202,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
         onSuccess={handleLogCreated}
         onCancel={handleCancelForm}
         onUpdateGlobalCounters={onUpdateGlobalCounters}
+        userCurrency={userCurrency}
       />
     );
   }

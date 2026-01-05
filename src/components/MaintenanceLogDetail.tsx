@@ -15,6 +15,7 @@ import {
 import { format } from "date-fns";
 import { ArrowLeft, Pencil, Trash2, FileCheck } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ComplianceEntry {
@@ -36,9 +37,10 @@ interface MaintenanceLogDetailProps {
   onClose: () => void;
   onEdit: (log: any) => void;
   onDelete: (logId: string) => void;
+  userCurrency?: string;
 }
 
-const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLogDetailProps) => {
+const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "USD" }: MaintenanceLogDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [complianceEntries, setComplianceEntries] = useState<ComplianceEntry[]>([]);
 
@@ -321,25 +323,25 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete }: MaintenanceLog
               {log.parts_cost && (
                 <div>
                   <p className="text-sm text-muted-foreground">Parts Cost</p>
-                  <p className="font-medium">${log.parts_cost.toFixed(2)}</p>
+                  <p className="font-medium">{formatCurrency(log.parts_cost, userCurrency)}</p>
                 </div>
               )}
               {log.labor_cost && (
                 <div>
                   <p className="text-sm text-muted-foreground">Labor Cost</p>
-                  <p className="font-medium">${log.labor_cost.toFixed(2)}</p>
+                  <p className="font-medium">{formatCurrency(log.labor_cost, userCurrency)}</p>
                 </div>
               )}
               {log.other_cost && (
                 <div>
                   <p className="text-sm text-muted-foreground">Other Cost</p>
-                  <p className="font-medium">${log.other_cost.toFixed(2)}</p>
+                  <p className="font-medium">{formatCurrency(log.other_cost, userCurrency)}</p>
                 </div>
               )}
               {log.total_cost && (
                 <div>
                   <p className="text-sm text-muted-foreground">Total Cost</p>
-                  <p className="font-medium">${log.total_cost.toFixed(2)}</p>
+                  <p className="font-medium">{formatCurrency(log.total_cost, userCurrency)}</p>
                 </div>
               )}
               {log.vendor_name && (

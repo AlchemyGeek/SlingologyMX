@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import TransactionForm from "./TransactionForm";
 import TransactionList from "./TransactionList";
 import TransactionDetail from "./TransactionDetail";
+import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { toast } from "sonner";
 
 interface TransactionsPanelProps {
@@ -20,6 +21,7 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: Transactions
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currency: userCurrency } = useUserCurrency(userId);
 
   const fetchTransactions = async () => {
     if (!aircraftId) return;
@@ -94,6 +96,7 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: Transactions
             onClose={handleCloseDetail}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            userCurrency={userCurrency}
           />
         </CardContent>
       </Card>
@@ -133,6 +136,7 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: Transactions
             }}
             onEdit={handleEdit}
             onSelect={handleSelect}
+            userCurrency={userCurrency}
           />
         )}
       </CardContent>
