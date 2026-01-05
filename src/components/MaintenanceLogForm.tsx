@@ -124,12 +124,16 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     ) : false
   );
   const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
+  const [countersManuallyEdited, setCountersManuallyEdited] = useState(!!editingLog);
 
   // All syncable counters including Hobbs
   const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
   type SyncableCounterField = typeof syncableCounterFields[number];
 
   const handleCounterChange = (field: string, newValue: string) => {
+    // Mark counters as manually edited
+    setCountersManuallyEdited(true);
+    
     const isSyncable = syncableCounterFields.includes(field as SyncableCounterField);
     
     if (counterSyncEnabled && isSyncable) {
@@ -218,6 +222,43 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       fetchComplianceLinks();
     }
   }, [editingLog]);
+
+  // Fetch counter values from history when date_performed changes (only if not manually edited)
+  useEffect(() => {
+    const fetchCountersFromHistory = async () => {
+      if (!aircraftId || countersManuallyEdited || editingLog) return;
+      
+      const dateStr = format(formData.date_performed, "yyyy-MM-dd");
+      
+      // Find the closest previous history entry
+      const { data, error } = await supabase
+        .from("aircraft_counter_history")
+        .select("*")
+        .eq("aircraft_id", aircraftId)
+        .lte("change_date", dateStr)
+        .order("change_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching counter history:", error);
+        return;
+      }
+      
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          hobbs_at_event: data.hobbs?.toString() || prev.hobbs_at_event,
+          tach_at_event: data.tach?.toString() || prev.tach_at_event,
+          airframe_total_time: data.airframe_total_time?.toString() || prev.airframe_total_time,
+          engine_total_time: data.engine_total_time?.toString() || prev.engine_total_time,
+          prop_total_time: data.prop_total_time?.toString() || prev.prop_total_time,
+        }));
+      }
+    };
+    
+    fetchCountersFromHistory();
+  }, [formData.date_performed, aircraftId, countersManuallyEdited, editingLog]);
 
   // Auto-calculate next_due_date when date_performed or interval_months changes
   useEffect(() => {
