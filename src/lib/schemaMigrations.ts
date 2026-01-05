@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.2";
+export const CURRENT_SCHEMA_VERSION = "1.3";
 
 export interface ExportData {
   version: string;
@@ -23,6 +23,7 @@ export interface ExportData {
     directive_history: any[];
     maintenance_directive_compliance: any[];
     equipment: any[];
+    transactions: any[];
   };
 }
 
@@ -130,6 +131,19 @@ const MIGRATIONS: Migration[] = [
       }
     })
   },
+  {
+    fromVersion: "1.2",
+    toVersion: "1.3",
+    description: "Add transactions table for financial tracking",
+    migrate: (data) => ({
+      ...data,
+      version: "1.3",
+      tables: {
+        ...data.tables,
+        transactions: data.tables.transactions ?? []
+      }
+    })
+  },
 ];
 
 /**
@@ -196,7 +210,8 @@ function validateStructure(data: any): { valid: boolean; error?: string } {
     'aircraft_directive_status',
     'directive_history',
     'maintenance_directive_compliance',
-    'equipment'
+    'equipment',
+    'transactions'
   ];
   
   // Ensure all table entries are arrays
@@ -226,6 +241,7 @@ function normalizeData(data: ExportData): ExportData {
       directive_history: data.tables.directive_history || [],
       maintenance_directive_compliance: data.tables.maintenance_directive_compliance || [],
       equipment: data.tables.equipment || [],
+      transactions: data.tables.transactions || [],
     }
   };
 }
