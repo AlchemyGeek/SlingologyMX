@@ -124,7 +124,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
 
   // All syncable counters including Hobbs
-  const syncableCounterFields = ["hobbs_at_event", "tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
+  const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
   type SyncableCounterField = typeof syncableCounterFields[number];
 
   const handleCounterChange = (field: string, newValue: string) => {
