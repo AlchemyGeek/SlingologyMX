@@ -1162,6 +1162,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string | null
+          currency: string | null
           display_name: string | null
           email: string | null
           id: string
@@ -1170,12 +1171,14 @@ export type Database = {
           plane_model_make: string | null
           plane_registration: string | null
           state_prefecture: string | null
+          timezone: string | null
         }
         Insert: {
           access_code?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
+          currency?: string | null
           display_name?: string | null
           email?: string | null
           id: string
@@ -1184,12 +1187,14 @@ export type Database = {
           plane_model_make?: string | null
           plane_registration?: string | null
           state_prefecture?: string | null
+          timezone?: string | null
         }
         Update: {
           access_code?: string | null
           city?: string | null
           country?: string | null
           created_at?: string | null
+          currency?: string | null
           display_name?: string | null
           email?: string | null
           id?: string
@@ -1198,6 +1203,7 @@ export type Database = {
           plane_model_make?: string | null
           plane_registration?: string | null
           state_prefecture?: string | null
+          timezone?: string | null
         }
         Relationships: []
       }
