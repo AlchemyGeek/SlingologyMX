@@ -1013,15 +1013,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           const origProp = editingLog.prop_total_time !== null && editingLog.prop_total_time !== undefined 
             ? Number(editingLog.prop_total_time) : null;
           
-          // Debug logging for counter comparison
-          console.log("Counter comparison debug:", {
-            hobbs: { form: hobbs, orig: origHobbs, changed: hobbs !== origHobbs },
-            tach: { form: tach, orig: origTach, changed: tach !== origTach },
-            airframe: { form: airframe, orig: origAirframe, changed: airframe !== origAirframe },
-            engine: { form: engine, orig: origEngine, changed: engine !== origEngine },
-            prop: { form: prop, orig: origProp, changed: prop !== origProp },
-          });
-          
           // Check each counter for changes - include if value changed OR if going from null to value (or vice versa)
           if (hobbs !== origHobbs) {
             if (hobbs !== null) updates.hobbs = hobbs;
