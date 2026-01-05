@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, ArrowLeft, Save, User as UserIcon, Users, Plane } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
 import UserManagement from "@/components/UserManagement";
@@ -20,6 +21,8 @@ interface ProfileData {
   country: string;
   state_prefecture: string;
   city: string;
+  currency: string;
+  timezone: string;
 }
 
 interface ProfileCardProps {
@@ -104,6 +107,54 @@ const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: Profil
             placeholder="Enter city"
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="currency">Currency</Label>
+          <Select
+            value={profileData.currency}
+            onValueChange={(value) => setProfileData({ ...profileData, currency: value })}
+          >
+            <SelectTrigger id="currency">
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD - US Dollar</SelectItem>
+              <SelectItem value="EUR">EUR - Euro</SelectItem>
+              <SelectItem value="GBP">GBP - British Pound</SelectItem>
+              <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+              <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+              <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+              <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
+              <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="timezone">Timezone</Label>
+          <Select
+            value={profileData.timezone}
+            onValueChange={(value) => setProfileData({ ...profileData, timezone: value })}
+          >
+            <SelectTrigger id="timezone">
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="America/Los_Angeles">Pacific Time (PST/PDT)</SelectItem>
+              <SelectItem value="America/Denver">Mountain Time (MST/MDT)</SelectItem>
+              <SelectItem value="America/Chicago">Central Time (CST/CDT)</SelectItem>
+              <SelectItem value="America/New_York">Eastern Time (EST/EDT)</SelectItem>
+              <SelectItem value="America/Anchorage">Alaska Time (AKST/AKDT)</SelectItem>
+              <SelectItem value="Pacific/Honolulu">Hawaii Time (HST)</SelectItem>
+              <SelectItem value="Europe/London">London (GMT/BST)</SelectItem>
+              <SelectItem value="Europe/Paris">Central European (CET/CEST)</SelectItem>
+              <SelectItem value="Europe/Berlin">Berlin (CET/CEST)</SelectItem>
+              <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
+              <SelectItem value="Australia/Sydney">Sydney (AEST/AEDT)</SelectItem>
+              <SelectItem value="Africa/Johannesburg">Johannesburg (SAST)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Button onClick={handleSave} disabled={saving} className="w-full">
@@ -141,6 +192,8 @@ const Profile = () => {
     country: "",
     state_prefecture: "",
     city: "",
+    currency: "USD",
+    timezone: "America/Los_Angeles",
   });
 
   useEffect(() => {
@@ -204,6 +257,8 @@ const Profile = () => {
         country: data.country || "",
         state_prefecture: data.state_prefecture || "",
         city: data.city || "",
+        currency: (data as any).currency || "USD",
+        timezone: (data as any).timezone || "America/Los_Angeles",
       });
     }
   };
@@ -227,6 +282,8 @@ const Profile = () => {
         country: profileData.country,
         state_prefecture: profileData.state_prefecture,
         city: profileData.city,
+        currency: profileData.currency,
+        timezone: profileData.timezone,
       } as any)
       .eq("id", user.id);
 
