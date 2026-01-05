@@ -74,7 +74,7 @@ interface MaintenanceLogFormProps {
   defaultCounters?: DefaultCounters;
   onSuccess: () => void;
   onCancel: () => void;
-  onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date) => Promise<void>;
+  onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date, allCounterValues?: CounterUpdates) => Promise<void>;
   userCurrency?: string;
 }
 
@@ -1053,8 +1053,17 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         return; // Don't close dialog, let user decide to skip or fix
       }
       
-      // Pass the maintenance date to use for the history entry
-      await onUpdateGlobalCounters(pendingCounterUpdates, formData.date_performed);
+      // Build all counter values from the form to log in history
+      const allCounterValues: CounterUpdates = {
+        hobbs: formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : undefined,
+        tach: formData.tach_at_event ? parseFloat(formData.tach_at_event) : undefined,
+        airframe_total_time: formData.airframe_total_time ? parseFloat(formData.airframe_total_time) : undefined,
+        engine_total_time: formData.engine_total_time ? parseFloat(formData.engine_total_time) : undefined,
+        prop_total_time: formData.prop_total_time ? parseFloat(formData.prop_total_time) : undefined,
+      };
+      
+      // Pass the maintenance date and all counter values for the history entry
+      await onUpdateGlobalCounters(pendingCounterUpdates, formData.date_performed, allCounterValues);
       toast.success("Global counters updated");
     } catch (error) {
       console.error("Error updating global counters:", error);

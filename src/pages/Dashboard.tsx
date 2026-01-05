@@ -261,7 +261,7 @@ const Dashboard = () => {
             userId={user!.id}
             aircraftId={selectedAircraft?.id || ""}
             counters={counters}
-            onUpdateGlobalCounters={(updates, changeDate) => updateAllCounters(updates, "Maintenance Record", changeDate)}
+            onUpdateGlobalCounters={(updates, changeDate, allCounterValues) => updateAllCounters(updates, "Maintenance Record", changeDate, allCounterValues)}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
         );

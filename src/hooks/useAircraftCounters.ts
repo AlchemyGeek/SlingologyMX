@@ -80,12 +80,20 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
   const logCounterHistory = async (
     newCounters: Partial<AircraftCounters>, 
     source: CounterChangeSource,
-    changeDate?: Date
+    changeDate?: Date,
+    allCounterValues?: Partial<AircraftCounters>
   ) => {
     if (!userId || !aircraftId) return;
     
-    // Merge current counters with new values
-    const finalCounters = {
+    // If allCounterValues is provided (e.g., from maintenance form), use those values
+    // Otherwise, merge with current global counters
+    const finalCounters = allCounterValues ? {
+      hobbs: allCounterValues.hobbs ?? null,
+      tach: allCounterValues.tach ?? null,
+      airframe_total_time: allCounterValues.airframe_total_time ?? null,
+      engine_total_time: allCounterValues.engine_total_time ?? null,
+      prop_total_time: allCounterValues.prop_total_time ?? null,
+    } : {
       hobbs: newCounters.hobbs ?? counters.hobbs,
       tach: newCounters.tach ?? counters.tach,
       airframe_total_time: newCounters.airframe_total_time ?? counters.airframe_total_time,
@@ -144,7 +152,8 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
   const updateAllCounters = async (
     newCounters: Partial<Omit<AircraftCounters, "id">>,
     source: CounterChangeSource = "Dashboard",
-    changeDate?: Date
+    changeDate?: Date,
+    allCounterValuesForHistory?: Partial<AircraftCounters>
   ) => {
     if (!counters.id) return;
 
@@ -159,7 +168,8 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
     }
 
     // Log the history with optional date
-    await logCounterHistory(newCounters, source, changeDate);
+    // If allCounterValuesForHistory is provided (from maintenance form), use those for the history log
+    await logCounterHistory(newCounters, source, changeDate, allCounterValuesForHistory);
 
     setCounters((prev) => ({ ...prev, ...newCounters }));
   };
