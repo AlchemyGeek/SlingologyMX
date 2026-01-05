@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Calendar, DollarSign, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 
 interface SubscriptionDetailProps {
@@ -22,9 +23,10 @@ interface SubscriptionDetailProps {
   onClose: () => void;
   onEdit?: (subscription: any) => void;
   onDelete?: (subscriptionId: string) => void;
+  userCurrency?: string;
 }
 
-const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete }: SubscriptionDetailProps) => {
+const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete, userCurrency = "USD" }: SubscriptionDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = () => {
@@ -75,7 +77,7 @@ const SubscriptionDetail = ({ subscription, onClose, onEdit, onDelete }: Subscri
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Cost</p>
-                  <p className="font-medium">${subscription.cost || 0}</p>
+                  <p className="font-medium">{formatCurrency(subscription.cost || 0, userCurrency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
