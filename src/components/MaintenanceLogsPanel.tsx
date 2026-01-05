@@ -57,7 +57,7 @@ interface MaintenanceLogsPanelProps {
   userId: string;
   aircraftId: string;
   counters: AircraftCounters;
-  onUpdateGlobalCounters?: (updates: CounterUpdates) => Promise<void>;
+  onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date) => Promise<void>;
   onRecordChanged?: () => void;
 }
 

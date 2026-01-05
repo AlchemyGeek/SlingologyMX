@@ -77,7 +77,11 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
     fetchCounters();
   }, [fetchCounters]);
 
-  const logCounterHistory = async (newCounters: Partial<AircraftCounters>, source: CounterChangeSource) => {
+  const logCounterHistory = async (
+    newCounters: Partial<AircraftCounters>, 
+    source: CounterChangeSource,
+    changeDate?: Date
+  ) => {
     if (!userId || !aircraftId) return;
     
     // Merge current counters with new values
@@ -88,6 +92,11 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
       engine_total_time: newCounters.engine_total_time ?? counters.engine_total_time,
       prop_total_time: newCounters.prop_total_time ?? counters.prop_total_time,
     };
+
+    // Format the change date for insertion
+    const formattedDate = changeDate 
+      ? `${changeDate.getFullYear()}-${String(changeDate.getMonth() + 1).padStart(2, "0")}-${String(changeDate.getDate()).padStart(2, "0")}`
+      : new Date().toISOString().split("T")[0];
 
     const { error } = await supabase
       .from("aircraft_counter_history")
@@ -100,6 +109,7 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
         engine_total_time: finalCounters.engine_total_time,
         prop_total_time: finalCounters.prop_total_time,
         source,
+        change_date: formattedDate,
       }]);
 
     if (error) {
@@ -110,7 +120,8 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
   const updateCounter = async (
     field: keyof Omit<AircraftCounters, "id">, 
     value: number, 
-    source: CounterChangeSource = "Dashboard"
+    source: CounterChangeSource = "Dashboard",
+    changeDate?: Date
   ) => {
     if (!counters.id) return;
 
@@ -124,15 +135,16 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
       throw error;
     }
 
-    // Log the history
-    await logCounterHistory({ [field]: value }, source);
+    // Log the history with optional date
+    await logCounterHistory({ [field]: value }, source, changeDate);
 
     setCounters((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateAllCounters = async (
     newCounters: Partial<Omit<AircraftCounters, "id">>,
-    source: CounterChangeSource = "Dashboard"
+    source: CounterChangeSource = "Dashboard",
+    changeDate?: Date
   ) => {
     if (!counters.id) return;
 
@@ -146,8 +158,8 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
       throw error;
     }
 
-    // Log the history
-    await logCounterHistory(newCounters, source);
+    // Log the history with optional date
+    await logCounterHistory(newCounters, source, changeDate);
 
     setCounters((prev) => ({ ...prev, ...newCounters }));
   };
