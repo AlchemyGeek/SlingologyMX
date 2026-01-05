@@ -118,14 +118,37 @@ const ProfileCard = ({ profileData, setProfileData, handleSave, saving }: Profil
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
             <SelectContent>
+              {/* Americas */}
               <SelectItem value="USD">USD - US Dollar</SelectItem>
+              <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+              {/* Europe */}
               <SelectItem value="EUR">EUR - Euro</SelectItem>
               <SelectItem value="GBP">GBP - British Pound</SelectItem>
-              <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-              <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-              <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
               <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
+              <SelectItem value="SEK">SEK - Swedish Krona</SelectItem>
+              <SelectItem value="NOK">NOK - Norwegian Krone</SelectItem>
+              <SelectItem value="DKK">DKK - Danish Krone</SelectItem>
+              <SelectItem value="PLN">PLN - Polish Zloty</SelectItem>
+              <SelectItem value="CZK">CZK - Czech Koruna</SelectItem>
+              <SelectItem value="HUF">HUF - Hungarian Forint</SelectItem>
+              <SelectItem value="RON">RON - Romanian Leu</SelectItem>
+              <SelectItem value="ISK">ISK - Icelandic Króna</SelectItem>
+              {/* Asia-Pacific */}
+              <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+              <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+              <SelectItem value="NZD">NZD - New Zealand Dollar</SelectItem>
+              {/* Africa */}
               <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+              <SelectItem value="EGP">EGP - Egyptian Pound</SelectItem>
+              <SelectItem value="MAD">MAD - Moroccan Dirham</SelectItem>
+              {/* Middle East / Arabic */}
+              <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+              <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+              <SelectItem value="QAR">QAR - Qatari Riyal</SelectItem>
+              <SelectItem value="KWD">KWD - Kuwaiti Dinar</SelectItem>
+              <SelectItem value="BHD">BHD - Bahraini Dinar</SelectItem>
+              <SelectItem value="OMR">OMR - Omani Rial</SelectItem>
+              <SelectItem value="JOD">JOD - Jordanian Dinar</SelectItem>
             </SelectContent>
           </Select>
         </div>
