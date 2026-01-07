@@ -17,6 +17,7 @@ import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import EquipmentPanel from "@/components/EquipmentPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
 import TransactionsPanel from "@/components/TransactionsPanel";
+import ReservesPanel from "@/components/ReservesPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
@@ -240,13 +241,15 @@ const Dashboard = () => {
           />
         );
       case "reserves":
-      case "analysis":
         return (
-          <div className="text-center text-muted-foreground py-12">
-            <p className="text-lg">Coming Soon</p>
-            <p className="text-sm mt-2">This feature is under development.</p>
-          </div>
+          <ReservesPanel
+            userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
+            currentCounters={currentCounters}
+            onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+          />
         );
+      case "analysis":
       case "equipment":
         return (
           <EquipmentPanel
