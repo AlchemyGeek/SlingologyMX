@@ -1207,6 +1207,124 @@ export type Database = {
         }
         Relationships: []
       }
+      reserves: {
+        Row: {
+          accrual_method: Database["public"]["Enums"]["reserve_accrual_method"]
+          aircraft_id: string
+          basis_type: Database["public"]["Enums"]["reserve_basis_type"]
+          cost_estimate_date: string | null
+          cost_source_notes: string | null
+          counter_type: string | null
+          created_at: string | null
+          currency: string
+          equipment_id: string | null
+          expected_cost: number | null
+          id: string
+          include_in_cost_per_hour: boolean
+          include_in_true_cost: boolean
+          interval_unit:
+            | Database["public"]["Enums"]["reserve_interval_unit"]
+            | null
+          interval_value: number | null
+          limit_cycles: number | null
+          limit_hours: number | null
+          maintenance_log_id: string | null
+          notes: string | null
+          reserve_type: Database["public"]["Enums"]["reserve_type"]
+          start_counter_value: number | null
+          start_cycle_count: number | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["reserve_status"]
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accrual_method?: Database["public"]["Enums"]["reserve_accrual_method"]
+          aircraft_id: string
+          basis_type: Database["public"]["Enums"]["reserve_basis_type"]
+          cost_estimate_date?: string | null
+          cost_source_notes?: string | null
+          counter_type?: string | null
+          created_at?: string | null
+          currency?: string
+          equipment_id?: string | null
+          expected_cost?: number | null
+          id?: string
+          include_in_cost_per_hour?: boolean
+          include_in_true_cost?: boolean
+          interval_unit?:
+            | Database["public"]["Enums"]["reserve_interval_unit"]
+            | null
+          interval_value?: number | null
+          limit_cycles?: number | null
+          limit_hours?: number | null
+          maintenance_log_id?: string | null
+          notes?: string | null
+          reserve_type: Database["public"]["Enums"]["reserve_type"]
+          start_counter_value?: number | null
+          start_cycle_count?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["reserve_status"]
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accrual_method?: Database["public"]["Enums"]["reserve_accrual_method"]
+          aircraft_id?: string
+          basis_type?: Database["public"]["Enums"]["reserve_basis_type"]
+          cost_estimate_date?: string | null
+          cost_source_notes?: string | null
+          counter_type?: string | null
+          created_at?: string | null
+          currency?: string
+          equipment_id?: string | null
+          expected_cost?: number | null
+          id?: string
+          include_in_cost_per_hour?: boolean
+          include_in_true_cost?: boolean
+          interval_unit?:
+            | Database["public"]["Enums"]["reserve_interval_unit"]
+            | null
+          interval_value?: number | null
+          limit_cycles?: number | null
+          limit_hours?: number | null
+          maintenance_log_id?: string | null
+          notes?: string | null
+          reserve_type?: Database["public"]["Enums"]["reserve_type"]
+          start_counter_value?: number | null
+          start_cycle_count?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["reserve_status"]
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reserves_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reserves_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reserves_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           aircraft_id: string
@@ -1583,6 +1701,18 @@ export type Database = {
         | "Equipment"
         | "Trip"
         | "Other"
+      reserve_accrual_method: "Straight-line" | "None"
+      reserve_basis_type: "Calendar" | "Hours" | "Cycles"
+      reserve_interval_unit: "Months" | "Years"
+      reserve_status: "Active" | "Paused" | "Retired"
+      reserve_type:
+        | "Engine"
+        | "Propeller"
+        | "Gearbox"
+        | "Parachute"
+        | "Battery"
+        | "Avionics"
+        | "Other"
       subscription_type:
         | "Facilities & Storage"
         | "Insurance"
@@ -1901,6 +2031,19 @@ export const Constants = {
         "Compliance",
         "Equipment",
         "Trip",
+        "Other",
+      ],
+      reserve_accrual_method: ["Straight-line", "None"],
+      reserve_basis_type: ["Calendar", "Hours", "Cycles"],
+      reserve_interval_unit: ["Months", "Years"],
+      reserve_status: ["Active", "Paused", "Retired"],
+      reserve_type: [
+        "Engine",
+        "Propeller",
+        "Gearbox",
+        "Parachute",
+        "Battery",
+        "Avionics",
         "Other",
       ],
       subscription_type: [
