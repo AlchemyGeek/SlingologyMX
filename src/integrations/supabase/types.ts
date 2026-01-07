@@ -1228,6 +1228,7 @@ export type Database = {
           interval_value: number | null
           limit_cycles: number | null
           limit_hours: number | null
+          links: Json | null
           maintenance_log_id: string | null
           notes: string | null
           reserve_type: Database["public"]["Enums"]["reserve_type"]
@@ -1259,6 +1260,7 @@ export type Database = {
           interval_value?: number | null
           limit_cycles?: number | null
           limit_hours?: number | null
+          links?: Json | null
           maintenance_log_id?: string | null
           notes?: string | null
           reserve_type: Database["public"]["Enums"]["reserve_type"]
@@ -1290,6 +1292,7 @@ export type Database = {
           interval_value?: number | null
           limit_cycles?: number | null
           limit_hours?: number | null
+          links?: Json | null
           maintenance_log_id?: string | null
           notes?: string | null
           reserve_type?: Database["public"]["Enums"]["reserve_type"]

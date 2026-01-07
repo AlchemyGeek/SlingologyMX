@@ -29,12 +29,12 @@ export interface Reserve {
   cost_estimate_date: string | null;
   cost_source_notes: string | null;
   accrual_method: "Straight-line" | "None";
-  include_in_true_cost: boolean;
   include_in_cost_per_hour: boolean;
   status: "Active" | "Paused" | "Retired";
   equipment_id: string | null;
   maintenance_log_id: string | null;
   notes: string | null;
+  links: Array<{ url: string; description: string }> | null;
   created_at: string;
   updated_at: string;
 }
