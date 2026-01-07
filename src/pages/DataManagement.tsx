@@ -56,6 +56,7 @@ interface RecordCounts {
   maintenance_directive_compliance: number;
   equipment: number;
   transactions: number;
+  reserves: number;
 }
 
 const tableDisplayNames: Record<string, string> = {
@@ -70,6 +71,7 @@ const tableDisplayNames: Record<string, string> = {
   maintenance_directive_compliance: "Compliance Records",
   equipment: "Equipment",
   transactions: "Transactions",
+  reserves: "Reserves",
 };
 
 const DataManagement = () => {
@@ -143,6 +145,7 @@ const DataManagement = () => {
         complianceRes,
         equipmentRes,
         transactionsRes,
+        reservesRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -155,6 +158,7 @@ const DataManagement = () => {
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("reserves").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Remove user_id from exported data (will be replaced on import)
@@ -176,6 +180,7 @@ const DataManagement = () => {
           maintenance_directive_compliance: sanitizeRecords(complianceRes.data || []),
           equipment: sanitizeRecords(equipmentRes.data || []),
           transactions: sanitizeRecords(transactionsRes.data || []),
+          reserves: sanitizeRecords(reservesRes.data || []),
         },
       };
 
@@ -192,6 +197,7 @@ const DataManagement = () => {
         maintenance_directive_compliance: exportData.tables.maintenance_directive_compliance.length,
         equipment: exportData.tables.equipment.length,
         transactions: exportData.tables.transactions.length,
+        reserves: exportData.tables.reserves.length,
       };
       setExportCounts(counts);
 
@@ -234,6 +240,7 @@ const DataManagement = () => {
         complianceRes,
         equipmentRes,
         transactionsRes,
+        reservesRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -246,6 +253,7 @@ const DataManagement = () => {
         supabase.from("maintenance_directive_compliance").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("reserves").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Helper to create human-readable ID from UUID and created_at date
@@ -268,6 +276,7 @@ const DataManagement = () => {
         compliance: {},
         equipment: {},
         transactions: {},
+        reserves: {},
       };
 
       // Sort records by created_at for consistent numbering and build mappings
@@ -285,6 +294,7 @@ const DataManagement = () => {
       const compliance = (complianceRes.data || []).sort(sortByCreated);
       const equipment = (equipmentRes.data || []).sort(sortByCreated);
       const transactions = (transactionsRes.data || []).sort(sortByCreated);
+      const reserves = (reservesRes.data || []).sort(sortByCreated);
 
       // Build ID maps
       counters.forEach((r, i) => { idMaps.counters[r.id] = createHumanId("CTR", r.id, r.created_at, i); });
@@ -298,6 +308,7 @@ const DataManagement = () => {
       compliance.forEach((r, i) => { idMaps.compliance[r.id] = createHumanId("CMP", r.id, r.created_at, i); });
       equipment.forEach((r, i) => { idMaps.equipment[r.id] = createHumanId("EQP", r.id, r.created_at, i); });
       transactions.forEach((r, i) => { idMaps.transactions[r.id] = createHumanId("TXN", r.id, r.created_at, i); });
+      reserves.forEach((r, i) => { idMaps.reserves[r.id] = createHumanId("RSV", r.id, r.created_at, i); });
 
       // Transform records: replace UUIDs with human-readable IDs
       const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
@@ -322,6 +333,9 @@ const DataManagement = () => {
         if (transformed.equipment_id && idMaps.equipment[transformed.equipment_id]) {
           transformed.equipment_id = idMaps.equipment[transformed.equipment_id];
         }
+        if (transformed.maintenance_log_id && idMaps.maintenanceLogs[transformed.maintenance_log_id]) {
+          transformed.maintenance_log_id = idMaps.maintenanceLogs[transformed.maintenance_log_id];
+        }
         if (transformed.reference_id && idMaps.subscriptions[transformed.reference_id]) {
           transformed.reference_id = idMaps.subscriptions[transformed.reference_id];
         }
@@ -344,6 +358,7 @@ const DataManagement = () => {
         "Compliance Records": compliance.map(r => transformRecord(r, idMaps.compliance)),
         "Equipment": equipment.map(r => transformRecord(r, idMaps.equipment)),
         "Transactions": transactions.map(r => transformRecord(r, idMaps.transactions)),
+        "Reserves": reserves.map(r => transformRecord(r, idMaps.reserves)),
       };
 
       // Create workbook with separate worksheets
@@ -410,6 +425,7 @@ const DataManagement = () => {
           maintenance_directive_compliance: data.tables.maintenance_directive_compliance?.length || 0,
           equipment: data.tables.equipment?.length || 0,
           transactions: data.tables.transactions?.length || 0,
+          reserves: data.tables.reserves?.length || 0,
         };
         setImportCounts(counts);
         setImportResult(null);
@@ -442,6 +458,7 @@ const DataManagement = () => {
         maintenance_directive_compliance: 0,
         equipment: 0,
         transactions: 0,
+        reserves: 0,
       };
 
       const skipped: RecordCounts = {
@@ -456,6 +473,7 @@ const DataManagement = () => {
         maintenance_directive_compliance: 0,
         equipment: 0,
         transactions: 0,
+        reserves: 0,
       };
 
       // ID mapping for cross-user imports (old ID -> new ID)
@@ -477,6 +495,7 @@ const DataManagement = () => {
         "directive_history",
         "maintenance_directive_compliance",
         "transactions",
+        "reserves",
       ] as const;
 
       // Helper to update progress
@@ -924,6 +943,52 @@ const DataManagement = () => {
           } else {
             console.error("Insert transactions error:", error);
             skipped.transactions++;
+          }
+        }
+      }
+
+      // 11. Reserves - check by title
+      const reservesData = importPreview.tables.reserves || [];
+      for (let i = 0; i < reservesData.length; i++) {
+        const record = reservesData[i];
+        updateProgress("reserves", i, reservesData.length, 11);
+        
+        // Check for duplicate based on title within same aircraft
+        const { data: existing } = await supabase
+          .from("reserves")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("aircraft_id", selectedAircraftId)
+          .eq("title", record.title)
+          .maybeSingle();
+
+        if (existing) {
+          idMap[record.id] = existing.id;
+          skipped.reserves++;
+        } else {
+          const newId = generateId();
+          const { id: _oldId, aircraft_id: _oldAircraftId, equipment_id, maintenance_log_id, ...recordWithoutId } = record;
+          
+          // Map foreign keys
+          const mappedEquipmentId = equipment_id ? (idMap[equipment_id] || null) : null;
+          const mappedMaintenanceLogId = maintenance_log_id ? (idMap[maintenance_log_id] || null) : null;
+
+          const { error } = await supabase
+            .from("reserves")
+            .insert({ 
+              ...recordWithoutId, 
+              id: newId, 
+              user_id: user.id, 
+              aircraft_id: selectedAircraftId,
+              equipment_id: mappedEquipmentId,
+              maintenance_log_id: mappedMaintenanceLogId 
+            });
+          if (!error) {
+            idMap[record.id] = newId;
+            inserted.reserves++;
+          } else {
+            console.error("Insert reserves error:", error);
+            skipped.reserves++;
           }
         }
       }
