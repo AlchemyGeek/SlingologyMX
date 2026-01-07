@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Calendar, DollarSign, Clock, Gauge, RefreshCw, Pencil, Trash2, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, Clock, Gauge, RefreshCw, Pencil, Trash2, TrendingUp, ExternalLink } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import { format, differenceInMonths, parseISO, addMonths, addYears } from "date-fns";
@@ -323,14 +323,10 @@ const ReserveDetail = ({ reserve, onClose, onEdit, onDelete, userCurrency = "USD
           {/* Accrual Settings */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Accrual Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Accrual Method</p>
                 <p className="font-medium">{reserve.accrual_method}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Include in True Cost</p>
-                <p className="font-medium">{reserve.include_in_true_cost ? "Yes" : "No"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Include in Cost-Per-Hour</p>
@@ -338,6 +334,33 @@ const ReserveDetail = ({ reserve, onClose, onEdit, onDelete, userCurrency = "USD
               </div>
             </div>
           </div>
+
+          {/* Links */}
+          {reserve.links && reserve.links.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Links
+                </h3>
+                <div className="space-y-2">
+                  {reserve.links.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {link.description || link.url}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Notes */}
           {reserve.notes && (

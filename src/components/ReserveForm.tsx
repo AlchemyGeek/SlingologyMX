@@ -13,7 +13,9 @@ import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { getCurrencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { Reserve } from "./ReservesPanel";
+import type { Json } from "@/integrations/supabase/types";
 
 const RESERVE_TYPES = ["Engine", "Propeller", "Gearbox", "Parachute", "Battery", "Avionics", "Other"] as const;
 const BASIS_TYPES = ["Calendar", "Hours", "Cycles"] as const;
@@ -54,13 +56,37 @@ const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, 
     cost_source_notes: editingReserve?.cost_source_notes || "",
     // Accrual
     accrual_method: editingReserve?.accrual_method || "Straight-line",
-    include_in_true_cost: editingReserve?.include_in_true_cost ?? false,
     include_in_cost_per_hour: editingReserve?.include_in_cost_per_hour ?? false,
     // Lifecycle
     status: editingReserve?.status || "Active",
     // Notes
     notes: editingReserve?.notes || "",
+    // Links
+    links: editingReserve?.links || [] as Array<{ url: string; description: string }>,
   });
+
+  const [linkDescInput, setLinkDescInput] = useState("");
+  const [linkUrlInput, setLinkUrlInput] = useState("");
+
+  const handleAddLink = () => {
+    if (linkUrlInput.trim()) {
+      try {
+        new URL(linkUrlInput.trim());
+        setFormData({
+          ...formData,
+          links: [...formData.links, { url: linkUrlInput.trim(), description: linkDescInput.trim() }],
+        });
+        setLinkDescInput("");
+        setLinkUrlInput("");
+      } catch {
+        toast.error("Please enter a valid URL");
+      }
+    }
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setFormData({ ...formData, links: formData.links.filter((_, i) => i !== index) });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,12 +141,13 @@ const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, 
         cost_source_notes: formData.cost_source_notes || null,
         // Accrual
         accrual_method: formData.accrual_method,
-        include_in_true_cost: formData.include_in_true_cost,
         include_in_cost_per_hour: formData.include_in_cost_per_hour,
         // Lifecycle
         status: formData.status,
         // Notes
         notes: formData.notes || null,
+        // Links
+        links: formData.links as unknown as Json,
       };
 
       if (editingReserve) {
@@ -372,20 +399,73 @@ const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, 
             </div>
             <div className="flex items-center gap-3 pt-6">
               <Switch
-                id="include_in_true_cost"
-                checked={formData.include_in_true_cost}
-                onCheckedChange={(checked) => setFormData({ ...formData, include_in_true_cost: checked })}
-              />
-              <Label htmlFor="include_in_true_cost" className="cursor-pointer">Include in True Cost</Label>
-            </div>
-            <div className="flex items-center gap-3 pt-6">
-              <Switch
                 id="include_in_cost_per_hour"
                 checked={formData.include_in_cost_per_hour}
                 onCheckedChange={(checked) => setFormData({ ...formData, include_in_cost_per_hour: checked })}
               />
               <Label htmlFor="include_in_cost_per_hour" className="cursor-pointer">Include in Cost-Per-Hour</Label>
             </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Links */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Links</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="link_desc_input" className="text-sm">
+                Description (optional)
+              </Label>
+              <Input
+                id="link_desc_input"
+                value={linkDescInput}
+                onChange={(e) => setLinkDescInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLink())}
+                maxLength={100}
+                placeholder="Manual, datasheet, etc."
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="link_url_input" className="text-sm">
+                URL Link
+              </Label>
+              <Input
+                id="link_url_input"
+                value={linkUrlInput}
+                onChange={(e) => setLinkUrlInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLink())}
+                maxLength={255}
+                placeholder="https://example.com/manual.pdf"
+              />
+            </div>
+          </div>
+          <Button type="button" onClick={handleAddLink} size="sm">
+            Add Link
+          </Button>
+          <div className="space-y-1 mt-2">
+            {formData.links.map((link, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded"
+              >
+                <div className="flex-1 min-w-0">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium hover:underline block truncate"
+                  >
+                    {link.description || link.url}
+                  </a>
+                </div>
+                <X
+                  className="h-4 w-4 cursor-pointer flex-shrink-0 hover:text-destructive"
+                  onClick={() => handleRemoveLink(index)}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
