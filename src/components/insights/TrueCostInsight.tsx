@@ -474,11 +474,11 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
           <p className="text-sm text-muted-foreground uppercase tracking-wide">
             Hours ({counterType.toUpperCase()})
           </p>
-          {hoursData ? (
+          {hoursData && !isNaN(hoursData.hours) ? (
             <div className="mt-2">
               <p className="text-3xl font-semibold">{hoursData.hours.toFixed(1)}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {hoursData.startValue.toFixed(1)} → {hoursData.endValue.toFixed(1)}
+                {!isNaN(hoursData.startValue) ? hoursData.startValue.toFixed(1) : "?"} → {!isNaN(hoursData.endValue) ? hoursData.endValue.toFixed(1) : "?"}
                 {hoursData.startResult.type !== "actual" && ` (${hoursData.startResult.type})`}
               </p>
             </div>
