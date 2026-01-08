@@ -26,7 +26,7 @@ interface TransactionFormProps {
 const INTENTS = Constants.public.Enums.transaction_intent;
 const CATEGORIES = Constants.public.Enums.transaction_category;
 const STATUSES = Constants.public.Enums.transaction_status;
-const SOURCES = Constants.public.Enums.transaction_source;
+// Source is always "Manual" for form entries
 const ALLOCATION_METHODS = Constants.public.Enums.allocation_method;
 const ALLOCATION_UNITS = Constants.public.Enums.allocation_period_unit;
 
@@ -104,7 +104,7 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
         category: formData.category as typeof CATEGORIES[number],
         tags: formData.tags,
         status: formData.status as typeof STATUSES[number],
-        source: formData.source as typeof SOURCES[number],
+        source: "Manual" as const,
         notes: formData.notes || null,
         include_in_cash_flow: formData.include_in_cash_flow,
         include_in_ownership_total: formData.include_in_ownership_total,
@@ -239,38 +239,22 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
 
         <Separator />
 
-        {/* Status & Source */}
+        {/* Status */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Status & Source</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Status</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((status) => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="source">Source <span className="text-destructive">*</span></Label>
-              <Select value={formData.source} onValueChange={(value) => setFormData({ ...formData, source: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SOURCES.map((source) => (
-                    <SelectItem key={source} value={source}>{source}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
+            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>{status}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
