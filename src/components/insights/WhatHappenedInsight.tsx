@@ -64,7 +64,7 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
         .from("transactions")
         .select("*")
         .eq("aircraft_id", selectedAircraft.id)
-        .in("status", ["Posted", "Pending"])
+        .eq("status", "Posted")
         .eq("direction", "Debit");
 
       if (!error && data) {
