@@ -16,7 +16,7 @@ import {
   Package,
   ArrowLeftRight,
   PiggyBank,
-  BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,7 +38,7 @@ type DashboardView =
   | "transactions"
   | "commitments"
   | "reserves"
-  | "analysis"
+  | "insights"
   | "equipment"
   | "maintenance"
   | "directives";
@@ -74,7 +74,7 @@ const financialItems = [
   { id: "transactions" as const, title: "Transactions", icon: ArrowLeftRight },
   { id: "commitments" as const, title: "Commitments", icon: CreditCard },
   { id: "reserves" as const, title: "Reserves", icon: PiggyBank },
-  { id: "analysis" as const, title: "Analysis", icon: BarChart3 },
+  { id: "insights" as const, title: "Insights", icon: Sparkles },
 ];
 
 const supportItems = [

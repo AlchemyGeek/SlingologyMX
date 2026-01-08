@@ -18,6 +18,7 @@ import EquipmentPanel from "@/components/EquipmentPanel";
 import DirectivesPanel from "@/components/DirectivesPanel";
 import TransactionsPanel from "@/components/TransactionsPanel";
 import ReservesPanel from "@/components/ReservesPanel";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import AircraftCountersDisplay from "@/components/AircraftCountersDisplay";
 import CountersPanel from "@/components/CountersPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
@@ -249,7 +250,8 @@ const Dashboard = () => {
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
           />
         );
-      case "analysis":
+      case "insights":
+        return <InsightsPanel />;
       case "equipment":
         return (
           <EquipmentPanel
