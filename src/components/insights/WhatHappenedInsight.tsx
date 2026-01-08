@@ -1,10 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
+import { format, subMonths, subDays, startOfYear, startOfMonth, endOfMonth, subYears } from "date-fns";
 import { InsightContainer, DisplayMode } from "./InsightContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAircraft } from "@/contexts/AircraftContext";
 import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { formatCurrency } from "@/lib/currency";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   BarChart,
   Bar,
@@ -35,6 +52,8 @@ interface CategoryData {
   count: number;
 }
 
+type TimeframePeriod = "last-month" | "last-quarter" | "last-6-months" | "year-so-far" | "last-year" | "custom";
+
 const CATEGORY_COLORS: Record<string, string> = {
   "Fuel": "hsl(220, 70%, 50%)",
   "Oil & Consumables": "hsl(200, 70%, 50%)",
@@ -49,11 +68,73 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Other": "hsl(0, 0%, 50%)",
 };
 
+const TIMEFRAME_OPTIONS = [
+  { value: "last-month", label: "Last Month" },
+  { value: "last-quarter", label: "Last Quarter" },
+  { value: "last-6-months", label: "Last 6 Months" },
+  { value: "year-so-far", label: "Year So Far" },
+  { value: "last-year", label: "Last Year" },
+  { value: "custom", label: "Custom Range" },
+];
+
+function getDateRange(period: TimeframePeriod, customStart?: Date, customEnd?: Date): { start: Date; end: Date } {
+  const today = new Date();
+  
+  switch (period) {
+    case "last-month": {
+      const lastMonth = subMonths(today, 1);
+      return {
+        start: startOfMonth(lastMonth),
+        end: endOfMonth(lastMonth),
+      };
+    }
+    case "last-quarter":
+      return {
+        start: subMonths(today, 3),
+        end: today,
+      };
+    case "last-6-months":
+      return {
+        start: subMonths(today, 6),
+        end: today,
+      };
+    case "year-so-far":
+      return {
+        start: startOfYear(today),
+        end: today,
+      };
+    case "last-year": {
+      const lastYear = subYears(today, 1);
+      return {
+        start: startOfYear(lastYear),
+        end: new Date(lastYear.getFullYear(), 11, 31),
+      };
+    }
+    case "custom":
+      return {
+        start: customStart || subMonths(today, 1),
+        end: customEnd || today,
+      };
+    default:
+      return {
+        start: startOfYear(today),
+        end: today,
+      };
+  }
+}
+
 export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps) {
   const { selectedAircraft } = useAircraft();
   const { currency } = useUserCurrency(userId);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState<TimeframePeriod>("year-so-far");
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
+
+  const dateRange = useMemo(() => {
+    return getDateRange(timeframe, customStartDate, customEndDate);
+  }, [timeframe, customStartDate, customEndDate]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -65,7 +146,9 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
         .select("*")
         .eq("aircraft_id", selectedAircraft.id)
         .eq("status", "Posted")
-        .eq("direction", "Debit");
+        .eq("direction", "Debit")
+        .gte("transaction_date", format(dateRange.start, "yyyy-MM-dd"))
+        .lte("transaction_date", format(dateRange.end, "yyyy-MM-dd"));
 
       if (!error && data) {
         setTransactions(data);
@@ -74,7 +157,7 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     };
 
     fetchTransactions();
-  }, [selectedAircraft?.id]);
+  }, [selectedAircraft?.id, dateRange]);
 
   const { categoryData, totalCost, transactionCount } = useMemo(() => {
     const categoryMap = new Map<string, { amount: number; count: number }>();
@@ -105,9 +188,9 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     if (categoryData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground">No posted transactions found.</p>
+          <p className="text-muted-foreground">No posted transactions in this period.</p>
           <p className="text-xs text-muted-foreground mt-2">
-            Record transactions and mark them as "Posted" to see your spending breakdown.
+            Try selecting a different timeframe or mark transactions as "Posted".
           </p>
         </div>
       );
@@ -159,7 +242,7 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     if (categoryData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground">No posted transactions found.</p>
+          <p className="text-muted-foreground">No posted transactions in this period.</p>
         </div>
       );
     }
@@ -207,6 +290,78 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
 
     return (
       <div className="space-y-6">
+        {/* Timeframe Selector */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Select value={timeframe} onValueChange={(v) => setTimeframe(v as TimeframePeriod)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select timeframe" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIMEFRAME_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {timeframe === "custom" && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customStartDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customStartDate ? format(customStartDate, "MMM d, yyyy") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customStartDate}
+                    onSelect={setCustomStartDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground">to</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !customEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customEndDate ? format(customEndDate, "MMM d, yyyy") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customEndDate}
+                    onSelect={setCustomEndDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          <span className="text-sm text-muted-foreground ml-auto">
+            {format(dateRange.start, "MMM d, yyyy")} – {format(dateRange.end, "MMM d, yyyy")}
+          </span>
+        </div>
+
         {/* Summary Numbers */}
         <div className="flex gap-6">
           <Card className="flex-1">
