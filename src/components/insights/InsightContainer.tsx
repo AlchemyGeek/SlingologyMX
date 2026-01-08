@@ -44,7 +44,7 @@ export function InsightContainer({
   children,
   showDisplayToggle = true,
 }: InsightContainerProps) {
-  const [displayMode, setDisplayMode] = useState<DisplayMode>("table");
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("chart");
 
   return (
     <div className="space-y-6">
@@ -75,13 +75,13 @@ export function InsightContainer({
             onValueChange={(value) => value && setDisplayMode(value as DisplayMode)}
             className="bg-muted rounded-lg p-1"
           >
-            <ToggleGroupItem value="table" aria-label="Table view" className="px-3">
-              <Table className="h-4 w-4 mr-2" />
-              Table
-            </ToggleGroupItem>
             <ToggleGroupItem value="chart" aria-label="Chart view" className="px-3">
               <BarChart3 className="h-4 w-4 mr-2" />
               Chart
+            </ToggleGroupItem>
+            <ToggleGroupItem value="table" aria-label="Table view" className="px-3">
+              <Table className="h-4 w-4 mr-2" />
+              Table
             </ToggleGroupItem>
           </ToggleGroup>
         )}
