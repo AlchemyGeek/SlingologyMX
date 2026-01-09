@@ -1,17 +1,33 @@
 import { useState, useEffect, useCallback } from "react";
-import { format, subMonths, addMonths } from "date-fns";
+import { format, subDays } from "date-fns";
 import { InsightContainer } from "./InsightContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info, CheckCircle2, AlertTriangle, HelpCircle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAircraft } from "@/contexts/AircraftContext";
-import { fetchCounterLog, calculateUsageRate, CounterType } from "@/lib/counterInterpolation";
+import { fetchCounterLog, calculateUsageRate, CounterType, CounterEntry } from "@/lib/counterInterpolation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 
 interface AssumptionsInsightProps {
   onBack: () => void;
   userId: string;
+}
+
+interface UsageChartDataPoint {
+  date: string;
+  displayDate: string;
+  value: number;
+  trendValue?: number;
 }
 
 interface UsageAssumptions {
@@ -19,9 +35,12 @@ interface UsageAssumptions {
   forecastedTotalHours: number | null;
   usageModel: "Linear" | "Manual" | "Fixed-costs-only";
   sourceWindow: string;
+  sourceWindowDays: number;
   counterType: string;
   hasOverride: boolean;
   confidence: "high" | "low" | null;
+  chartData: UsageChartDataPoint[];
+  trendSlope: number | null; // hours per day
 }
 
 interface CostBehaviorAssumptions {
@@ -92,30 +111,81 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
       const log = await fetchCounterLog(selectedAircraft.id, counterType);
       const usageRate = calculateUsageRate(log, 90);
       
+      // Filter entries within the source window (last 90 days)
+      const windowStart = subDays(new Date(), 90);
+      const windowStartStr = format(windowStart, "yyyy-MM-dd");
+      const windowEntries = log.entries.filter(e => e.date >= windowStartStr);
+      
       let usageAssumptions: UsageAssumptions;
       
       if (!usageRate || usageRate.rate <= 0) {
         gaps.push("Insufficient counter history for usage projection");
         fallbacks.push("Using zero hours for variable cost projections");
+        
+        // Still build chart data if we have entries
+        const chartData: UsageChartDataPoint[] = windowEntries.map(entry => ({
+          date: entry.date,
+          displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
+          value: entry.value,
+        }));
+        
         usageAssumptions = {
           forecastedHoursPerMonth: null,
           forecastedTotalHours: null,
           usageModel: "Fixed-costs-only",
           sourceWindow: "N/A",
+          sourceWindowDays: 0,
           counterType: "Tach",
           hasOverride: false,
           confidence: null,
+          chartData,
+          trendSlope: null,
         };
       } else {
         const hoursPerMonth = usageRate.rate * 30.44;
+        
+        // Build chart data with trend line values
+        const chartData: UsageChartDataPoint[] = [];
+        
+        if (windowEntries.length >= 2) {
+          // Calculate trend line using first and last points in window
+          const firstEntry = windowEntries[0];
+          const lastEntry = windowEntries[windowEntries.length - 1];
+          const daysBetween = (new Date(lastEntry.date).getTime() - new Date(firstEntry.date).getTime()) / (1000 * 60 * 60 * 24);
+          const slope = daysBetween > 0 ? (lastEntry.value - firstEntry.value) / daysBetween : 0;
+          
+          windowEntries.forEach(entry => {
+            const daysFromFirst = (new Date(entry.date).getTime() - new Date(firstEntry.date).getTime()) / (1000 * 60 * 60 * 24);
+            const trendValue = firstEntry.value + slope * daysFromFirst;
+            
+            chartData.push({
+              date: entry.date,
+              displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
+              value: entry.value,
+              trendValue: Math.round(trendValue * 10) / 10,
+            });
+          });
+        } else {
+          windowEntries.forEach(entry => {
+            chartData.push({
+              date: entry.date,
+              displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
+              value: entry.value,
+            });
+          });
+        }
+        
         usageAssumptions = {
           forecastedHoursPerMonth: Math.round(hoursPerMonth * 10) / 10,
           forecastedTotalHours: Math.round(hoursPerMonth * 12 * 10) / 10,
           usageModel: "Linear",
           sourceWindow: `Last ${usageRate.windowDays} days`,
+          sourceWindowDays: usageRate.windowDays,
           counterType: "Tach",
           hasOverride: false,
           confidence: usageRate.confidence,
+          chartData,
+          trendSlope: usageRate.rate,
         };
         
         if (usageRate.confidence === "low") {
@@ -399,6 +469,74 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
                 value={assumptions.usage.hasOverride ? "Yes" : "No"}
                 status="neutral"
               />
+              
+              {/* Usage Chart */}
+              {assumptions.usage.chartData.length >= 2 && (
+                <div className="pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Counter readings over source window:
+                  </p>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={assumptions.usage.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                        <XAxis 
+                          dataKey="displayDate" 
+                          tick={{ fontSize: 10 }} 
+                          tickLine={false}
+                          axisLine={{ stroke: "hsl(var(--border))" }}
+                          interval="preserveStartEnd"
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 10 }} 
+                          tickLine={false}
+                          axisLine={false}
+                          width={40}
+                          domain={['dataMin - 5', 'dataMax + 5']}
+                          tickFormatter={(val) => val.toFixed(0)}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            fontSize: 12, 
+                            backgroundColor: "hsl(var(--background))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 6,
+                          }}
+                          formatter={(value: number, name: string) => [
+                            value.toFixed(1),
+                            name === "value" ? "Actual" : "Trend"
+                          ]}
+                          labelFormatter={(label) => label}
+                        />
+                        {/* Trend line */}
+                        <Line
+                          type="linear"
+                          dataKey="trendValue"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          strokeDasharray="4 4"
+                          dot={false}
+                          name="Trend"
+                        />
+                        {/* Actual data points */}
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
+                          activeDot={{ r: 5 }}
+                          name="Actual"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {assumptions.usage.trendSlope !== null && (
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Linear rate: <span className="font-medium">{(assumptions.usage.trendSlope * 30.44).toFixed(1)} hours/month</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
