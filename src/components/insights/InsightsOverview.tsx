@@ -122,7 +122,7 @@ export function InsightsOverview({ onSelectInsight }: InsightsOverviewProps) {
       <div className="mt-8 p-4 rounded-lg bg-muted/50 border border-dashed">
         <p className="text-sm text-muted-foreground">
           <strong>Note:</strong> Insights provide interpretation, not raw data manipulation.
-          For custom analysis, use the <span className="font-medium">Export</span> feature in Data Management.
+          For custom analysis, use the <span className="font-medium">Export</span> feature in Transactions.
         </p>
       </div>
     </div>
