@@ -157,6 +157,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
   // Usage controls
   const [useManualUsage, setUseManualUsage] = useState(false);
   const [manualHoursPerMonth, setManualHoursPerMonth] = useState<string>("");
+  const [usagePopoverOpen, setUsagePopoverOpen] = useState(false);
   
   // Data
   const [loading, setLoading] = useState(true);
@@ -862,7 +863,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
           </Select>
 
           {/* Usage Override Popover */}
-          <Popover>
+          <Popover open={usagePopoverOpen} onOpenChange={setUsagePopoverOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -873,6 +874,10 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
             <PopoverContent 
               className="w-72" 
               align="start"
+              onInteractOutside={(e) => {
+                // Only close if clicking outside the popover content
+                e.preventDefault();
+              }}
             >
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -923,6 +928,14 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                     disabled={!useManualUsage}
                   />
                 </div>
+
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => setUsagePopoverOpen(false)}
+                >
+                  Apply
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
