@@ -142,7 +142,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
   const [loading, setLoading] = useState(true);
   const [usageProjection, setUsageProjection] = useState<UsageProjection | null>(null);
   const [breakdown, setBreakdown] = useState<ForecastCostItem[]>([]);
-  const [historicalCostPerHour, setHistoricalCostPerHour] = useState<number>(0);
+  const [historicalCostPerHourByCategory, setHistoricalCostPerHourByCategory] = useState<Record<string, number>>({});
 
   const dateRange = useMemo(() => {
     return getForecastDateRange(forecastPeriod, customStartDate, customEndDate);
@@ -209,7 +209,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     }
   }, [selectedAircraft?.id, counterType, useManualUsage, manualHoursPerMonth, forecastMonths]);
 
-  // Fetch historical variable cost per hour (last 90 days)
+  // Fetch historical variable cost per hour by category (last 90 days)
   const fetchHistoricalCostPerHour = useCallback(async () => {
     if (!selectedAircraft?.id) return;
 
@@ -228,11 +228,16 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       .lte("transaction_date", today);
 
     if (!transactions || transactions.length === 0) {
-      setHistoricalCostPerHour(0);
+      setHistoricalCostPerHourByCategory({});
       return;
     }
 
-    const totalVariableCost = transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    // Group costs by category
+    const costByCategory: Record<string, number> = {};
+    transactions.forEach((tx) => {
+      const cat = tx.category as string;
+      costByCategory[cat] = (costByCategory[cat] || 0) + (tx.amount || 0);
+    });
 
     // Get hours in last 90 days
     try {
@@ -242,7 +247,12 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       if (usageRate && usageRate.rate > 0) {
         const hoursInPeriod = usageRate.rate * usageRate.windowDays;
         if (hoursInPeriod > 0) {
-          setHistoricalCostPerHour(totalVariableCost / hoursInPeriod);
+          // Calculate cost per hour for each category
+          const perHourByCategory: Record<string, number> = {};
+          for (const cat of Object.keys(costByCategory)) {
+            perHourByCategory[cat] = costByCategory[cat] / hoursInPeriod;
+          }
+          setHistoricalCostPerHourByCategory(perHourByCategory);
           return;
         }
       }
@@ -250,7 +260,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       console.error("Error calculating historical cost per hour:", err);
     }
 
-    setHistoricalCostPerHour(0);
+    setHistoricalCostPerHourByCategory({});
   }, [selectedAircraft?.id, counterType]);
 
   // Fetch all forecast cost components
@@ -303,17 +313,20 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       });
     }
 
-    // 2. VARIABLE COSTS (Usage-based projection)
-    // Use historical cost per hour × projected hours
-    if (usageProjection && usageProjection.totalHours > 0 && historicalCostPerHour > 0) {
-      const projectedVariableCost = historicalCostPerHour * usageProjection.totalHours;
-      
-      items.push({
-        name: "Operational Costs (Fuel, Oil, Travel)",
-        amount: Math.round(projectedVariableCost * 100) / 100,
-        type: "variable",
-        category: "variable",
-      });
+    // 2. VARIABLE COSTS (Usage-based projection) - broken down by category
+    if (usageProjection && usageProjection.totalHours > 0) {
+      for (const category of VARIABLE_CATEGORIES) {
+        const costPerHour = historicalCostPerHourByCategory[category] || 0;
+        if (costPerHour > 0) {
+          const projectedCost = costPerHour * usageProjection.totalHours;
+          items.push({
+            name: category,
+            amount: Math.round(projectedCost * 100) / 100,
+            type: "variable",
+            category: "variable",
+          });
+        }
+      }
     }
 
     // 3. RESERVES (Deferred Costs) - usage-based accrual projection
@@ -375,7 +388,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     }
 
     setBreakdown(items);
-  }, [selectedAircraft?.id, startDateStr, endDateStr, dateRange, usageProjection, historicalCostPerHour]);
+  }, [selectedAircraft?.id, startDateStr, endDateStr, dateRange, usageProjection, historicalCostPerHourByCategory]);
 
   // Load all data
   useEffect(() => {
@@ -442,15 +455,16 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       }
     }
     
-    if (historicalCostPerHour > 0) {
-      list.push(`Variable costs derived from recent ${formatCurrency(historicalCostPerHour, currency)}/hr average`);
+    const totalHistoricalCostPerHour = Object.values(historicalCostPerHourByCategory).reduce((sum, val) => sum + val, 0);
+    if (totalHistoricalCostPerHour > 0) {
+      list.push(`Variable costs derived from recent ${formatCurrency(totalHistoricalCostPerHour, currency)}/hr average`);
     }
     
     list.push("Commitment renewals assumed to continue at current rates");
     list.push("Reserve accruals calculated using straight-line method");
     
     return list;
-  }, [usageProjection, historicalCostPerHour, currency]);
+  }, [usageProjection, historicalCostPerHourByCategory, currency]);
 
   const renderHeroSection = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
