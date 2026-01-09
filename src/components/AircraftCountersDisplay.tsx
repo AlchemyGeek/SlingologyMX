@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Pencil, History } from "lucide-react";
 import { toast } from "sonner";
-import { AircraftCounters } from "@/hooks/useAircraftCounters";
+import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import CounterHistoryDialog from "./CounterHistoryDialog";
 
 interface AircraftCountersDisplayProps {
@@ -20,8 +20,8 @@ interface AircraftCountersDisplayProps {
   loading: boolean;
   userId: string;
   aircraftId: string;
-  onUpdateCounter: (field: keyof Omit<AircraftCounters, "id">, value: number) => Promise<void>;
-  onUpdateAllCounters: (updates: Partial<Omit<AircraftCounters, "id">>) => Promise<void>;
+  onUpdateCounter: (field: NumericCounterKey, value: number) => Promise<void>;
+  onUpdateAllCounters: (updates: Partial<Pick<AircraftCounters, NumericCounterKey>>) => Promise<void>;
   onRefetch: () => void;
 }
 
@@ -33,12 +33,25 @@ const counterConfig = [
   { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
 ];
 
-const syncableCounters: (keyof Omit<AircraftCounters, "id">)[] = [
+const syncableCounters: NumericCounterKey[] = [
   "tach", "airframe_total_time", "engine_total_time", "prop_total_time"
 ];
 
+// Helper to get numeric value, defaulting null to 0 for calculations
+const getCounterValue = (counters: AircraftCounters, key: NumericCounterKey): number => {
+  const value = counters[key];
+  return typeof value === "number" ? value : 0;
+};
+
+// Helper to format counter display
+const formatCounterDisplay = (counters: AircraftCounters, key: NumericCounterKey): string => {
+  if (!counters.isInitialized) return "—";
+  const value = counters[key];
+  return typeof value === "number" ? value.toFixed(1) : "—";
+};
+
 const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateCounter, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
-  const [editingCounter, setEditingCounter] = useState<keyof Omit<AircraftCounters, "id"> | null>(null);
+  const [editingCounter, setEditingCounter] = useState<NumericCounterKey | null>(null);
   const [editValue, setEditValue] = useState("");
   const [addValue, setAddValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,9 +60,9 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
 
   const isSyncableCounter = editingCounter && syncableCounters.includes(editingCounter);
 
-  const handleOpenEdit = (key: keyof Omit<AircraftCounters, "id">) => {
+  const handleOpenEdit = (key: NumericCounterKey) => {
     setEditingCounter(key);
-    setEditValue(counters[key].toString());
+    setEditValue(getCounterValue(counters, key).toString());
     setAddValue("");
     setSyncEnabled(true);
     setIsDialogOpen(true);
@@ -63,7 +76,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
       return;
     }
 
-    const currentValue = counters[editingCounter];
+    const currentValue = getCounterValue(counters, editingCounter);
     if (newValue < currentValue) {
       toast.error(`Value cannot be less than current value (${currentValue.toFixed(1)})`);
       return;
@@ -73,9 +86,9 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
       if (syncEnabled && isSyncableCounter) {
         // Calculate difference and apply to all syncable counters
         const diff = newValue - currentValue;
-        const updates: Partial<Omit<AircraftCounters, "id">> = {};
+        const updates: Partial<Pick<AircraftCounters, NumericCounterKey>> = {};
         syncableCounters.forEach(key => {
-          updates[key] = counters[key] + diff;
+          updates[key] = getCounterValue(counters, key) + diff;
         });
         await onUpdateAllCounters(updates);
         toast.success(`Counter updated (synced ${diff >= 0 ? "+" : ""}${diff.toFixed(1)} to all)`);
@@ -100,14 +113,14 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
     try {
       if (syncEnabled && isSyncableCounter) {
         // Update all syncable counters
-        const updates: Partial<Omit<AircraftCounters, "id">> = {};
+        const updates: Partial<Pick<AircraftCounters, NumericCounterKey>> = {};
         syncableCounters.forEach(key => {
-          updates[key] = counters[key] + toAdd;
+          updates[key] = getCounterValue(counters, key) + toAdd;
         });
         await onUpdateAllCounters(updates);
         toast.success(`Added ${toAdd} to all synced counters`);
       } else {
-        const newValue = counters[editingCounter] + toAdd;
+        const newValue = getCounterValue(counters, editingCounter) + toAdd;
         await onUpdateCounter(editingCounter, newValue);
         toast.success(`Added ${toAdd} to ${counterConfig.find(c => c.key === editingCounter)?.label}`);
       }
@@ -156,7 +169,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
               <CardContent className="p-4 text-center relative">
                 <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-                <p className="text-2xl font-bold mt-1">{counters[config.key].toFixed(1)}</p>
+                <p className="text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
               </CardContent>
             </Card>
           ))}
@@ -174,7 +187,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
             <div className="space-y-2">
               <Label>Current Value</Label>
               <p className="text-2xl font-bold">
-                {editingCounter ? counters[editingCounter].toFixed(1) : "0.0"}
+                {editingCounter ? getCounterValue(counters, editingCounter).toFixed(1) : "0.0"}
               </p>
             </div>
             
