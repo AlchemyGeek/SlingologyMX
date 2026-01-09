@@ -48,13 +48,28 @@ export async function fetchCounterLog(
     return { entries: [], counterType };
   }
 
-  const entries: CounterEntry[] = (data as RawHistoryEntry[])
+  // Map entries and normalize dates
+  const rawEntries: CounterEntry[] = (data as RawHistoryEntry[])
     .map((row) => ({
       // Normalize date to YYYY-MM-DD format (remove timezone info)
       date: row.change_date.split("T")[0],
       value: row[counterType] ?? null,
     }))
     .filter((e): e is CounterEntry => e.value !== null);
+
+  // Deduplicate by date, keeping the highest value for each date
+  // (counters are monotonically increasing, so highest is most accurate)
+  const entriesByDate = new Map<string, number>();
+  rawEntries.forEach((entry) => {
+    const existing = entriesByDate.get(entry.date);
+    if (existing === undefined || entry.value > existing) {
+      entriesByDate.set(entry.date, entry.value);
+    }
+  });
+
+  const entries: CounterEntry[] = Array.from(entriesByDate.entries())
+    .map(([date, value]) => ({ date, value }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return { entries, counterType };
 }
