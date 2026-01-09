@@ -271,37 +271,31 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
         if (!sub.cost || sub.cost <= 0) return;
 
         const recurrenceMonths = getRecurrenceMonths(sub.recurrence);
-        
-        // Calculate how many occurrences fall within the forecast window
-        let occurrences = 0;
-        const subStart = new Date(sub.initial_date);
         const subEnd = sub.final_date ? new Date(sub.final_date) : null;
         
-        // Find occurrences within forecast period
-        let currentOccurrence = new Date(subStart);
-        while (currentOccurrence <= dateRange.end) {
-          if (currentOccurrence >= dateRange.start) {
-            if (!subEnd || currentOccurrence <= subEnd) {
-              occurrences++;
-            }
-          }
-          // Advance to next occurrence
-          if (recurrenceMonths < 1) {
-            // Weekly or bi-monthly
-            currentOccurrence = new Date(currentOccurrence);
-            currentOccurrence.setDate(currentOccurrence.getDate() + Math.round(recurrenceMonths * 30.44));
-          } else {
-            currentOccurrence = addMonths(currentOccurrence, recurrenceMonths);
-          }
-          
-          // Safety limit to prevent infinite loops
-          if (occurrences > 100) break;
-        }
+        // Determine the effective date range for this commitment
+        // Start: later of commitment initial_date or forecast start
+        // End: earlier of commitment final_date or forecast end
+        const effectiveStart = dateRange.start;
+        const effectiveEnd = subEnd && subEnd < dateRange.end ? subEnd : dateRange.end;
+        
+        // Skip if commitment ends before forecast starts
+        if (effectiveEnd < effectiveStart) return;
+        
+        // Calculate the prorated cost for the forecast period
+        // Cost per month = (cost / recurrenceMonths)
+        // Total = cost per month * months in effective period
+        const effectiveDays = differenceInDays(effectiveEnd, effectiveStart);
+        const effectiveMonths = effectiveDays / 30.44; // Average days per month
+        
+        // Monthly cost from this commitment
+        const costPerMonth = sub.cost / recurrenceMonths;
+        const proratedCost = costPerMonth * effectiveMonths;
 
-        if (occurrences > 0) {
+        if (proratedCost > 0) {
           items.push({
             name: sub.subscription_name,
-            amount: sub.cost * occurrences,
+            amount: Math.round(proratedCost * 100) / 100,
             type: "commitment",
             category: "fixed",
           });
