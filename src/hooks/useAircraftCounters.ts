@@ -1,21 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export type NumericCounterKey = "hobbs" | "tach" | "airframe_total_time" | "engine_total_time" | "prop_total_time";
+
 export interface AircraftCounters {
   id?: string;
-  hobbs: number;
-  tach: number;
-  airframe_total_time: number;
-  engine_total_time: number;
-  prop_total_time: number;
+  hobbs: number | null;
+  tach: number | null;
+  airframe_total_time: number | null;
+  engine_total_time: number | null;
+  prop_total_time: number | null;
+  isInitialized: boolean;
 }
 
 const defaultCounters: AircraftCounters = {
-  hobbs: 0,
-  tach: 0,
-  airframe_total_time: 0,
-  engine_total_time: 0,
-  prop_total_time: 0,
+  hobbs: null,
+  tach: null,
+  airframe_total_time: null,
+  engine_total_time: null,
+  prop_total_time: null,
+  isInitialized: false,
 };
 
 export type CounterChangeSource = "Dashboard" | "Maintenance Record";
@@ -43,13 +47,31 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
     }
 
     if (data) {
+      // Check if any counter has been set (non-null and non-zero means initialized)
+      // Or check if there's any history for this aircraft
+      const { count: historyCount } = await supabase
+        .from("aircraft_counter_history")
+        .select("*", { count: "exact", head: true })
+        .eq("aircraft_id", aircraftId);
+
+      const hasHistory = (historyCount ?? 0) > 0;
+      const hasNonZeroValues = 
+        (data.hobbs !== null && data.hobbs > 0) ||
+        (data.tach !== null && data.tach > 0) ||
+        (data.airframe_total_time !== null && data.airframe_total_time > 0) ||
+        (data.engine_total_time !== null && data.engine_total_time > 0) ||
+        (data.prop_total_time !== null && data.prop_total_time > 0);
+
+      const isInitialized = hasHistory || hasNonZeroValues;
+
       setCounters({
         id: data.id,
-        hobbs: Number(data.hobbs) || 0,
-        tach: Number(data.tach) || 0,
-        airframe_total_time: Number(data.airframe_total_time) || 0,
-        engine_total_time: Number(data.engine_total_time) || 0,
-        prop_total_time: Number(data.prop_total_time) || 0,
+        hobbs: data.hobbs !== null ? Number(data.hobbs) : null,
+        tach: data.tach !== null ? Number(data.tach) : null,
+        airframe_total_time: data.airframe_total_time !== null ? Number(data.airframe_total_time) : null,
+        engine_total_time: data.engine_total_time !== null ? Number(data.engine_total_time) : null,
+        prop_total_time: data.prop_total_time !== null ? Number(data.prop_total_time) : null,
+        isInitialized,
       });
     } else {
       // Create initial counters record for this aircraft
@@ -62,11 +84,12 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
       if (!insertError && newData) {
         setCounters({
           id: newData.id,
-          hobbs: 0,
-          tach: 0,
-          airframe_total_time: 0,
-          engine_total_time: 0,
-          prop_total_time: 0,
+          hobbs: null,
+          tach: null,
+          airframe_total_time: null,
+          engine_total_time: null,
+          prop_total_time: null,
+          isInitialized: false,
         });
       }
     }
@@ -78,10 +101,10 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
   }, [fetchCounters]);
 
   const logCounterHistory = async (
-    newCounters: Partial<AircraftCounters>, 
+    newCounters: Partial<Pick<AircraftCounters, NumericCounterKey>>, 
     source: CounterChangeSource,
     changeDate?: Date,
-    allCounterValues?: Partial<AircraftCounters>
+    allCounterValues?: Partial<Pick<AircraftCounters, NumericCounterKey>>
   ) => {
     if (!userId || !aircraftId) return;
     
@@ -126,7 +149,7 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
   };
 
   const updateCounter = async (
-    field: keyof Omit<AircraftCounters, "id">, 
+    field: NumericCounterKey, 
     value: number, 
     source: CounterChangeSource = "Dashboard",
     changeDate?: Date
@@ -146,14 +169,14 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
     // Log the history with optional date
     await logCounterHistory({ [field]: value }, source, changeDate);
 
-    setCounters((prev) => ({ ...prev, [field]: value }));
+    setCounters((prev) => ({ ...prev, [field]: value, isInitialized: true }));
   };
 
   const updateAllCounters = async (
-    newCounters: Partial<Omit<AircraftCounters, "id">>,
+    newCounters: Partial<Pick<AircraftCounters, NumericCounterKey>>,
     source: CounterChangeSource = "Dashboard",
     changeDate?: Date,
-    allCounterValuesForHistory?: Partial<AircraftCounters>
+    allCounterValuesForHistory?: Partial<Pick<AircraftCounters, NumericCounterKey>>
   ) => {
     if (!counters.id) return;
 
@@ -171,7 +194,7 @@ export const useAircraftCounters = (userId: string, aircraftId: string | undefin
     // If allCounterValuesForHistory is provided (from maintenance form), use those for the history log
     await logCounterHistory(newCounters, source, changeDate, allCounterValuesForHistory);
 
-    setCounters((prev) => ({ ...prev, ...newCounters }));
+    setCounters((prev) => ({ ...prev, ...newCounters, isInitialized: true }));
   };
 
   return { counters, loading, updateCounter, updateAllCounters, refetch: fetchCounters };
