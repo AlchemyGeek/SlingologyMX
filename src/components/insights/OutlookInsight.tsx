@@ -489,11 +489,16 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
         }
 
         if (occurrences > 0) {
+          // Counter-based (Hours) maintenance is variable - scales with usage
+          // Calendar-based maintenance is fixed - time-driven regardless of usage
+          // Mixed defaults to variable since it has a usage component
+          const costCategory = log.interval_type === "Calendar" ? "fixed" : "variable";
+          
           items.push({
             name: `${log.entry_title} (Scheduled)`,
             amount: Math.round(totalCost * occurrences * 100) / 100,
             type: "maintenance",
-            category: "fixed", // Scheduled maintenance is a predictable fixed cost
+            category: costCategory,
           });
         }
       }
