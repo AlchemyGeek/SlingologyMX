@@ -862,7 +862,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
           </Select>
 
           {/* Usage Override Popover */}
-          <Popover>
+          <Popover modal={false}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -870,7 +870,18 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                 {useManualUsage && <span className="text-primary">(Manual)</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <PopoverContent 
+              className="w-64" 
+              align="start" 
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onInteractOutside={(e) => {
+                // Prevent closing when interacting with the select dropdown
+                const target = e.target as HTMLElement;
+                if (target.closest('[role="listbox"]') || target.closest('[data-radix-select-viewport]')) {
+                  e.preventDefault();
+                }
+              }}
+            >
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Usage Forecast Mode</Label>
@@ -882,6 +893,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent
+                      position="popper"
                       onCloseAutoFocus={(e) => e.preventDefault()}
                     >
                       <SelectItem value="calculated">Auto (from history)</SelectItem>
@@ -901,7 +913,6 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                     onChange={(e) => setManualHoursPerMonth(e.target.value)}
                     placeholder="e.g. 10"
                     disabled={!useManualUsage}
-                    autoFocus={useManualUsage}
                   />
                 </div>
               </div>
