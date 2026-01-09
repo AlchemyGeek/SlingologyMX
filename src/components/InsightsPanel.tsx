@@ -38,7 +38,7 @@ export function InsightsPanel({ userId: propUserId }: InsightsPanelProps) {
     case "cost-structure":
       return <CostStructureInsight onBack={handleBack} userId={userId} />;
     case "outlook":
-      return <OutlookInsight onBack={handleBack} />;
+      return <OutlookInsight onBack={handleBack} userId={userId} />;
     case "assumptions":
       return <AssumptionsInsight onBack={handleBack} />;
     default:
