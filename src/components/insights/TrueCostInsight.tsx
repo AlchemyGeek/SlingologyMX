@@ -305,27 +305,66 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
         
         // Calculate amortization period from recurrence
         const recurrenceMonths = getRecurrenceMonths(commitment.recurrence);
+        if (recurrenceMonths <= 0) return;
         
-        // Determine the amortization window
-        // Use initial_date as start, and calculate end based on recurrence
-        const commitmentStart = commitment.initial_date;
-        const commitmentEndDate = new Date(commitmentStart);
-        commitmentEndDate.setMonth(commitmentEndDate.getMonth() + Math.ceil(recurrenceMonths));
-        const commitmentEnd = format(commitmentEndDate, "yyyy-MM-dd");
-
-        const config: TimeBasedAmortization = {
-          basis: "time",
-          totalCost: commitment.cost,
-          startDate: commitmentStart,
-          endDate: commitmentEnd,
-        };
-
-        const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
+        // Find recurrence periods that overlap with the analysis window
+        // Start from initial_date and iterate through recurrence periods
+        let periodStart = new Date(commitment.initial_date + "T00:00:00");
+        const analysisStartDate = new Date(startDateStr + "T00:00:00");
+        const analysisEndDate = new Date(endDateStr + "T00:00:00");
         
-        if (result && result.amortizedCost > 0) {
+        // Fast-forward to the first period that could overlap with analysis window
+        // (period end must be after analysis start)
+        while (true) {
+          const periodEnd = new Date(periodStart);
+          periodEnd.setMonth(periodEnd.getMonth() + Math.ceil(recurrenceMonths));
+          
+          if (periodEnd >= analysisStartDate) {
+            break; // This period might overlap
+          }
+          
+          // Move to next period
+          periodStart = periodEnd;
+          
+          // Safety: don't loop forever if dates are malformed
+          if (periodStart > analysisEndDate) break;
+        }
+        
+        // Now iterate through periods that overlap with analysis window
+        let totalAmortized = 0;
+        let iterations = 0;
+        const maxIterations = 100; // Safety limit
+        
+        while (periodStart <= analysisEndDate && iterations < maxIterations) {
+          iterations++;
+          
+          const periodEnd = new Date(periodStart);
+          periodEnd.setMonth(periodEnd.getMonth() + Math.ceil(recurrenceMonths));
+          
+          const periodStartStr = format(periodStart, "yyyy-MM-dd");
+          const periodEndStr = format(periodEnd, "yyyy-MM-dd");
+          
+          const config: TimeBasedAmortization = {
+            basis: "time",
+            totalCost: commitment.cost,
+            startDate: periodStartStr,
+            endDate: periodEndStr,
+          };
+
+          const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
+          
+          if (result && result.amortizedCost > 0) {
+            totalAmortized += result.amortizedCost;
+          }
+          
+          // Move to next period
+          periodStart = periodEnd;
+        }
+        
+        if (totalAmortized > 0) {
           items.push({
             name: commitment.subscription_name,
-            amount: result.amortizedCost,
+            amount: Math.round(totalAmortized * 100) / 100,
             type: "amortized",
             category: "fixed",
           });
