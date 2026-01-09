@@ -6,7 +6,7 @@ import {
   Wrench,
   FileText,
   AlertCircle,
-  HelpCircle,
+  Megaphone,
   BookOpen,
   MessageCircle,
   Bug,
@@ -78,7 +78,7 @@ const financialItems = [
 ];
 
 const supportItems = [
-  { id: "help", title: "Help", icon: HelpCircle, external: "https://slingology.blog/slingologymx-help-pages/?utm_campaign=slingologymx&utm_source=service&utm_medium=help" },
+  { id: "releases", title: "Releases", icon: Megaphone, external: "https://slingology.blog/slingologymx-releases/" },
   {
     id: "blog",
     title: "Blog",
