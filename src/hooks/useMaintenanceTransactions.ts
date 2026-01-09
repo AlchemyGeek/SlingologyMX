@@ -18,7 +18,7 @@ interface TransactionData {
   amount: number;
   direction: "Debit";
   intent: "Maintenance";
-  category: "Maintenance Labor" | "Maintenance Parts" | "Other";
+  category: "Maintenance Labor" | "Maintenance Parts" | "Maintenance (Unspecified)";
   status: "Pending";
   source: "Maintenance";
   reference_id: string;
@@ -28,7 +28,7 @@ interface TransactionData {
   include_in_cost_per_hour: boolean;
 }
 
-type TransactionCategory = "Maintenance Labor" | "Maintenance Parts" | "Other";
+type TransactionCategory = "Maintenance Labor" | "Maintenance Parts" | "Maintenance (Unspecified)";
 
 /**
  * Create transaction records from maintenance log cost data
@@ -54,14 +54,14 @@ export const createMaintenanceTransactions = async (
   }
   
   if (!isItemized) {
-    // Not itemized: create a single transaction for the total
+    // Not itemized: create a single transaction for the total using "Maintenance (Unspecified)"
     transactions.push({
       title: `${log.entry_title}:Maintenance`,
       transaction_date: log.date_performed,
       amount: log.total_cost!,
       direction: "Debit",
       intent: "Maintenance",
-      category: "Other",
+      category: "Maintenance (Unspecified)",
       status: "Pending",
       source: "Maintenance",
       reference_id: log.id,
@@ -115,7 +115,7 @@ export const createMaintenanceTransactions = async (
         amount: log.other_cost!,
         direction: "Debit",
         intent: "Maintenance",
-        category: "Other",
+        category: "Maintenance (Unspecified)",
         status: "Pending",
         source: "Maintenance",
         reference_id: log.id,
@@ -181,13 +181,14 @@ export const updateMaintenanceTransactions = async (
   
   if (hasTotalCost) {
     if (!isItemized) {
-      // Not itemized: single transaction for total
-      neededTransactions.set("Other", { amount: log.total_cost!, label: "Maintenance" });
+      // Not itemized: single transaction for total using "Maintenance (Unspecified)"
+      neededTransactions.set("Maintenance (Unspecified)", { amount: log.total_cost!, label: "Maintenance" });
     } else {
       // Itemized: individual transactions
       if (hasLaborCost) neededTransactions.set("Maintenance Labor", { amount: log.labor_cost!, label: "Labor" });
       if (hasPartsCost) neededTransactions.set("Maintenance Parts", { amount: log.parts_cost!, label: "Parts" });
-      if (hasOtherCost) neededTransactions.set("Other", { amount: log.other_cost!, label: "Other" });
+      // Itemized "Other" also uses "Maintenance (Unspecified)"
+      if (hasOtherCost) neededTransactions.set("Maintenance (Unspecified)", { amount: log.other_cost!, label: "Other" });
     }
   }
   

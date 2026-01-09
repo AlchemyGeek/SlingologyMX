@@ -1735,6 +1735,7 @@ export type Database = {
         | "Travel"
         | "Tools & Equipment"
         | "Other"
+        | "Maintenance (Unspecified)"
       transaction_direction: "Debit" | "Credit"
       transaction_intent:
         | "Ownership"
@@ -2069,6 +2070,7 @@ export const Constants = {
         "Travel",
         "Tools & Equipment",
         "Other",
+        "Maintenance (Unspecified)",
       ],
       transaction_direction: ["Debit", "Credit"],
       transaction_intent: [
