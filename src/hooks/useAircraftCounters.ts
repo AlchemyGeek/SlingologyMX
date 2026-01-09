@@ -18,7 +18,7 @@ const defaultCounters: AircraftCounters = {
   prop_total_time: 0,
 };
 
-export type CounterChangeSource = "Dashboard" | "Maintenance";
+export type CounterChangeSource = "Dashboard" | "Maintenance Record";
 
 export const useAircraftCounters = (userId: string, aircraftId: string | undefined) => {
   const [counters, setCounters] = useState<AircraftCounters>(defaultCounters);
