@@ -33,14 +33,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  PieChart,
+  Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
   Legend,
 } from "recharts";
 import { 
@@ -557,11 +554,14 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     };
   }, [breakdown, usageProjection]);
 
-  const chartData = useMemo(() => [
-    { name: "Variable", amount: variableCost },
-    { name: "Fixed", amount: fixedCost },
-    { name: "Deferred", amount: deferredCost },
-  ], [variableCost, fixedCost, deferredCost]);
+  const pieData = useMemo(() => {
+    const data = [
+      { name: "Fixed", value: fixedCost, percent: totalCost > 0 ? (fixedCost / totalCost) * 100 : 0, color: BREAKDOWN_COLORS.fixed },
+      { name: "Variable", value: variableCost, percent: totalCost > 0 ? (variableCost / totalCost) * 100 : 0, color: BREAKDOWN_COLORS.variable },
+      { name: "Deferred", value: deferredCost, percent: totalCost > 0 ? (deferredCost / totalCost) * 100 : 0, color: BREAKDOWN_COLORS.deferred },
+    ];
+    return data.filter(d => d.value > 0);
+  }, [fixedCost, variableCost, deferredCost, totalCost]);
 
   const assumptions = useMemo(() => {
     const list: string[] = [];
@@ -656,27 +656,36 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" fontSize={12} />
-          <YAxis tickFormatter={(v) => formatCurrency(v, currency)} fontSize={12} />
-          <Tooltip
-            formatter={(value: number) => [formatCurrency(value, currency), "Amount"]}
-            contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "8px",
-            }}
-          />
-          <Legend />
-          <Bar dataKey="amount" name="Projected Cost" radius={[4, 4, 0, 0]}>
-            <Cell fill={BREAKDOWN_COLORS.variable} />
-            <Cell fill={BREAKDOWN_COLORS.fixed} />
-            <Cell fill={BREAKDOWN_COLORS.deferred} />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={100}
+              paddingAngle={2}
+              dataKey="value"
+              label={({ name, percent }) => `${name}: ${percent.toFixed(0)}%`}
+              labelLine={true}
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value: number, name: string) => [formatCurrency(value, currency), name]}
+              contentStyle={{
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+              }}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     );
   };
 
