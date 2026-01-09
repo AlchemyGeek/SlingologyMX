@@ -156,7 +156,8 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
   
   // Usage controls
   const [useManualUsage, setUseManualUsage] = useState(false);
-  const [manualHoursPerMonth, setManualHoursPerMonth] = useState<string>("");
+  const [appliedManualHours, setAppliedManualHours] = useState<string>(""); // Actually used for calculations
+  const [draftManualHours, setDraftManualHours] = useState<string>(""); // For input while popover is open
   const [usagePopoverOpen, setUsagePopoverOpen] = useState(false);
   
   // Data
@@ -185,8 +186,8 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     if (!selectedAircraft?.id) return;
 
     // If manual mode and valid input, use that
-    if (useManualUsage && manualHoursPerMonth) {
-      const hpm = parseFloat(manualHoursPerMonth);
+    if (useManualUsage && appliedManualHours) {
+      const hpm = parseFloat(appliedManualHours);
       if (!isNaN(hpm) && hpm >= 0) {
         setUsageProjection({
           hoursPerMonth: hpm,
@@ -228,7 +229,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       console.error("Error calculating usage:", err);
       setUsageProjection(null);
     }
-  }, [selectedAircraft?.id, counterType, useManualUsage, manualHoursPerMonth, forecastMonths]);
+  }, [selectedAircraft?.id, counterType, useManualUsage, appliedManualHours, forecastMonths]);
 
   // Fetch historical variable cost per hour by category (last 90 days)
   const fetchHistoricalCostPerHour = useCallback(async () => {
@@ -863,7 +864,16 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
           </Select>
 
           {/* Usage Override Popover */}
-          <Popover open={usagePopoverOpen} onOpenChange={setUsagePopoverOpen}>
+          <Popover 
+            open={usagePopoverOpen} 
+            onOpenChange={(open) => {
+              if (open) {
+                // Sync draft with applied value when opening
+                setDraftManualHours(appliedManualHours);
+              }
+              setUsagePopoverOpen(open);
+            }}
+          >
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -922,8 +932,8 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                     type="number"
                     min="0"
                     step="0.1"
-                    value={manualHoursPerMonth}
-                    onChange={(e) => setManualHoursPerMonth(e.target.value)}
+                    value={draftManualHours}
+                    onChange={(e) => setDraftManualHours(e.target.value)}
                     placeholder="e.g. 10"
                     disabled={!useManualUsage}
                   />
@@ -932,7 +942,10 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                 <Button 
                   size="sm" 
                   className="w-full"
-                  onClick={() => setUsagePopoverOpen(false)}
+                  onClick={() => {
+                    setAppliedManualHours(draftManualHours);
+                    setUsagePopoverOpen(false);
+                  }}
                 >
                   Apply
                 </Button>
