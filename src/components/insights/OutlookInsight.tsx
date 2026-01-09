@@ -870,7 +870,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                 {useManualUsage && <span className="text-primary">(Manual)</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64" align="start">
+            <PopoverContent className="w-64" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Usage Forecast Mode</Label>
@@ -881,27 +881,29 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                    >
                       <SelectItem value="calculated">Auto (from history)</SelectItem>
                       <SelectItem value="manual">Manual entry</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {useManualUsage && (
-                  <div className="space-y-2">
-                    <Label htmlFor="manual-hours">Hours per month</Label>
-                    <Input
-                      id="manual-hours"
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={manualHoursPerMonth}
-                      onChange={(e) => setManualHoursPerMonth(e.target.value)}
-                      placeholder="e.g. 10"
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="manual-hours">Hours per month</Label>
+                  <Input
+                    id="manual-hours"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={manualHoursPerMonth}
+                    onChange={(e) => setManualHoursPerMonth(e.target.value)}
+                    placeholder="e.g. 10"
+                    disabled={!useManualUsage}
+                    autoFocus={useManualUsage}
+                  />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
