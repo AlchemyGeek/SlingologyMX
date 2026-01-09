@@ -898,7 +898,6 @@ export type Database = {
           interval_hours: number | null
           interval_months: number | null
           interval_type: Database["public"]["Enums"]["interval_type"] | null
-          invoice_number: string | null
           is_recurring_task: boolean | null
           labor_cost: number | null
           next_due_date: string | null
@@ -918,7 +917,6 @@ export type Database = {
           total_cost: number | null
           updated_at: string | null
           user_id: string
-          vendor_name: string | null
         }
         Insert: {
           aircraft_id: string
@@ -940,7 +938,6 @@ export type Database = {
           interval_hours?: number | null
           interval_months?: number | null
           interval_type?: Database["public"]["Enums"]["interval_type"] | null
-          invoice_number?: string | null
           is_recurring_task?: boolean | null
           labor_cost?: number | null
           next_due_date?: string | null
@@ -960,7 +957,6 @@ export type Database = {
           total_cost?: number | null
           updated_at?: string | null
           user_id: string
-          vendor_name?: string | null
         }
         Update: {
           aircraft_id?: string
@@ -982,7 +978,6 @@ export type Database = {
           interval_hours?: number | null
           interval_months?: number | null
           interval_type?: Database["public"]["Enums"]["interval_type"] | null
-          invoice_number?: string | null
           is_recurring_task?: boolean | null
           labor_cost?: number | null
           next_due_date?: string | null
@@ -1002,7 +997,6 @@ export type Database = {
           total_cost?: number | null
           updated_at?: string | null
           user_id?: string
-          vendor_name?: string | null
         }
         Relationships: [
           {
