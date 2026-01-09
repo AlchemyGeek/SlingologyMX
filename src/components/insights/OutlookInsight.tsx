@@ -720,9 +720,12 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                   "text-xs px-2 py-0.5 rounded-full",
                   item.type === "commitment" && "bg-emerald-500/10 text-emerald-600",
                   item.type === "variable" && "bg-blue-500/10 text-blue-600",
-                  item.type === "reserve" && "bg-amber-500/10 text-amber-600"
+                  item.type === "reserve" && "bg-amber-500/10 text-amber-600",
+                  item.type === "maintenance" && "bg-purple-500/10 text-purple-600"
                 )}>
-                  {item.type === "commitment" ? "Commitment" : item.type === "variable" ? "Variable" : "Reserve"}
+                  {item.type === "commitment" ? "Commitment" : 
+                   item.type === "variable" ? "Variable" : 
+                   item.type === "maintenance" ? "Maintenance" : "Reserve"}
                 </span>
               </TableCell>
               <TableCell className="text-right">{formatCurrency(item.amount, currency)}</TableCell>
