@@ -63,7 +63,7 @@ type ForecastPeriod = "rolling-12" | "calendar-year" | "custom";
 interface ForecastCostItem {
   name: string;
   amount: number;
-  type: "commitment" | "variable" | "reserve";
+  type: "commitment" | "variable" | "reserve" | "maintenance";
   category: "fixed" | "variable" | "deferred";
 }
 
@@ -121,6 +121,26 @@ function getForecastDateRange(period: ForecastPeriod, customStart?: Date, custom
       return { start: customStart || today, end: customEnd || addYears(today, 1) };
     default:
       return { start: today, end: addYears(today, 1) };
+  }
+}
+
+// Helper to get current counter value for maintenance projections
+async function getCurrentCounterValue(aircraftId: string, counterType: CounterType): Promise<number | null> {
+  const { data: counters } = await supabase
+    .from("aircraft_counters")
+    .select("*")
+    .eq("aircraft_id", aircraftId)
+    .single();
+
+  if (!counters) return null;
+
+  switch (counterType) {
+    case "tach": return counters.tach;
+    case "hobbs": return counters.hobbs;
+    case "engine_total_time": return counters.engine_total_time;
+    case "airframe_total_time": return counters.airframe_total_time;
+    case "prop_total_time": return counters.prop_total_time;
+    default: return null;
   }
 }
 
@@ -387,8 +407,96 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       });
     }
 
+    // 4. RECURRING MAINTENANCE - scheduled maintenance within forecast period
+    const { data: maintenanceLogs } = await supabase
+      .from("maintenance_logs")
+      .select("*")
+      .eq("aircraft_id", selectedAircraft.id)
+      .eq("is_recurring_task", true);
+
+    if (maintenanceLogs && usageProjection) {
+      const currentCounterValue = usageProjection.totalHours > 0 && usageProjection.hoursPerMonth > 0
+        ? await getCurrentCounterValue(selectedAircraft.id, counterType)
+        : null;
+
+      maintenanceLogs.forEach((log) => {
+        const totalCost = log.total_cost || 0;
+        if (totalCost <= 0) return;
+
+        let occurrences = 0;
+
+        // Check date-based recurrence (Calendar or Mixed)
+        if ((log.interval_type === "Calendar" || log.interval_type === "Mixed") && log.next_due_date) {
+          const nextDue = new Date(log.next_due_date);
+          
+          // Count occurrences within forecast period
+          if (nextDue >= dateRange.start && nextDue <= dateRange.end) {
+            occurrences++;
+            
+            // Check for additional occurrences if interval_months is set
+            if (log.interval_months && log.interval_months > 0) {
+              let subsequentDue = addMonths(nextDue, log.interval_months);
+              while (subsequentDue <= dateRange.end) {
+                occurrences++;
+                subsequentDue = addMonths(subsequentDue, log.interval_months);
+              }
+            }
+          }
+        }
+
+        // Check counter-based recurrence (Hours or Mixed with counter)
+        if ((log.interval_type === "Hours" || log.interval_type === "Mixed") && 
+            log.next_due_hours && currentCounterValue !== null && usageProjection.hoursPerMonth > 0) {
+          
+          const hoursUntilDue = log.next_due_hours - currentCounterValue;
+          
+          if (hoursUntilDue > 0) {
+            // Calculate when counter threshold will be reached
+            const daysUntilDue = (hoursUntilDue / usageProjection.hoursPerMonth) * 30.44;
+            const projectedDueDate = new Date();
+            projectedDueDate.setDate(projectedDueDate.getDate() + daysUntilDue);
+
+            if (projectedDueDate >= dateRange.start && projectedDueDate <= dateRange.end) {
+              // Only count if not already counted by date-based logic for Mixed
+              if (log.interval_type === "Hours") {
+                occurrences++;
+              }
+              
+              // Check for additional counter-based occurrences
+              if (log.interval_hours && log.interval_hours > 0) {
+                let nextCounterDue = log.next_due_hours + log.interval_hours;
+                while (true) {
+                  const hoursToNext = nextCounterDue - currentCounterValue;
+                  const daysToNext = (hoursToNext / usageProjection.hoursPerMonth) * 30.44;
+                  const nextDate = new Date();
+                  nextDate.setDate(nextDate.getDate() + daysToNext);
+                  
+                  if (nextDate > dateRange.end) break;
+                  if (nextDate >= dateRange.start) {
+                    if (log.interval_type === "Hours") {
+                      occurrences++;
+                    }
+                  }
+                  nextCounterDue += log.interval_hours;
+                }
+              }
+            }
+          }
+        }
+
+        if (occurrences > 0) {
+          items.push({
+            name: `${log.entry_title} (Scheduled)`,
+            amount: Math.round(totalCost * occurrences * 100) / 100,
+            type: "maintenance",
+            category: "fixed", // Scheduled maintenance is a predictable fixed cost
+          });
+        }
+      });
+    }
+
     setBreakdown(items);
-  }, [selectedAircraft?.id, startDateStr, endDateStr, dateRange, usageProjection, historicalCostPerHourByCategory]);
+  }, [selectedAircraft?.id, startDateStr, endDateStr, dateRange, usageProjection, historicalCostPerHourByCategory, counterType]);
 
   // Load all data
   useEffect(() => {
@@ -461,6 +569,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     }
     
     list.push("Commitment renewals assumed to continue at current rates");
+    list.push("Recurring maintenance projected based on next due dates/hours");
     list.push("Reserve accruals calculated using straight-line method");
     
     return list;
