@@ -329,84 +329,10 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
       });
     });
 
-    // 2. Fetch commitments (subscriptions) and calculate amortized contributions
-    const { data: commitments } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("aircraft_id", selectedAircraft.id);
-
-    if (commitments) {
-      commitments.forEach((commitment) => {
-        if (!commitment.cost || commitment.cost <= 0) return;
-        
-        // Calculate amortization period from recurrence
-        const recurrenceMonths = getRecurrenceMonths(commitment.recurrence);
-        if (recurrenceMonths <= 0) return;
-        
-        // Find recurrence periods that overlap with the analysis window
-        // Start from initial_date and iterate through recurrence periods
-        let periodStart = new Date(commitment.initial_date + "T00:00:00");
-        const analysisStartDate = new Date(startDateStr + "T00:00:00");
-        const analysisEndDate = new Date(endDateStr + "T00:00:00");
-        
-        // Fast-forward to the first period that could overlap with analysis window
-        // (period end must be after analysis start)
-        while (true) {
-          const periodEnd = new Date(periodStart);
-          periodEnd.setMonth(periodEnd.getMonth() + Math.ceil(recurrenceMonths));
-          
-          if (periodEnd >= analysisStartDate) {
-            break; // This period might overlap
-          }
-          
-          // Move to next period
-          periodStart = periodEnd;
-          
-          // Safety: don't loop forever if dates are malformed
-          if (periodStart > analysisEndDate) break;
-        }
-        
-        // Now iterate through periods that overlap with analysis window
-        let totalAmortized = 0;
-        let iterations = 0;
-        const maxIterations = 100; // Safety limit
-        
-        while (periodStart <= analysisEndDate && iterations < maxIterations) {
-          iterations++;
-          
-          const periodEnd = new Date(periodStart);
-          periodEnd.setMonth(periodEnd.getMonth() + Math.ceil(recurrenceMonths));
-          
-          const periodStartStr = format(periodStart, "yyyy-MM-dd");
-          const periodEndStr = format(periodEnd, "yyyy-MM-dd");
-          
-          const config: TimeBasedAmortization = {
-            basis: "time",
-            totalCost: commitment.cost,
-            startDate: periodStartStr,
-            endDate: periodEndStr,
-          };
-
-          const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
-          
-          if (result && result.amortizedCost > 0) {
-            totalAmortized += result.amortizedCost;
-          }
-          
-          // Move to next period
-          periodStart = periodEnd;
-        }
-        
-        if (totalAmortized > 0) {
-          items.push({
-            name: commitment.subscription_name,
-            amount: Math.round(totalAmortized * 100) / 100,
-            type: "amortized",
-            category: "fixed",
-          });
-        }
-      });
-    }
+    // NOTE: Commitments (subscriptions) are NOT included in True Cost analysis.
+    // True Cost is backward-looking and should use actual transactions only.
+    // Commitments either auto-generate transactions or are manually entered as transactions.
+    // Commitments are used in future-looking insights like Year-End Outlook.
 
     // 3. Fetch reserves and calculate accrued contributions
     const { data: reserves } = await supabase
