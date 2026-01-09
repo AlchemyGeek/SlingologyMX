@@ -103,8 +103,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     labor_cost: "",
     other_cost: "",
     total_cost: "",
-    vendor_name: "",
-    invoice_number: "",
     attachment_urls: [] as Array<{ url: string; description?: string }>,
     internal_notes: "",
   });
@@ -191,8 +189,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         labor_cost: editingLog.labor_cost?.toString() || "",
         other_cost: editingLog.other_cost?.toString() || "",
         total_cost: editingLog.total_cost?.toString() || "",
-        vendor_name: editingLog.vendor_name || "",
-        invoice_number: editingLog.invoice_number || "",
         attachment_urls: editingLog.attachment_urls || [],
         internal_notes: editingLog.internal_notes || "",
       });
@@ -462,8 +458,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       labor_cost: isItemizedCost && formData.labor_cost ? parseFloat(formData.labor_cost) : null,
       other_cost: isItemizedCost && formData.other_cost ? parseFloat(formData.other_cost) : null,
       total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
-      vendor_name: formData.vendor_name || null,
-      invoice_number: formData.invoice_number || null,
       attachment_urls: formData.attachment_urls,
       internal_notes: formData.internal_notes || null,
     };

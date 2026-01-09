@@ -40,8 +40,6 @@ interface MaintenanceLog {
   labor_cost: number | null;
   other_cost: number | null;
   total_cost: number | null;
-  vendor_name: string | null;
-  invoice_number: string | null;
   attachment_urls: Array<{ url: string; description?: string }>;
   internal_notes: string | null;
 }
