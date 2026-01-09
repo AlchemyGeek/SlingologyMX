@@ -862,7 +862,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
           </Select>
 
           {/* Usage Override Popover */}
-          <Popover modal={false}>
+          <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -871,35 +871,43 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent 
-              className="w-64" 
-              align="start" 
-              onOpenAutoFocus={(e) => e.preventDefault()}
-              onInteractOutside={(e) => {
-                // Prevent closing when interacting with the select dropdown
-                const target = e.target as HTMLElement;
-                if (target.closest('[role="listbox"]') || target.closest('[data-radix-select-viewport]')) {
-                  e.preventDefault();
-                }
-              }}
+              className="w-72" 
+              align="start"
             >
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Usage Forecast Mode</Label>
-                  <Select 
-                    value={useManualUsage ? "manual" : "calculated"} 
-                    onValueChange={(v) => setUseManualUsage(v === "manual")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      onCloseAutoFocus={(e) => e.preventDefault()}
+                  <div className="flex rounded-md border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setUseManualUsage(false)}
+                      className={cn(
+                        "flex-1 px-3 py-2 text-sm font-medium transition-colors",
+                        !useManualUsage 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-muted/50 hover:bg-muted"
+                      )}
                     >
-                      <SelectItem value="calculated">Auto (from history)</SelectItem>
-                      <SelectItem value="manual">Manual entry</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      Auto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUseManualUsage(true)}
+                      className={cn(
+                        "flex-1 px-3 py-2 text-sm font-medium transition-colors border-l",
+                        useManualUsage 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-muted/50 hover:bg-muted"
+                      )}
+                    >
+                      Manual
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {useManualUsage 
+                      ? "Enter your expected monthly flight hours" 
+                      : "Calculated from last 90 days of history"}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
