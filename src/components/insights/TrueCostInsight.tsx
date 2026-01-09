@@ -184,6 +184,11 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     try {
       const log = await fetchCounterLog(selectedAircraft.id, counterType);
       
+      console.log("[TrueCost] Counter log entries:", log.entries.length, "for", counterType);
+      console.log("[TrueCost] Date range:", startDateStr, "to", endDateStr);
+      console.log("[TrueCost] First entry:", log.entries[0]);
+      console.log("[TrueCost] Last entry:", log.entries[log.entries.length - 1]);
+      
       if (log.entries.length === 0) {
         setHoursError("No counter data available. Please record counter values to enable cost per hour calculations.");
         setHoursData(null);
@@ -191,7 +196,10 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
       }
 
       let startResult = getCounterValue(log, startDateStr);
-      const endResult = getCounterValue(log, endDateStr);
+      let endResult = getCounterValue(log, endDateStr);
+
+      console.log("[TrueCost] startResult:", startResult);
+      console.log("[TrueCost] endResult:", endResult);
 
       // If start date is before first entry, use first entry as start
       const firstEntry = log.entries[0];
@@ -202,6 +210,14 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
           confidence: "high",
           explanation: `First recorded value on ${firstEntry.date} (counter history starts after selected period start)`,
         };
+        console.log("[TrueCost] Using first entry as start fallback:", startResult);
+      }
+
+      // If end date is after last entry, extrapolate or use last entry
+      const lastEntry = log.entries[log.entries.length - 1];
+      if (!endResult && lastEntry && endDateStr > lastEntry.date) {
+        // This shouldn't happen as getCounterValue handles extrapolation, but let's log it
+        console.log("[TrueCost] End date after last entry, extrapolation should have worked");
       }
 
       if (!startResult) {
