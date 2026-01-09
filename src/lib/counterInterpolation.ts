@@ -103,10 +103,16 @@ export function getCounterValue(
     };
   }
 
-  // Check if date is before first entry - not supported
+  // Check if date is before first entry - fall back to first entry value
+  // This allows partial-period calculations when analysis starts before history
   const firstEntry = entries[0];
   if (analysisDate < firstEntry.date) {
-    return null;
+    return {
+      value: firstEntry.value,
+      type: "interpolated",
+      confidence: "low",
+      explanation: `Earliest available value from ${formatDate(firstEntry.date)} (analysis date precedes counter history)`,
+    };
   }
 
   // Check if date is after last entry - extrapolation
