@@ -190,17 +190,28 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
         return;
       }
 
-      const startResult = getCounterValue(log, startDateStr);
+      let startResult = getCounterValue(log, startDateStr);
       const endResult = getCounterValue(log, endDateStr);
 
+      // If start date is before first entry, use first entry as start
+      const firstEntry = log.entries[0];
+      if (!startResult && firstEntry && startDateStr < firstEntry.date) {
+        startResult = {
+          value: firstEntry.value,
+          type: "actual",
+          confidence: "high",
+          explanation: `First recorded value on ${firstEntry.date} (counter history starts after selected period start)`,
+        };
+      }
+
       if (!startResult) {
-        setHoursError(`Cannot determine ${counterType.toUpperCase()} value at period start. Counter history may not go back far enough.`);
+        setHoursError(`Cannot determine ${counterType.toUpperCase()} value at period start (${startDateStr}). Please record counter values covering this date.`);
         setHoursData(null);
         return;
       }
 
       if (!endResult) {
-        setHoursError(`Cannot determine ${counterType.toUpperCase()} value at period end.`);
+        setHoursError(`Cannot determine ${counterType.toUpperCase()} value at period end (${endDateStr}). The counter history may not extend to this date.`);
         setHoursData(null);
         return;
       }
