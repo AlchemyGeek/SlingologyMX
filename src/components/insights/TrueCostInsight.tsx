@@ -264,34 +264,70 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
 
     const items: CostBreakdownItem[] = [];
 
-    // 1. Fetch transactions (actual cash costs)
-    const { data: transactions } = await supabase
+    // 1. Fetch transactions - separate handling for amortized vs non-amortized
+    // 1a. Non-amortized transactions within the period
+    const { data: regularTransactions } = await supabase
       .from("transactions")
       .select("category, amount")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
+      .eq("allocate_over_time", false)
       .gte("transaction_date", startDateStr)
       .lte("transaction_date", endDateStr);
 
-    if (transactions) {
-      // Group by category
-      const categoryTotals = new Map<string, number>();
-      transactions.forEach((tx) => {
+    // 1b. Amortized transactions - fetch those whose allocation window overlaps analysis period
+    const { data: amortizedTransactions } = await supabase
+      .from("transactions")
+      .select("title, category, amount, allocation_start_date, allocation_end_date")
+      .eq("aircraft_id", selectedAircraft.id)
+      .eq("status", "Posted")
+      .eq("direction", "Debit")
+      .eq("allocate_over_time", true)
+      .not("allocation_start_date", "is", null)
+      .not("allocation_end_date", "is", null)
+      .lte("allocation_start_date", endDateStr)
+      .gte("allocation_end_date", startDateStr);
+
+    // Process regular transactions
+    const categoryTotals = new Map<string, number>();
+    if (regularTransactions) {
+      regularTransactions.forEach((tx) => {
         const existing = categoryTotals.get(tx.category) || 0;
         categoryTotals.set(tx.category, existing + (tx.amount || 0));
       });
+    }
 
-      categoryTotals.forEach((amount, category) => {
-        const isVariable = VARIABLE_CATEGORIES.includes(category);
-        items.push({
-          name: category,
-          amount,
-          type: "actual",
-          category: isVariable ? "variable" : "fixed",
-        });
+    // Process amortized transactions
+    if (amortizedTransactions) {
+      amortizedTransactions.forEach((tx) => {
+        if (!tx.amount || !tx.allocation_start_date || !tx.allocation_end_date) return;
+        
+        const config: TimeBasedAmortization = {
+          basis: "time",
+          totalCost: tx.amount,
+          startDate: tx.allocation_start_date,
+          endDate: tx.allocation_end_date,
+        };
+
+        const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
+        
+        if (result && result.amortizedCost > 0) {
+          const existing = categoryTotals.get(tx.category) || 0;
+          categoryTotals.set(tx.category, existing + result.amortizedCost);
+        }
       });
     }
+
+    categoryTotals.forEach((amount, category) => {
+      const isVariable = VARIABLE_CATEGORIES.includes(category);
+      items.push({
+        name: category,
+        amount: Math.round(amount * 100) / 100,
+        type: "actual",
+        category: isVariable ? "variable" : "fixed",
+      });
+    });
 
     // 2. Fetch commitments (subscriptions) and calculate amortized contributions
     const { data: commitments } = await supabase
