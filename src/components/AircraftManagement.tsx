@@ -318,7 +318,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
             <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleteConfirmText.toLowerCase() !== CONFIRMATION_PHRASE}
+              disabled={deleteConfirmText !== CONFIRMATION_PHRASE}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete
