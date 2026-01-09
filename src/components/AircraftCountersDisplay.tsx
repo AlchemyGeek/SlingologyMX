@@ -1,18 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, Pencil, History, Settings2 } from "lucide-react";
-import { toast } from "sonner";
+import { Pencil, History } from "lucide-react";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import CounterHistoryDialog from "./CounterHistoryDialog";
 import { BatchCounterEditDialog } from "./BatchCounterEditDialog";
@@ -35,16 +24,6 @@ const counterConfig = [
   { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
 ];
 
-const syncableCounters: NumericCounterKey[] = [
-  "tach", "airframe_total_time", "engine_total_time", "prop_total_time"
-];
-
-// Helper to get numeric value, defaulting null to 0 for calculations
-const getCounterValue = (counters: AircraftCounters, key: NumericCounterKey): number => {
-  const value = counters[key];
-  return typeof value === "number" ? value : 0;
-};
-
 // Helper to format counter display
 const formatCounterDisplay = (counters: AircraftCounters, key: NumericCounterKey): string => {
   if (!counters.isInitialized) return "—";
@@ -52,86 +31,9 @@ const formatCounterDisplay = (counters: AircraftCounters, key: NumericCounterKey
   return typeof value === "number" ? value.toFixed(1) : "—";
 };
 
-const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateCounter, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
-  const [editingCounter, setEditingCounter] = useState<NumericCounterKey | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [addValue, setAddValue] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
-  const [syncEnabled, setSyncEnabled] = useState(true);
-
-  const isSyncableCounter = editingCounter && syncableCounters.includes(editingCounter);
-
-  const handleOpenEdit = (key: NumericCounterKey) => {
-    setEditingCounter(key);
-    setEditValue(getCounterValue(counters, key).toString());
-    setAddValue("");
-    setSyncEnabled(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleSetValue = async () => {
-    if (!editingCounter) return;
-    const newValue = parseFloat(editValue);
-    if (isNaN(newValue) || newValue < 0) {
-      toast.error("Please enter a valid positive number");
-      return;
-    }
-
-    const currentValue = getCounterValue(counters, editingCounter);
-    if (newValue < currentValue) {
-      toast.error(`Value cannot be less than current value (${currentValue.toFixed(1)})`);
-      return;
-    }
-    
-    try {
-      if (syncEnabled && isSyncableCounter) {
-        // Calculate difference and apply to all syncable counters
-        const diff = newValue - currentValue;
-        const updates: Partial<Pick<AircraftCounters, NumericCounterKey>> = {};
-        syncableCounters.forEach(key => {
-          updates[key] = getCounterValue(counters, key) + diff;
-        });
-        await onUpdateAllCounters(updates);
-        toast.success(`Counter updated (synced ${diff >= 0 ? "+" : ""}${diff.toFixed(1)} to all)`);
-      } else {
-        await onUpdateCounter(editingCounter, newValue);
-        toast.success("Counter updated");
-      }
-      setIsDialogOpen(false);
-    } catch {
-      toast.error("Failed to update counter");
-    }
-  };
-
-  const handleAddValue = async () => {
-    if (!editingCounter) return;
-    const toAdd = parseFloat(addValue);
-    if (isNaN(toAdd) || toAdd <= 0) {
-      toast.error("Please enter a valid positive number to add");
-      return;
-    }
-
-    try {
-      if (syncEnabled && isSyncableCounter) {
-        // Update all syncable counters
-        const updates: Partial<Pick<AircraftCounters, NumericCounterKey>> = {};
-        syncableCounters.forEach(key => {
-          updates[key] = getCounterValue(counters, key) + toAdd;
-        });
-        await onUpdateAllCounters(updates);
-        toast.success(`Added ${toAdd} to all synced counters`);
-      } else {
-        const newValue = getCounterValue(counters, editingCounter) + toAdd;
-        await onUpdateCounter(editingCounter, newValue);
-        toast.success(`Added ${toAdd} to ${counterConfig.find(c => c.key === editingCounter)?.label}`);
-      }
-      setIsDialogOpen(false);
-    } catch {
-      toast.error("Failed to update counter");
-    }
-  };
 
   if (loading) {
     return (
@@ -153,31 +55,21 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Aircraft Counters</h2>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBatchEditOpen(true)}
-            >
-              <Settings2 className="h-4 w-4 mr-1" />
-              Edit All
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsHistoryOpen(true)}
-            >
-              <History className="h-4 w-4 mr-1" />
-              History
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryOpen(true)}
+          >
+            <History className="h-4 w-4 mr-1" />
+            History
+          </Button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {counterConfig.map((config) => (
             <Card
               key={config.key}
               className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
-              onClick={() => handleOpenEdit(config.key)}
+              onClick={() => setIsBatchEditOpen(true)}
             >
               <CardContent className="p-4 text-center relative">
                 <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
@@ -188,71 +80,6 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
           ))}
         </div>
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Edit {counterConfig.find(c => c.key === editingCounter)?.label}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Current Value</Label>
-              <p className="text-2xl font-bold">
-                {editingCounter ? getCounterValue(counters, editingCounter).toFixed(1) : "0.0"}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="setvalue">Set to specific value</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="setvalue"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  placeholder="Enter value"
-                />
-                <Button onClick={handleSetValue}>Set</Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="addvalue">Add hours</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="addvalue"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={addValue}
-                  onChange={(e) => setAddValue(e.target.value)}
-                  placeholder="Hours to add"
-                />
-                <Button onClick={handleAddValue} variant="secondary">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </div>
-              {isSyncableCounter && (
-                <div className="flex items-center justify-between pt-2 border-t mt-3">
-                  <Label htmlFor="sync-toggle" className="text-sm text-muted-foreground">
-                    Sync with other counters (Tach, Airframe, Engine, Prop)
-                  </Label>
-                  <Switch
-                    id="sync-toggle"
-                    checked={syncEnabled}
-                    onCheckedChange={setSyncEnabled}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <CounterHistoryDialog
         open={isHistoryOpen}

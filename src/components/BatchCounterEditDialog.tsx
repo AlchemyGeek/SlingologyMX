@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -21,12 +22,14 @@ interface BatchCounterEditDialogProps {
 }
 
 const counterConfig = [
-  { key: "hobbs" as const, label: "Hobbs" },
-  { key: "tach" as const, label: "Tach" },
-  { key: "airframe_total_time" as const, label: "Airframe TT" },
-  { key: "engine_total_time" as const, label: "Engine TT" },
-  { key: "prop_total_time" as const, label: "Prop TT" },
+  { key: "hobbs" as const, label: "Hobbs", syncable: false },
+  { key: "tach" as const, label: "Tach", syncable: true },
+  { key: "airframe_total_time" as const, label: "Airframe TT", syncable: true },
+  { key: "engine_total_time" as const, label: "Engine TT", syncable: true },
+  { key: "prop_total_time" as const, label: "Prop TT", syncable: true },
 ];
+
+const syncableKeys: NumericCounterKey[] = ["tach", "airframe_total_time", "engine_total_time", "prop_total_time"];
 
 // Helper to get numeric value, defaulting null to 0
 const getCounterValue = (counters: AircraftCounters, key: NumericCounterKey): number => {
@@ -47,23 +50,64 @@ export function BatchCounterEditDialog({
     engine_total_time: "",
     prop_total_time: "",
   });
+  const [syncEnabled, setSyncEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Track the original values to calculate deltas
+  const originalValues = useRef<Record<NumericCounterKey, number>>({
+    hobbs: 0,
+    tach: 0,
+    airframe_total_time: 0,
+    engine_total_time: 0,
+    prop_total_time: 0,
+  });
 
   // Initialize values when dialog opens
   useEffect(() => {
     if (open) {
+      const initial = {
+        hobbs: getCounterValue(counters, "hobbs"),
+        tach: getCounterValue(counters, "tach"),
+        airframe_total_time: getCounterValue(counters, "airframe_total_time"),
+        engine_total_time: getCounterValue(counters, "engine_total_time"),
+        prop_total_time: getCounterValue(counters, "prop_total_time"),
+      };
+      originalValues.current = initial;
       setValues({
-        hobbs: getCounterValue(counters, "hobbs").toString(),
-        tach: getCounterValue(counters, "tach").toString(),
-        airframe_total_time: getCounterValue(counters, "airframe_total_time").toString(),
-        engine_total_time: getCounterValue(counters, "engine_total_time").toString(),
-        prop_total_time: getCounterValue(counters, "prop_total_time").toString(),
+        hobbs: initial.hobbs.toString(),
+        tach: initial.tach.toString(),
+        airframe_total_time: initial.airframe_total_time.toString(),
+        engine_total_time: initial.engine_total_time.toString(),
+        prop_total_time: initial.prop_total_time.toString(),
       });
+      setSyncEnabled(true);
     }
   }, [open, counters]);
 
   const handleValueChange = (key: NumericCounterKey, value: string) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
+    const config = counterConfig.find(c => c.key === key);
+    
+    // If sync is enabled and this is a syncable counter, apply delta to all syncable counters
+    if (syncEnabled && config?.syncable) {
+      const newValue = parseFloat(value) || 0;
+      const originalValue = originalValues.current[key];
+      const delta = newValue - originalValue;
+      
+      setValues(prev => {
+        const updated = { ...prev, [key]: value };
+        // Apply the same delta to other syncable counters
+        syncableKeys.forEach(syncKey => {
+          if (syncKey !== key) {
+            const syncOriginal = originalValues.current[syncKey];
+            const syncedValue = syncOriginal + delta;
+            updated[syncKey] = syncedValue.toFixed(1);
+          }
+        });
+        return updated;
+      });
+    } else {
+      setValues(prev => ({ ...prev, [key]: value }));
+    }
   };
 
   const handleSave = async () => {
@@ -105,7 +149,7 @@ export function BatchCounterEditDialog({
     setSaving(true);
     try {
       await onSave(updates);
-      toast.success("All counters updated");
+      toast.success("Counters updated");
       onOpenChange(false);
     } catch {
       toast.error("Failed to update counters");
@@ -118,9 +162,9 @@ export function BatchCounterEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit All Counters</DialogTitle>
+          <DialogTitle>Edit Counters</DialogTitle>
           <DialogDescription>
-            Update all counter values at once. This creates a single history entry.
+            Update counter values. This creates a single history entry.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -140,13 +184,27 @@ export function BatchCounterEditDialog({
               />
             </div>
           ))}
+          
+          <div className="flex items-center justify-between pt-4 border-t">
+            <Label htmlFor="sync-toggle" className="text-sm text-muted-foreground">
+              Sync Tach, Airframe, Engine &amp; Prop
+            </Label>
+            <Switch
+              id="sync-toggle"
+              checked={syncEnabled}
+              onCheckedChange={setSyncEnabled}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            When enabled, changing any synced counter applies the same increment to all others.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save All"}
+            {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
