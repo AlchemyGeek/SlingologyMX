@@ -7,13 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, History } from "lucide-react";
+import { Plus, Pencil, History, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import CounterHistoryDialog from "./CounterHistoryDialog";
+import { BatchCounterEditDialog } from "./BatchCounterEditDialog";
 
 interface AircraftCountersDisplayProps {
   counters: AircraftCounters;
@@ -56,6 +58,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
   const [addValue, setAddValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
   const [syncEnabled, setSyncEnabled] = useState(true);
 
   const isSyncableCounter = editingCounter && syncableCounters.includes(editingCounter);
@@ -150,14 +153,24 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Aircraft Counters</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsHistoryOpen(true)}
-          >
-            <History className="h-4 w-4 mr-1" />
-            History
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBatchEditOpen(true)}
+            >
+              <Settings2 className="h-4 w-4 mr-1" />
+              Edit All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsHistoryOpen(true)}
+            >
+              <History className="h-4 w-4 mr-1" />
+              History
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {counterConfig.map((config) => (
@@ -247,6 +260,13 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
         userId={userId}
         aircraftId={aircraftId}
         onRevert={onRefetch}
+      />
+
+      <BatchCounterEditDialog
+        open={isBatchEditOpen}
+        onOpenChange={setIsBatchEditOpen}
+        counters={counters}
+        onSave={onUpdateAllCounters}
       />
     </>
   );
