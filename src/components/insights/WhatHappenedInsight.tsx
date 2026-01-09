@@ -367,7 +367,7 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
           <Card className="flex-1">
             <CardContent className="pt-6">
               <p className="text-sm text-muted-foreground uppercase tracking-wide">Total Spent</p>
-              <p className="text-3xl font-semibold mt-1">{formatCurrency(totalCost, currency)}</p>
+              <p className="text-3xl font-semibold mt-1">{formatCurrency(Math.round(totalCost), currency)}</p>
             </CardContent>
           </Card>
           <Card className="w-40">
