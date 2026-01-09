@@ -24,11 +24,26 @@ interface TransactionFormProps {
 }
 
 const INTENTS = Constants.public.Enums.transaction_intent;
-const CATEGORIES = Constants.public.Enums.transaction_category;
 const STATUSES = Constants.public.Enums.transaction_status;
 // Source is always "Manual" for form entries
 const ALLOCATION_METHODS = Constants.public.Enums.allocation_method;
 const ALLOCATION_UNITS = Constants.public.Enums.allocation_period_unit;
+
+// Custom ordered categories with maintenance grouped together
+const CATEGORIES = [
+  "Fuel",
+  "Oil & Consumables",
+  "Maintenance Labor",
+  "Maintenance Parts",
+  "Maintenance (Unspecified)",
+  "Hangar / Tie-Down",
+  "Insurance",
+  "Avionics",
+  "Training",
+  "Travel",
+  "Tools & Equipment",
+  "Other",
+] as const;
 
 const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTransaction }: TransactionFormProps) => {
   const [loading, setLoading] = useState(false);
