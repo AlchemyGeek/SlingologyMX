@@ -1510,24 +1510,6 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             </>
           )}
           
-          <div className="space-y-2">
-            <Label htmlFor="vendor_name">Vendor Name</Label>
-            <Input
-              id="vendor_name"
-              value={formData.vendor_name}
-              onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
-              maxLength={80}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="invoice_number">Invoice Number</Label>
-            <Input
-              id="invoice_number"
-              value={formData.invoice_number}
-              onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
-              maxLength={40}
-            />
-          </div>
         </div>
       </div>
 

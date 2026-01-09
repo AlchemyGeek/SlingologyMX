@@ -344,18 +344,6 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "
                   <p className="font-medium">{formatCurrency(log.total_cost, userCurrency)}</p>
                 </div>
               )}
-              {log.vendor_name && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Vendor</p>
-                  <p className="font-medium">{log.vendor_name}</p>
-                </div>
-              )}
-              {log.invoice_number && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Invoice #</p>
-                  <p className="font-medium">{log.invoice_number}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
