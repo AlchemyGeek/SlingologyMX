@@ -40,7 +40,7 @@ export function InsightsPanel({ userId: propUserId }: InsightsPanelProps) {
     case "outlook":
       return <OutlookInsight onBack={handleBack} userId={userId} />;
     case "assumptions":
-      return <AssumptionsInsight onBack={handleBack} />;
+      return <AssumptionsInsight onBack={handleBack} userId={userId} />;
     default:
       return <InsightsOverview onSelectInsight={setCurrentView} />;
   }
