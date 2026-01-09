@@ -3,7 +3,7 @@ import { InsightsOverview, InsightView } from "./insights/InsightsOverview";
 import { WhatHappenedInsight } from "./insights/WhatHappenedInsight";
 import { TrueCostInsight } from "./insights/TrueCostInsight";
 import { CostStructureInsight } from "./insights/CostStructureInsight";
-import { YearEndOutlookInsight } from "./insights/YearEndOutlookInsight";
+import { OutlookInsight } from "./insights/OutlookInsight";
 import { AssumptionsInsight } from "./insights/AssumptionsInsight";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -37,8 +37,8 @@ export function InsightsPanel({ userId: propUserId }: InsightsPanelProps) {
       return <TrueCostInsight onBack={handleBack} userId={userId} />;
     case "cost-structure":
       return <CostStructureInsight onBack={handleBack} userId={userId} />;
-    case "year-end-outlook":
-      return <YearEndOutlookInsight onBack={handleBack} />;
+    case "outlook":
+      return <OutlookInsight onBack={handleBack} />;
     case "assumptions":
       return <AssumptionsInsight onBack={handleBack} />;
     default:
