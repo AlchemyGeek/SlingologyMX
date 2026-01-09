@@ -37,10 +37,11 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
 // Currencies that don't use decimal places
 const NO_DECIMAL_CURRENCIES = ["JPY", "KRW", "HUF", "ISK"];
 
-export const formatCurrency = (amount: number, currencyCode: string = "USD"): string => {
+export const formatCurrency = (amount: number, currencyCode: string = "USD", options?: { decimals?: boolean }): string => {
   const symbol = CURRENCY_SYMBOLS[currencyCode] || currencyCode;
+  const showDecimals = options?.decimals ?? true;
   
-  if (NO_DECIMAL_CURRENCIES.includes(currencyCode)) {
+  if (NO_DECIMAL_CURRENCIES.includes(currencyCode) || !showDecimals) {
     return `${symbol}${Math.round(amount).toLocaleString()}`;
   }
   
