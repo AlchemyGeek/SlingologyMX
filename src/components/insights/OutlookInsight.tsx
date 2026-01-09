@@ -682,7 +682,6 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
                 borderRadius: "8px",
               }}
             />
-            <Legend />
           </PieChart>
         </ResponsiveContainer>
       </div>

@@ -425,7 +425,6 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
                 borderRadius: "8px",
               }}
             />
-            <Legend />
           </PieChart>
         </ResponsiveContainer>
       </div>
