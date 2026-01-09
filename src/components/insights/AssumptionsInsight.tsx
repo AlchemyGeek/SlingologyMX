@@ -50,6 +50,7 @@ interface ReserveAssumptions {
 interface AmortizationAssumptions {
   amortizedTransactionsIncluded: boolean;
   amortizedTransactionCount: number;
+  amortizedItems: { name: string; period: string }[];
   coverageHandoffs: { from: string; to: string }[];
   doubleCountingPrevention: boolean;
 }
@@ -246,9 +247,19 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
         });
       }
 
+      // Build list of amortized items with their periods
+      const amortizedItems = (amortizedTransactions || [])
+        .filter(tx => tx.allocation_start_date && tx.allocation_end_date)
+        .map(tx => ({
+          name: tx.title,
+          period: `${format(new Date(tx.allocation_start_date), "MMM yyyy")} – ${format(new Date(tx.allocation_end_date), "MMM yyyy")}`,
+        }))
+        .slice(0, 5);
+
       const amortizationAssumptions: AmortizationAssumptions = {
         amortizedTransactionsIncluded: (amortizedTransactions?.length || 0) > 0,
         amortizedTransactionCount: amortizedTransactions?.length || 0,
+        amortizedItems,
         coverageHandoffs: coverageHandoffs.slice(0, 3),
         doubleCountingPrevention: true, // Always applied
       };
@@ -535,6 +546,19 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
                   status="good"
                 />
               </div>
+              {assumptions.amortization.amortizedItems.length > 0 && (
+                <div className="mt-4 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">Amortized items:</p>
+                  <ul className="space-y-1">
+                    {assumptions.amortization.amortizedItems.map((item, i) => (
+                      <li key={i} className="text-xs">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-muted-foreground"> ({item.period})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {assumptions.amortization.coverageHandoffs.length > 0 && (
                 <div className="mt-4 pt-3 border-t">
                   <p className="text-xs text-muted-foreground mb-2">Coverage transitions:</p>
