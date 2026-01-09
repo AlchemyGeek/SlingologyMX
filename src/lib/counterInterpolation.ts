@@ -50,7 +50,8 @@ export async function fetchCounterLog(
 
   const entries: CounterEntry[] = (data as RawHistoryEntry[])
     .map((row) => ({
-      date: row.change_date,
+      // Normalize date to YYYY-MM-DD format (remove timezone info)
+      date: row.change_date.split("T")[0],
       value: row[counterType] ?? null,
     }))
     .filter((e): e is CounterEntry => e.value !== null);
