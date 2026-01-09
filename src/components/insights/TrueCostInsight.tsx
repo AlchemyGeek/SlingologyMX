@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { format, subMonths, startOfYear, endOfMonth, startOfMonth, subYears } from "date-fns";
-import { InsightContainer, DisplayMode } from "./InsightContainer";
+import { InsightContainer } from "./InsightContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAircraft } from "@/contexts/AircraftContext";
@@ -30,17 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  Legend,
-} from "recharts";
 import { 
   fetchCounterLog, 
   getCounterValue, 
@@ -111,7 +100,7 @@ const FIXED_COMMITMENT_TYPES = [
   "Operations & Administration",
 ];
 
-const BREAKDOWN_COLORS = {
+const CATEGORY_COLORS = {
   variable: "hsl(220, 70%, 50%)",
   fixed: "hsl(160, 70%, 50%)",
   deferred: "hsl(30, 70%, 50%)",
@@ -442,11 +431,6 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     };
   }, [breakdown, hoursData]);
 
-  const chartData = useMemo(() => [
-    { name: "Variable", amount: variableCost },
-    { name: "Fixed", amount: fixedCost },
-    { name: "Deferred", amount: deferredCost },
-  ], [variableCost, fixedCost, deferredCost]);
 
   const assumptions = useMemo(() => {
     const list = [
@@ -518,39 +502,6 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     </div>
   );
 
-  const renderChart = () => {
-    if (totalCost === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground">No costs recorded for this period.</p>
-        </div>
-      );
-    }
-
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" fontSize={12} />
-          <YAxis tickFormatter={(v) => formatCurrency(v, currency)} fontSize={12} />
-          <Tooltip
-            formatter={(value: number) => [formatCurrency(value, currency), "Amount"]}
-            contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "8px",
-            }}
-          />
-          <Legend />
-          <Bar dataKey="amount" name="Cost" radius={[4, 4, 0, 0]}>
-            <Cell fill={BREAKDOWN_COLORS.variable} />
-            <Cell fill={BREAKDOWN_COLORS.fixed} />
-            <Cell fill={BREAKDOWN_COLORS.deferred} />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  };
 
   const renderTable = () => {
     if (breakdown.length === 0) {
@@ -626,9 +577,9 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {renderSection("Variable (Actual Transactions)", variableItems, BREAKDOWN_COLORS.variable)}
-          {renderSection("Fixed (Time-Based Amortized)", fixedItems, BREAKDOWN_COLORS.fixed)}
-          {renderSection("Deferred (Usage-Based Reserves)", deferredItems, BREAKDOWN_COLORS.deferred)}
+          {renderSection("Variable (Actual Transactions)", variableItems, CATEGORY_COLORS.variable)}
+          {renderSection("Fixed (Time-Based Amortized)", fixedItems, CATEGORY_COLORS.fixed)}
+          {renderSection("Deferred (Usage-Based Reserves)", deferredItems, CATEGORY_COLORS.deferred)}
           
           {/* Grand Total */}
           <TableRow className="border-t-2 font-bold">
@@ -645,7 +596,7 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     );
   };
 
-  const renderContent = (mode: DisplayMode) => {
+  const renderContent = () => {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-16">
@@ -755,7 +706,7 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
         {/* Breakdown Chart or Table */}
         <Card>
           <CardContent className="pt-6">
-            {mode === "chart" ? renderChart() : renderTable()}
+            {renderTable()}
           </CardContent>
         </Card>
       </div>
@@ -769,8 +720,9 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
       dataType="modeled"
       assumptions={assumptions}
       onBack={onBack}
+      showDisplayToggle={false}
     >
-      {renderContent}
+      {() => renderContent()}
     </InsightContainer>
   );
 }
