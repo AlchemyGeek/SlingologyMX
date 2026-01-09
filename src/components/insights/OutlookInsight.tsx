@@ -415,13 +415,9 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       .eq("is_recurring_task", true);
 
     if (maintenanceLogs && usageProjection) {
-      const currentCounterValue = usageProjection.totalHours > 0 && usageProjection.hoursPerMonth > 0
-        ? await getCurrentCounterValue(selectedAircraft.id, counterType)
-        : null;
-
-      maintenanceLogs.forEach((log) => {
+      for (const log of maintenanceLogs) {
         const totalCost = log.total_cost || 0;
-        if (totalCost <= 0) return;
+        if (totalCost <= 0) continue;
 
         let occurrences = 0;
 
@@ -445,40 +441,48 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
         }
 
         // Check counter-based recurrence (Hours or Mixed with counter)
+        // Use recurrence_counter_type and recurrence_counter_increment fields
         if ((log.interval_type === "Hours" || log.interval_type === "Mixed") && 
-            log.next_due_hours && currentCounterValue !== null && usageProjection.hoursPerMonth > 0) {
+            log.recurrence_counter_type && log.recurrence_counter_increment && log.recurrence_counter_increment > 0 &&
+            usageProjection.hoursPerMonth > 0) {
           
-          const hoursUntilDue = log.next_due_hours - currentCounterValue;
+          // Map recurrence_counter_type to CounterType for getting current value
+          const counterTypeMap: Record<string, CounterType> = {
+            "Hobbs": "hobbs",
+            "Tach": "tach",
+            "Airframe TT": "airframe_total_time",
+            "Engine TT": "engine_total_time",
+            "Prop TT": "prop_total_time",
+          };
+          const mappedCounterType = counterTypeMap[log.recurrence_counter_type] || counterType;
+          const currentCounterValue = await getCurrentCounterValue(selectedAircraft.id, mappedCounterType);
           
-          if (hoursUntilDue > 0) {
-            // Calculate when counter threshold will be reached
-            const daysUntilDue = (hoursUntilDue / usageProjection.hoursPerMonth) * 30.44;
-            const projectedDueDate = new Date();
-            projectedDueDate.setDate(projectedDueDate.getDate() + daysUntilDue);
-
-            if (projectedDueDate >= dateRange.start && projectedDueDate <= dateRange.end) {
-              // Only count if not already counted by date-based logic for Mixed
-              if (log.interval_type === "Hours") {
-                occurrences++;
-              }
+          if (currentCounterValue !== null) {
+            // Calculate next due value from the counter value at last maintenance + increment
+            // Use tach_at_event for Tach, hobbs_at_event for Hobbs, etc.
+            let lastPerformedValue: number | null = null;
+            switch (log.recurrence_counter_type) {
+              case "Hobbs": lastPerformedValue = log.hobbs_at_event; break;
+              case "Tach": lastPerformedValue = log.tach_at_event; break;
+              case "Airframe TT": lastPerformedValue = log.airframe_total_time; break;
+              case "Engine TT": lastPerformedValue = log.engine_total_time; break;
+              case "Prop TT": lastPerformedValue = log.prop_total_time; break;
+            }
+            
+            if (lastPerformedValue !== null) {
+              // Calculate first next due after last maintenance
+              let nextDueCounter = lastPerformedValue + log.recurrence_counter_increment;
               
-              // Check for additional counter-based occurrences
-              if (log.interval_hours && log.interval_hours > 0) {
-                let nextCounterDue = log.next_due_hours + log.interval_hours;
-                while (true) {
-                  const hoursToNext = nextCounterDue - currentCounterValue;
-                  const daysToNext = (hoursToNext / usageProjection.hoursPerMonth) * 30.44;
-                  const nextDate = new Date();
-                  nextDate.setDate(nextDate.getDate() + daysToNext);
-                  
-                  if (nextDate > dateRange.end) break;
-                  if (nextDate >= dateRange.start) {
-                    if (log.interval_type === "Hours") {
-                      occurrences++;
-                    }
+              // Count how many occurrences fall within the forecast based on projected usage
+              while (nextDueCounter <= currentCounterValue + usageProjection.totalHours) {
+                // Check if this occurrence is in the future (counter value > current)
+                if (nextDueCounter > currentCounterValue) {
+                  // Only count for Hours type to avoid double counting in Mixed
+                  if (log.interval_type === "Hours") {
+                    occurrences++;
                   }
-                  nextCounterDue += log.interval_hours;
                 }
+                nextDueCounter += log.recurrence_counter_increment;
               }
             }
           }
@@ -492,7 +496,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
             category: "fixed", // Scheduled maintenance is a predictable fixed cost
           });
         }
-      });
+      }
     }
 
     setBreakdown(items);
