@@ -254,10 +254,10 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     const items: CostBreakdownItem[] = [];
 
     // 1. Fetch transactions - separate handling for amortized vs non-amortized
-    // 1a. Non-amortized transactions within the period
+    // 1a. Non-amortized transactions within the period (include reference_id for maintenance linking)
     const { data: regularTransactions } = await supabase
       .from("transactions")
-      .select("category, amount")
+      .select("category, amount, reference_id, reference_type, source")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
@@ -268,7 +268,7 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     // 1b. Amortized transactions - fetch those whose allocation window overlaps analysis period
     const { data: amortizedTransactions } = await supabase
       .from("transactions")
-      .select("title, category, amount, allocation_start_date, allocation_end_date")
+      .select("title, category, amount, allocation_start_date, allocation_end_date, reference_id, reference_type, source")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
@@ -278,12 +278,58 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
       .lte("allocation_start_date", endDateStr)
       .gte("allocation_end_date", startDateStr);
 
-    // Process regular transactions
-    const categoryTotals = new Map<string, number>();
+    // Collect maintenance log IDs from transactions to check for counter-based recurrence
+    const maintenanceLogIds = new Set<string>();
+    regularTransactions?.forEach((tx) => {
+      if (tx.source === "Maintenance" && tx.reference_type === "Maintenance" && tx.reference_id) {
+        maintenanceLogIds.add(tx.reference_id);
+      }
+    });
+    amortizedTransactions?.forEach((tx) => {
+      if (tx.source === "Maintenance" && tx.reference_type === "Maintenance" && tx.reference_id) {
+        maintenanceLogIds.add(tx.reference_id);
+      }
+    });
+
+    // Fetch maintenance logs to check their recurrence type
+    const counterBasedMaintenanceLogIds = new Set<string>();
+    if (maintenanceLogIds.size > 0) {
+      const { data: maintenanceLogs } = await supabase
+        .from("maintenance_logs")
+        .select("id, is_recurring_task, interval_type, recurrence_counter_type")
+        .in("id", Array.from(maintenanceLogIds));
+
+      maintenanceLogs?.forEach((log) => {
+        // Counter-based if has counter type or interval is Hours or Mixed
+        const isCounterBased = log.is_recurring_task && (
+          log.interval_type === "Hours" || 
+          log.interval_type === "Mixed" ||
+          (log.recurrence_counter_type && log.recurrence_counter_type.length > 0)
+        );
+        if (isCounterBased) {
+          counterBasedMaintenanceLogIds.add(log.id);
+        }
+      });
+    }
+
+    // Helper to check if transaction is from counter-based maintenance
+    const isCounterBasedMaintenance = (tx: { source?: string; reference_type?: string | null; reference_id?: string | null }) => {
+      return tx.source === "Maintenance" && 
+             tx.reference_type === "Maintenance" && 
+             tx.reference_id && 
+             counterBasedMaintenanceLogIds.has(tx.reference_id);
+    };
+
+    // Process regular transactions - separate by variable classification
+    const variableTotals = new Map<string, number>();
+    const fixedTotals = new Map<string, number>();
+    
     if (regularTransactions) {
       regularTransactions.forEach((tx) => {
-        const existing = categoryTotals.get(tx.category) || 0;
-        categoryTotals.set(tx.category, existing + (tx.amount || 0));
+        const isVariable = VARIABLE_CATEGORIES.includes(tx.category) || isCounterBasedMaintenance(tx);
+        const targetMap = isVariable ? variableTotals : fixedTotals;
+        const existing = targetMap.get(tx.category) || 0;
+        targetMap.set(tx.category, existing + (tx.amount || 0));
       });
     }
 
@@ -302,19 +348,31 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
         const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
         
         if (result && result.amortizedCost > 0) {
-          const existing = categoryTotals.get(tx.category) || 0;
-          categoryTotals.set(tx.category, existing + result.amortizedCost);
+          const isVariable = VARIABLE_CATEGORIES.includes(tx.category) || isCounterBasedMaintenance(tx);
+          const targetMap = isVariable ? variableTotals : fixedTotals;
+          const existing = targetMap.get(tx.category) || 0;
+          targetMap.set(tx.category, existing + result.amortizedCost);
         }
       });
     }
 
-    categoryTotals.forEach((amount, category) => {
-      const isVariable = VARIABLE_CATEGORIES.includes(category);
+    // Add variable items
+    variableTotals.forEach((amount, category) => {
       items.push({
         name: category,
         amount: Math.round(amount * 100) / 100,
         type: "actual",
-        category: isVariable ? "variable" : "fixed",
+        category: "variable",
+      });
+    });
+
+    // Add fixed items
+    fixedTotals.forEach((amount, category) => {
+      items.push({
+        name: category,
+        amount: Math.round(amount * 100) / 100,
+        type: "actual",
+        category: "fixed",
       });
     });
 
