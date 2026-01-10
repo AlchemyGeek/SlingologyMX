@@ -73,6 +73,8 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
     "Calendar",
     "Counters",
     "Profile",
+    "Insights",
+    "Financial Records",
     "UI/Display",
     "Performance",
     "Data",
