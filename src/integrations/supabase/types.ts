@@ -1573,6 +1573,8 @@ export type Database = {
         | "Performance"
         | "Data"
         | "Equipment"
+        | "Insights"
+        | "Financial Records"
       bug_priority: "Low" | "Medium" | "High" | "Urgent"
       bug_severity: "Minor" | "Moderate" | "Major" | "Critical"
       bug_status:
@@ -1897,6 +1899,8 @@ export const Constants = {
         "Performance",
         "Data",
         "Equipment",
+        "Insights",
+        "Financial Records",
       ],
       bug_priority: ["Low", "Medium", "High", "Urgent"],
       bug_severity: ["Minor", "Moderate", "Major", "Critical"],
