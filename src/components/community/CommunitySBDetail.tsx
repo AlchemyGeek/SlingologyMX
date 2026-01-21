@@ -151,7 +151,6 @@ const CommunitySBDetail = ({
 
       if (usageError) {
         console.error("Failed to create usage record:", usageError);
-      }
         // Don't fail the operation for this
       }
 
