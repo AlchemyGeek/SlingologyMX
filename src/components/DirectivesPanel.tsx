@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Users } from "lucide-react";
 import DirectiveForm from "./DirectiveForm";
 import DirectiveList from "./DirectiveList";
 import DirectiveDetail from "./DirectiveDetail";
+import CommunitySBList from "./community/CommunitySBList";
+import CommunitySBDetail from "./community/CommunitySBDetail";
+import { useCommunitySBs } from "@/hooks/useCommunitySBs";
+import type { CommunitySBWithMaintainer } from "@/types/communitySB";
 import { toast } from "sonner";
-
 export interface Directive {
   id: string;
   user_id: string;
@@ -65,6 +69,10 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
   const [showForm, setShowForm] = useState(false);
   const [editingDirective, setEditingDirective] = useState<Directive | null>(null);
   const [selectedDirective, setSelectedDirective] = useState<Directive | null>(null);
+  const [selectedCommunitySB, setSelectedCommunitySB] = useState<CommunitySBWithMaintainer | null>(null);
+  const [activeTab, setActiveTab] = useState("my-directives");
+
+  const { communitySBs, loading: communitySBsLoading, refetch: refetchCommunitySBs } = useCommunitySBs(userId);
 
   const fetchDirectives = async () => {
     try {
@@ -167,6 +175,23 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
     );
   }
 
+  if (selectedCommunitySB) {
+    return (
+      <CommunitySBDetail
+        sb={selectedCommunitySB}
+        userId={userId}
+        aircraftId={aircraftId}
+        onClose={() => setSelectedCommunitySB(null)}
+        onUsed={() => {
+          setSelectedCommunitySB(null);
+          fetchDirectives();
+          refetchCommunitySBs();
+          onRecordChanged?.();
+        }}
+      />
+    );
+  }
+
   if (selectedDirective) {
     return (
       <DirectiveDetail
@@ -203,17 +228,37 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
             <CardTitle>Directives & Bulletins</CardTitle>
             <CardDescription>Track ADs, Service Bulletins, and other compliance items</CardDescription>
           </div>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Directive
-          </Button>
+          {activeTab === "my-directives" && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Directive
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
-        <DirectiveList
-          directives={directives}
-          onViewDetail={handleViewDetail}
-        />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="my-directives">My Directives</TabsTrigger>
+            <TabsTrigger value="community" className="gap-2">
+              <Users className="h-4 w-4" />
+              Community
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="my-directives">
+            <DirectiveList
+              directives={directives}
+              onViewDetail={handleViewDetail}
+            />
+          </TabsContent>
+          <TabsContent value="community">
+            <CommunitySBList
+              communitySBs={communitySBs}
+              onViewDetail={setSelectedCommunitySB}
+              loading={communitySBsLoading}
+            />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
