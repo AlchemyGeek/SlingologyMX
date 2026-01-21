@@ -173,6 +173,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
       } else {
         const data: any = {
           user_id: userId,
+          aircraft_id: aircraftId,
           description: formData.description,
           notes: formData.notes,
           type: formData.type as "Maintenance" | "Subscription",
