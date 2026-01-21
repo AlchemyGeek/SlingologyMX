@@ -503,6 +503,7 @@ export type Database = {
           compliance_scope: Database["public"]["Enums"]["compliance_scope"]
           counter_type: string | null
           created_at: string | null
+          database_version: string | null
           directive_code: string
           directive_status: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
@@ -525,6 +526,7 @@ export type Database = {
           requires_log_entry: boolean
           revision: string | null
           severity: Database["public"]["Enums"]["directive_severity"]
+          software_version: string | null
           source_links: Json | null
           terminating_action_exists: boolean
           terminating_action_summary: string | null
@@ -546,6 +548,7 @@ export type Database = {
           compliance_scope: Database["public"]["Enums"]["compliance_scope"]
           counter_type?: string | null
           created_at?: string | null
+          database_version?: string | null
           directive_code: string
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type: Database["public"]["Enums"]["directive_type"]
@@ -568,6 +571,7 @@ export type Database = {
           requires_log_entry?: boolean
           revision?: string | null
           severity: Database["public"]["Enums"]["directive_severity"]
+          software_version?: string | null
           source_links?: Json | null
           terminating_action_exists?: boolean
           terminating_action_summary?: string | null
@@ -589,6 +593,7 @@ export type Database = {
           compliance_scope?: Database["public"]["Enums"]["compliance_scope"]
           counter_type?: string | null
           created_at?: string | null
+          database_version?: string | null
           directive_code?: string
           directive_status?: Database["public"]["Enums"]["directive_status"]
           directive_type?: Database["public"]["Enums"]["directive_type"]
@@ -611,6 +616,7 @@ export type Database = {
           requires_log_entry?: boolean
           revision?: string | null
           severity?: Database["public"]["Enums"]["directive_severity"]
+          software_version?: string | null
           source_links?: Json | null
           terminating_action_exists?: boolean
           terminating_action_summary?: string | null

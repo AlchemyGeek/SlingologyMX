@@ -48,6 +48,9 @@ export interface Directive {
   equipment_name: string | null;
   equipment_model: string | null;
   equipment_serial_number: string | null;
+  // Version fields
+  software_version: string | null;
+  database_version: string | null;
 }
 
 interface DirectivesPanelProps {
