@@ -435,6 +435,338 @@ export type Database = {
         }
         Relationships: []
       }
+      community_sb_feedback: {
+        Row: {
+          community_sb_id: string
+          created_at: string | null
+          id: string
+          maintainer_response_at: string | null
+          maintainer_status: string | null
+          reason: string | null
+          updated_at: string | null
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          community_sb_id: string
+          created_at?: string | null
+          id?: string
+          maintainer_response_at?: string | null
+          maintainer_status?: string | null
+          reason?: string | null
+          updated_at?: string | null
+          user_id: string
+          vote_type: number
+        }
+        Update: {
+          community_sb_id?: string
+          created_at?: string | null
+          id?: string
+          maintainer_response_at?: string | null
+          maintainer_status?: string | null
+          reason?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vote_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_sb_feedback_community_sb_id_fkey"
+            columns: ["community_sb_id"]
+            isOneToOne: false
+            referencedRelation: "community_service_bulletins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_sb_update_notifications: {
+        Row: {
+          community_sb_id: string
+          created_at: string | null
+          id: string
+          is_dismissed: boolean
+          is_read: boolean
+          local_directive_id: string | null
+          new_version_number: number
+          old_version_number: number
+          user_id: string
+          version_notes: string | null
+        }
+        Insert: {
+          community_sb_id: string
+          created_at?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          local_directive_id?: string | null
+          new_version_number: number
+          old_version_number: number
+          user_id: string
+          version_notes?: string | null
+        }
+        Update: {
+          community_sb_id?: string
+          created_at?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          local_directive_id?: string | null
+          new_version_number?: number
+          old_version_number?: number
+          user_id?: string
+          version_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_sb_update_notifications_community_sb_id_fkey"
+            columns: ["community_sb_id"]
+            isOneToOne: false
+            referencedRelation: "community_service_bulletins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_update_notifications_local_directive_id_fkey"
+            columns: ["local_directive_id"]
+            isOneToOne: false
+            referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_update_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_update_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_sb_usage: {
+        Row: {
+          community_sb_id: string
+          created_at: string | null
+          id: string
+          is_modified: boolean
+          last_seen_version: number
+          local_directive_id: string
+          updated_at: string | null
+          used_version_number: number
+          user_id: string
+        }
+        Insert: {
+          community_sb_id: string
+          created_at?: string | null
+          id?: string
+          is_modified?: boolean
+          last_seen_version: number
+          local_directive_id: string
+          updated_at?: string | null
+          used_version_number: number
+          user_id: string
+        }
+        Update: {
+          community_sb_id?: string
+          created_at?: string | null
+          id?: string
+          is_modified?: boolean
+          last_seen_version?: number
+          local_directive_id?: string
+          updated_at?: string | null
+          used_version_number?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_sb_usage_community_sb_id_fkey"
+            columns: ["community_sb_id"]
+            isOneToOne: false
+            referencedRelation: "community_service_bulletins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_usage_local_directive_id_fkey"
+            columns: ["local_directive_id"]
+            isOneToOne: true
+            referencedRelation: "directives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_sb_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_service_bulletins: {
+        Row: {
+          action_types: string[] | null
+          applicability_category: string | null
+          applicability_model: string | null
+          applicability_notes: string | null
+          applicable_serial_range: string | null
+          category: Database["public"]["Enums"]["directive_category"]
+          compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          counter_type: string | null
+          created_at: string | null
+          database_version: string | null
+          description: string | null
+          directive_code: string
+          directive_status: Database["public"]["Enums"]["directive_status"]
+          directive_type: Database["public"]["Enums"]["directive_type"]
+          effective_date: string | null
+          equipment_model: string | null
+          equipment_name: string | null
+          id: string
+          initial_due_hours: number | null
+          initial_due_months: number | null
+          initial_due_type:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date: string | null
+          issuing_authority: string | null
+          maintainer_id: string
+          repeat_hours: number | null
+          repeat_months: number | null
+          requires_log_entry: boolean
+          revision: string | null
+          severity: Database["public"]["Enums"]["directive_severity"]
+          software_version: string | null
+          source_links: Json | null
+          terminating_action_exists: boolean
+          terminating_action_summary: string | null
+          title: string
+          updated_at: string | null
+          version_notes: string | null
+          version_number: number
+        }
+        Insert: {
+          action_types?: string[] | null
+          applicability_category?: string | null
+          applicability_model?: string | null
+          applicability_notes?: string | null
+          applicable_serial_range?: string | null
+          category: Database["public"]["Enums"]["directive_category"]
+          compliance_scope: Database["public"]["Enums"]["compliance_scope"]
+          counter_type?: string | null
+          created_at?: string | null
+          database_version?: string | null
+          description?: string | null
+          directive_code: string
+          directive_status?: Database["public"]["Enums"]["directive_status"]
+          directive_type: Database["public"]["Enums"]["directive_type"]
+          effective_date?: string | null
+          equipment_model?: string | null
+          equipment_name?: string | null
+          id?: string
+          initial_due_hours?: number | null
+          initial_due_months?: number | null
+          initial_due_type?:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date?: string | null
+          issuing_authority?: string | null
+          maintainer_id: string
+          repeat_hours?: number | null
+          repeat_months?: number | null
+          requires_log_entry?: boolean
+          revision?: string | null
+          severity: Database["public"]["Enums"]["directive_severity"]
+          software_version?: string | null
+          source_links?: Json | null
+          terminating_action_exists?: boolean
+          terminating_action_summary?: string | null
+          title: string
+          updated_at?: string | null
+          version_notes?: string | null
+          version_number?: number
+        }
+        Update: {
+          action_types?: string[] | null
+          applicability_category?: string | null
+          applicability_model?: string | null
+          applicability_notes?: string | null
+          applicable_serial_range?: string | null
+          category?: Database["public"]["Enums"]["directive_category"]
+          compliance_scope?: Database["public"]["Enums"]["compliance_scope"]
+          counter_type?: string | null
+          created_at?: string | null
+          database_version?: string | null
+          description?: string | null
+          directive_code?: string
+          directive_status?: Database["public"]["Enums"]["directive_status"]
+          directive_type?: Database["public"]["Enums"]["directive_type"]
+          effective_date?: string | null
+          equipment_model?: string | null
+          equipment_name?: string | null
+          id?: string
+          initial_due_hours?: number | null
+          initial_due_months?: number | null
+          initial_due_type?:
+            | Database["public"]["Enums"]["initial_due_type"]
+            | null
+          issue_date?: string | null
+          issuing_authority?: string | null
+          maintainer_id?: string
+          repeat_hours?: number | null
+          repeat_months?: number | null
+          requires_log_entry?: boolean
+          revision?: string | null
+          severity?: Database["public"]["Enums"]["directive_severity"]
+          software_version?: string | null
+          source_links?: Json | null
+          terminating_action_exists?: boolean
+          terminating_action_summary?: string | null
+          title?: string
+          updated_at?: string | null
+          version_notes?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_service_bulletins_maintainer_id_fkey"
+            columns: ["maintainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_service_bulletins_maintainer_id_fkey"
+            columns: ["maintainer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       directive_history: {
         Row: {
           action_type: string
