@@ -41,7 +41,7 @@ const ShareSBDialog = ({
         maintainer_id: userId,
         directive_type: directive.directive_type as any,
         severity: directive.severity as any,
-        directive_status: directive.directive_status as any,
+        directive_status: "Active" as any, // Always share as Active regardless of local status
         category: directive.category as any,
         compliance_scope: directive.compliance_scope as any,
         directive_code: directive.directive_code,
