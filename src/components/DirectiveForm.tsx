@@ -127,6 +127,9 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     equipment_name: "",
     equipment_model: "",
     equipment_serial_number: "",
+    // Version fields
+    software_version: "",
+    database_version: "",
   });
 
   const [linkDescInput, setLinkDescInput] = useState("");
@@ -172,6 +175,8 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         equipment_name: (editingDirective as any).equipment_name || "",
         equipment_model: (editingDirective as any).equipment_model || "",
         equipment_serial_number: (editingDirective as any).equipment_serial_number || "",
+        software_version: (editingDirective as any).software_version || "",
+        database_version: (editingDirective as any).database_version || "",
       });
     }
   }, [editingDirective]);
@@ -449,6 +454,9 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       equipment_name: formData.equipment_name || null,
       equipment_model: formData.equipment_model || null,
       equipment_serial_number: formData.equipment_serial_number || null,
+      // Version fields
+      software_version: formData.software_version || null,
+      database_version: formData.database_version || null,
     };
 
     try {
@@ -808,6 +816,30 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   value={formData.equipment_serial_number}
                   onChange={(e) => setFormData({ ...formData, equipment_serial_number: e.target.value })}
                   placeholder="Enter or auto-fill from equipment"
+                />
+              </div>
+              
+              {/* Software Version */}
+              <div className="space-y-2">
+                <Label htmlFor="software_version">Software Version</Label>
+                <Input
+                  id="software_version"
+                  value={formData.software_version}
+                  onChange={(e) => setFormData({ ...formData, software_version: e.target.value })}
+                  placeholder="e.g., v2.1.0"
+                  maxLength={100}
+                />
+              </div>
+              
+              {/* Database Version */}
+              <div className="space-y-2">
+                <Label htmlFor="database_version">Database Version</Label>
+                <Input
+                  id="database_version"
+                  value={formData.database_version}
+                  onChange={(e) => setFormData({ ...formData, database_version: e.target.value })}
+                  placeholder="e.g., DB-2024.1"
+                  maxLength={100}
                 />
               </div>
               
