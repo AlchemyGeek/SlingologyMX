@@ -23,8 +23,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Trash2, ExternalLink, Bell, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, ExternalLink, Bell, Calendar, Clock, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import ShareSBDialog from "./community/ShareSBDialog";
 import type { Directive } from "./DirectivesPanel";
 
 interface DirectiveDetailProps {
@@ -103,6 +104,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
   const [complianceEvents, setComplianceEvents] = useState<ComplianceEvent[]>([]);
   const [pendingNotifications, setPendingNotifications] = useState<PendingNotification[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchComplianceEvents = async () => {
@@ -200,6 +202,10 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           Back to List
         </Button>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
+            <Users className="h-4 w-4 mr-2" />
+            Share with Community
+          </Button>
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -210,6 +216,15 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           </Button>
         </div>
       </div>
+
+      {/* Share with Community Dialog */}
+      <ShareSBDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        directive={directive}
+        userId={userId}
+        onShared={() => setShowShareDialog(false)}
+      />
 
       {/* Delete Directive Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
