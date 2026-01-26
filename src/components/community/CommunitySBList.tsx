@@ -25,6 +25,7 @@ interface CommunitySBListProps {
   communitySBs: CommunitySBWithMaintainer[];
   onViewDetail: (sb: CommunitySBWithMaintainer) => void;
   loading: boolean;
+  userId?: string;
 }
 
 const getSeverityColor = (severity: string) => {
@@ -42,7 +43,7 @@ const getSeverityColor = (severity: string) => {
   }
 };
 
-const CommunitySBList = ({ communitySBs, onViewDetail, loading }: CommunitySBListProps) => {
+const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId }: CommunitySBListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [severityFilter, setSeverityFilter] = useState<string>("all");
@@ -190,9 +191,13 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading }: CommunitySBLis
                   <TableCell className="hide-at-800">
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <User className="h-3 w-3" />
-                      <span className="truncate max-w-[100px]">
-                        {sb.maintainer_display_name || "Unknown"}
-                      </span>
+                      {userId && sb.maintainer_id === userId ? (
+                        <Badge variant="outline" className="text-xs">You</Badge>
+                      ) : (
+                        <span className="truncate max-w-[100px]">
+                          {sb.maintainer_display_name || "Unknown"}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
