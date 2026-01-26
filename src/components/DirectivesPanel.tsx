@@ -205,6 +205,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
           fetchDirectives();
           onRecordChanged?.();
         }}
+        onShareSuccess={refetchCommunitySBs}
       />
     );
   }
