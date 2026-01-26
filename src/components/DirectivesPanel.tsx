@@ -217,6 +217,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
         editingDirective={editingDirective}
         onSuccess={handleDirectiveCreated}
         onCancel={handleCancelForm}
+        onShareSuccess={refetchCommunitySBs}
       />
     );
   }
