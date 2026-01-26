@@ -36,6 +36,7 @@ interface DirectiveDetailProps {
   onEdit: () => void;
   onDelete: () => void;
   onUpdate: () => void;
+  onShareSuccess?: () => void;
 }
 
 interface ComplianceEvent {
@@ -101,7 +102,7 @@ const getDisplayStatus = (status: string) => {
   return status;
 };
 
-const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate }: DirectiveDetailProps) => {
+const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdate, onShareSuccess }: DirectiveDetailProps) => {
   const [complianceEvents, setComplianceEvents] = useState<ComplianceEvent[]>([]);
   const [pendingNotifications, setPendingNotifications] = useState<PendingNotification[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -248,6 +249,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         onShared={() => {
           setShowShareDialog(false);
           shareStatus.refetch();
+          onShareSuccess?.();
         }}
       />
 
