@@ -89,10 +89,8 @@ export function useCommunitySBs(userId: string | null) {
 
   useEffect(() => {
     fetchCommunitySBs();
-  }, [fetchCommunitySBs]);
 
-  // Refetch when tab regains focus
-  useEffect(() => {
+    // Refetch when tab regains focus
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && userId) {
         fetchCommunitySBs();
