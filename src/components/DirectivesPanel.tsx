@@ -10,6 +10,7 @@ import DirectiveDetail from "./DirectiveDetail";
 import CommunitySBList from "./community/CommunitySBList";
 import CommunitySBDetail from "./community/CommunitySBDetail";
 import { useCommunitySBs } from "@/hooks/useCommunitySBs";
+import { useCommunitySBVisit } from "@/hooks/useCommunitySBVisit";
 import type { CommunitySBWithMaintainer } from "@/types/communitySB";
 import { toast } from "sonner";
 export interface Directive {
@@ -74,6 +75,14 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
   const [activeTab, setActiveTab] = useState("my-directives");
 
   const { communitySBs, loading: communitySBsLoading, refetch: refetchCommunitySBs } = useCommunitySBs(userId);
+  const { hasNewOrUpdated, markAsVisited, getItemStatus } = useCommunitySBVisit(userId, communitySBs);
+
+  // Mark as visited when switching to community tab
+  useEffect(() => {
+    if (activeTab === "community") {
+      markAsVisited();
+    }
+  }, [activeTab, markAsVisited]);
 
   const fetchDirectives = async () => {
     try {
@@ -251,9 +260,12 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="my-directives">My Directives</TabsTrigger>
-            <TabsTrigger value="community" className="gap-2">
+            <TabsTrigger value="community" className="gap-2 relative">
               <Users className="h-4 w-4" />
               Community
+              {hasNewOrUpdated && activeTab !== "community" && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="my-directives">
@@ -268,6 +280,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
               onViewDetail={setSelectedCommunitySB}
               loading={communitySBsLoading}
               userId={userId}
+              getItemStatus={getItemStatus}
             />
           </TabsContent>
         </Tabs>
