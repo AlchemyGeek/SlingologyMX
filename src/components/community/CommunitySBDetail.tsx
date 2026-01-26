@@ -245,6 +245,16 @@ const CommunitySBDetail = ({
             </div>
           </div>
 
+          {/* Version Notes (Update Comment) */}
+          {sb.version_notes && sb.version_number > 1 && (
+            <div className="bg-background rounded-lg p-3 border">
+              <p className="text-xs font-medium text-muted-foreground mb-1">
+                Update Notes (v{sb.version_number}):
+              </p>
+              <p className="text-sm">{sb.version_notes}</p>
+            </div>
+          )}
+
           {/* Voting Section */}
           <Separator />
           <div className="flex items-center gap-4">
