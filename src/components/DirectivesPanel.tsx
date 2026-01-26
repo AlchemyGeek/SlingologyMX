@@ -189,6 +189,14 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
           refetchCommunitySBs();
           onRecordChanged?.();
         }}
+        onDeleted={() => {
+          setSelectedCommunitySB(null);
+          refetchCommunitySBs();
+        }}
+        onEdited={() => {
+          setSelectedCommunitySB(null);
+          refetchCommunitySBs();
+        }}
       />
     );
   }
@@ -259,6 +267,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
               communitySBs={communitySBs}
               onViewDetail={setSelectedCommunitySB}
               loading={communitySBsLoading}
+              userId={userId}
             />
           </TabsContent>
         </Tabs>

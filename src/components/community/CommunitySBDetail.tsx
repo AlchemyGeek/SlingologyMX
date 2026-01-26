@@ -15,6 +15,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   Download,
   ThumbsUp,
@@ -24,11 +34,14 @@ import {
   Calendar,
   Clock,
   AlertTriangle,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { CommunitySBWithMaintainer } from "@/types/communitySB";
 import { useCommunitySBFeedback } from "@/hooks/useCommunitySBs";
+import CommunitySBEditForm from "./CommunitySBEditForm";
 
 interface CommunitySBDetailProps {
   sb: CommunitySBWithMaintainer;
@@ -36,6 +49,8 @@ interface CommunitySBDetailProps {
   aircraftId: string;
   onClose: () => void;
   onUsed: () => void;
+  onDeleted?: () => void;
+  onEdited?: () => void;
 }
 
 const getSeverityColor = (severity: string) => {
@@ -59,12 +74,19 @@ const CommunitySBDetail = ({
   aircraftId,
   onClose,
   onUsed,
+  onDeleted,
+  onEdited,
 }: CommunitySBDetailProps) => {
   const { feedback, userVote, submitVote, refetch } = useCommunitySBFeedback(sb.id, userId);
   const [showDownvoteDialog, setShowDownvoteDialog] = useState(false);
   const [downvoteReason, setDownvoteReason] = useState("");
   const [showUseDialog, setShowUseDialog] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isMaintainer = sb.maintainer_id === userId;
 
   const upvoteCount = feedback.filter((f) => f.vote_type === 1).length;
   const downvoteCount = feedback.filter((f) => f.vote_type === -1).length;
@@ -184,10 +206,64 @@ const CommunitySBDetail = ({
     }
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      // Delete usage records first
+      await supabase
+        .from("community_sb_usage")
+        .delete()
+        .eq("community_sb_id", sb.id);
+
+      // Delete feedback
+      await supabase
+        .from("community_sb_feedback")
+        .delete()
+        .eq("community_sb_id", sb.id);
+
+      // Delete update notifications
+      await supabase
+        .from("community_sb_update_notifications")
+        .delete()
+        .eq("community_sb_id", sb.id);
+
+      // Delete the community SB itself
+      const { error } = await supabase
+        .from("community_service_bulletins")
+        .delete()
+        .eq("id", sb.id);
+
+      if (error) throw error;
+
+      toast.success("Community SB deleted");
+      setShowDeleteDialog(false);
+      onDeleted?.();
+    } catch (err: any) {
+      console.error("Error deleting community SB:", err);
+      toast.error("Failed to delete community SB");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Get maintainer feedback for display
   const downvoteReasons = feedback
     .filter((f) => f.vote_type === -1 && f.reason)
     .slice(0, 3);
+
+  // Show edit form if editing
+  if (isEditing) {
+    return (
+      <CommunitySBEditForm
+        sb={sb}
+        onClose={() => setIsEditing(false)}
+        onSaved={() => {
+          setIsEditing(false);
+          onEdited?.();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -197,10 +273,26 @@ const CommunitySBDetail = ({
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Community SBs
         </Button>
-        <Button onClick={() => setShowUseDialog(true)}>
-          <Download className="h-4 w-4 mr-2" />
-          Use This SB
-        </Button>
+        <div className="flex items-center gap-2">
+          {isMaintainer && (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </>
+          )}
+          {!isMaintainer && (
+            <Button onClick={() => setShowUseDialog(true)}>
+              <Download className="h-4 w-4 mr-2" />
+              Use This SB
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Disclaimer */}
@@ -543,6 +635,29 @@ const CommunitySBDetail = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Community SB?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this community SB. Users who have imported it will keep
+              their local copies, but will no longer receive update notifications.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
