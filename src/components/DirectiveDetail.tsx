@@ -245,7 +245,10 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
         onOpenChange={setShowShareDialog}
         directive={directive}
         userId={userId}
-        onShared={() => setShowShareDialog(false)}
+        onShared={() => {
+          setShowShareDialog(false);
+          shareStatus.refetch();
+        }}
       />
 
       {/* Delete Directive Dialog */}
