@@ -49,15 +49,17 @@ const ShareSBDialog = ({
     const checkExisting = async () => {
       setCheckingExisting(true);
       try {
+        // Get the latest version if multiple exist (handles duplicates from prior bug)
         const { data, error } = await supabase
           .from("community_service_bulletins")
           .select("id, version_number, directive_code")
           .eq("maintainer_id", userId)
           .eq("directive_code", directive.directive_code)
-          .maybeSingle();
+          .order("version_number", { ascending: false })
+          .limit(1);
 
         if (error) throw error;
-        setExistingSB(data);
+        setExistingSB(data && data.length > 0 ? data[0] : null);
       } catch (err) {
         console.error("Error checking existing community SB:", err);
       } finally {
