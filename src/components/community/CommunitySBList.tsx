@@ -26,6 +26,7 @@ interface CommunitySBListProps {
   onViewDetail: (sb: CommunitySBWithMaintainer) => void;
   loading: boolean;
   userId?: string;
+  getItemStatus?: (sb: CommunitySBWithMaintainer) => "new" | "updated" | null;
 }
 
 const getSeverityColor = (severity: string) => {
@@ -43,7 +44,7 @@ const getSeverityColor = (severity: string) => {
   }
 };
 
-const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId }: CommunitySBListProps) => {
+const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemStatus }: CommunitySBListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [severityFilter, setSeverityFilter] = useState<string>("all");
@@ -168,52 +169,65 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId }: Commun
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAndSortedSBs.map((sb) => (
-                <TableRow
-                  key={sb.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => onViewDetail(sb)}
-                >
-                  <TableCell className="font-mono font-medium">{sb.directive_code}</TableCell>
-                  <TableCell className="max-w-[200px]">
-                    <div className="truncate">{sb.title}</div>
-                    {sb.version_number > 1 && (
-                      <span className="text-xs text-muted-foreground">v{sb.version_number}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hide-at-1000 text-sm text-muted-foreground">
-                    {sb.equipment_name || sb.equipment_model || "-"}
-                  </TableCell>
-                  <TableCell className="hide-at-800">{sb.category}</TableCell>
-                  <TableCell>
-                    <Badge variant={getSeverityColor(sb.severity) as any}>{sb.severity}</Badge>
-                  </TableCell>
-                  <TableCell className="hide-at-800">
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      {userId && sb.maintainer_id === userId ? (
-                        <Badge variant="outline" className="text-xs">You</Badge>
-                      ) : (
-                        <span className="truncate max-w-[100px]">
-                          {sb.maintainer_display_name || "Unknown"}
-                        </span>
+              filteredAndSortedSBs.map((sb) => {
+                const itemStatus = getItemStatus?.(sb);
+                return (
+                  <TableRow
+                    key={sb.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => onViewDetail(sb)}
+                  >
+                    <TableCell className="font-mono font-medium">
+                      <div className="flex items-center gap-2">
+                        {sb.directive_code}
+                        {itemStatus === "new" && (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0">New</Badge>
+                        )}
+                        {itemStatus === "updated" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Updated</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[200px]">
+                      <div className="truncate">{sb.title}</div>
+                      {sb.version_number > 1 && (
+                        <span className="text-xs text-muted-foreground">v{sb.version_number}</span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2 text-sm">
-                      <span className="flex items-center gap-1 text-primary">
-                        <ThumbsUp className="h-3 w-3" />
-                        {sb.upvotes}
-                      </span>
-                      <span className="flex items-center gap-1 text-destructive">
-                        <ThumbsDown className="h-3 w-3" />
-                        {sb.downvotes}
-                      </span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell className="hide-at-1000 text-sm text-muted-foreground">
+                      {sb.equipment_name || sb.equipment_model || "-"}
+                    </TableCell>
+                    <TableCell className="hide-at-800">{sb.category}</TableCell>
+                    <TableCell>
+                      <Badge variant={getSeverityColor(sb.severity) as any}>{sb.severity}</Badge>
+                    </TableCell>
+                    <TableCell className="hide-at-800">
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        {userId && sb.maintainer_id === userId ? (
+                          <Badge variant="outline" className="text-xs">You</Badge>
+                        ) : (
+                          <span className="truncate max-w-[100px]">
+                            {sb.maintainer_display_name || "Unknown"}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2 text-sm">
+                        <span className="flex items-center gap-1 text-primary">
+                          <ThumbsUp className="h-3 w-3" />
+                          {sb.upvotes}
+                        </span>
+                        <span className="flex items-center gap-1 text-destructive">
+                          <ThumbsDown className="h-3 w-3" />
+                          {sb.downvotes}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
