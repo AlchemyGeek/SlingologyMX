@@ -28,7 +28,7 @@ const DIRECTIVE_TYPES = ["Service Bulletin", "Airworthiness Directive", "Safety 
 const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
 const CATEGORIES = ["Airframe", "Engine", "Propeller", "Avionics", "System", "Appliance", "Other"];
 const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "As Required"];
-const INITIAL_DUE_TYPES = ["", "Upon Effective Date", "At Next Inspection", "Within Hours", "Within Calendar Time", "Before Further Flight"];
+const INITIAL_DUE_TYPES = ["Upon Effective Date", "At Next Inspection", "Within Hours", "Within Calendar Time", "Before Further Flight"];
 const ACTION_TYPE_OPTIONS = ["Inspection", "Replacement", "Modification", "Repair", "Check", "Lubrication", "Adjustment", "Test", "Other"];
 
 const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps) => {
@@ -347,13 +347,13 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
             <div className="space-y-2">
               <Label>Initial Due</Label>
               <Select
-                value={formData.initial_due_type}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, initial_due_type: value }))}
+                value={formData.initial_due_type || "none"}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, initial_due_type: value === "none" ? "" : value }))}
               >
                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not specified</SelectItem>
-                  {INITIAL_DUE_TYPES.filter(Boolean).map((type) => (
+                  <SelectItem value="none">Not specified</SelectItem>
+                  {INITIAL_DUE_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
