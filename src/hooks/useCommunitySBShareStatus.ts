@@ -111,63 +111,73 @@ interface ShareStatus {
   hasChanges: boolean;
   loading: boolean;
   communitySB: CommunitySBData | null;
+  refetch: () => void;
 }
 
 export const useCommunitySBShareStatus = (
   directive: Directive,
   userId: string
 ): ShareStatus => {
-  const [status, setStatus] = useState<ShareStatus>({
+  const [status, setStatus] = useState<{
+    isShared: boolean;
+    hasChanges: boolean;
+    loading: boolean;
+    communitySB: CommunitySBData | null;
+  }>({
     isShared: false,
     hasChanges: false,
     loading: true,
     communitySB: null,
   });
+  
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
+  const checkShareStatus = async () => {
     if (!userId || !directive.directive_code) {
       setStatus({ isShared: false, hasChanges: false, loading: false, communitySB: null });
       return;
     }
 
-    const checkShareStatus = async () => {
-      setStatus((prev) => ({ ...prev, loading: true }));
-      try {
-        const { data, error } = await supabase
-          .from("community_service_bulletins")
-          .select("*")
-          .eq("maintainer_id", userId)
-          .eq("directive_code", directive.directive_code)
-          .order("version_number", { ascending: false })
-          .limit(1);
+    setStatus((prev) => ({ ...prev, loading: true }));
+    try {
+      const { data, error } = await supabase
+        .from("community_service_bulletins")
+        .select("*")
+        .eq("maintainer_id", userId)
+        .eq("directive_code", directive.directive_code)
+        .order("version_number", { ascending: false })
+        .limit(1);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data && data.length > 0) {
-          const communitySB = data[0] as CommunitySBData;
-          const changesExist = hasChanges(directive, communitySB);
-          setStatus({
-            isShared: true,
-            hasChanges: changesExist,
-            loading: false,
-            communitySB,
-          });
-        } else {
-          setStatus({
-            isShared: false,
-            hasChanges: false,
-            loading: false,
-            communitySB: null,
-          });
-        }
-      } catch (err) {
-        console.error("Error checking community SB status:", err);
-        setStatus({ isShared: false, hasChanges: false, loading: false, communitySB: null });
+      if (data && data.length > 0) {
+        const communitySB = data[0] as CommunitySBData;
+        const changesExist = hasChanges(directive, communitySB);
+        setStatus({
+          isShared: true,
+          hasChanges: changesExist,
+          loading: false,
+          communitySB,
+        });
+      } else {
+        setStatus({
+          isShared: false,
+          hasChanges: false,
+          loading: false,
+          communitySB: null,
+        });
       }
-    };
+    } catch (err) {
+      console.error("Error checking community SB status:", err);
+      setStatus({ isShared: false, hasChanges: false, loading: false, communitySB: null });
+    }
+  };
 
+  useEffect(() => {
     checkShareStatus();
-  }, [userId, directive.directive_code, directive.updated_at]);
+  }, [userId, directive.directive_code, directive.updated_at, refreshKey]);
 
-  return status;
+  const refetch = () => setRefreshKey((k) => k + 1);
+
+  return { ...status, refetch };
 };
