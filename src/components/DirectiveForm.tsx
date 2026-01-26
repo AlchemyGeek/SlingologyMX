@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import { format, addMonths } from "date-fns";
-import { X } from "lucide-react";
+import { X, Share2 } from "lucide-react";
 import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+import ConfirmShareDialog from "./community/ConfirmShareDialog";
 
 interface Equipment {
   id: string;
@@ -135,6 +136,9 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
   const [linkDescInput, setLinkDescInput] = useState("");
   const [linkUrlInput, setLinkUrlInput] = useState("");
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [pendingDirectiveId, setPendingDirectiveId] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingDirective) {
@@ -615,8 +619,227 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     }
   };
 
+  // Share directive to community
+  const shareToCommmunity = async (directiveId: string) => {
+    setIsSharing(true);
+    try {
+      // Fetch the just-created directive
+      const { data: directive, error: fetchError } = await supabase
+        .from("directives")
+        .select("*")
+        .eq("id", directiveId)
+        .single();
+
+      if (fetchError || !directive) throw fetchError || new Error("Directive not found");
+
+      // Create community SB (excluding user-specific fields)
+      const { error } = await supabase.from("community_service_bulletins").insert({
+        maintainer_id: userId,
+        directive_type: directive.directive_type as any,
+        severity: directive.severity as any,
+        directive_status: "Active" as any,
+        category: directive.category as any,
+        compliance_scope: directive.compliance_scope as any,
+        directive_code: directive.directive_code,
+        title: directive.title,
+        issuing_authority: directive.issuing_authority,
+        revision: directive.revision,
+        issue_date: directive.issue_date,
+        effective_date: directive.effective_date,
+        initial_due_type: directive.initial_due_type as any,
+        initial_due_hours: directive.initial_due_hours,
+        initial_due_months: directive.initial_due_months,
+        repeat_hours: directive.repeat_hours,
+        repeat_months: directive.repeat_months,
+        counter_type: directive.counter_type,
+        applicable_serial_range: directive.applicable_serial_range,
+        applicability_notes: directive.applicability_notes,
+        applicability_category: directive.applicability_category,
+        applicability_model: directive.applicability_model,
+        equipment_name: directive.equipment_name,
+        equipment_model: directive.equipment_model,
+        software_version: directive.software_version,
+        database_version: directive.database_version,
+        action_types: directive.action_types,
+        terminating_action_exists: directive.terminating_action_exists,
+        terminating_action_summary: directive.terminating_action_summary,
+        requires_log_entry: directive.requires_log_entry,
+        source_links: directive.source_links,
+        version_number: 1,
+      });
+
+      if (error) throw error;
+
+      toast.success("Directive created and shared with the community!");
+      setShowShareDialog(false);
+      setPendingDirectiveId(null);
+      onSuccess();
+    } catch (err: any) {
+      console.error("Error sharing to community:", err);
+      toast.error("Directive created, but failed to share to community");
+      onSuccess(); // Still call success since the directive was created
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // Handle Create & Share button
+  const handleCreateAndShare = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Run validation first (same as handleSubmit)
+    if (!formData.directive_code.trim()) {
+      toast.error("Directive code is required");
+      return;
+    }
+
+    const { data: existingDirective } = await supabase
+      .from("directives")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("aircraft_id", aircraftId)
+      .eq("directive_code", formData.directive_code.trim())
+      .maybeSingle();
+
+    if (existingDirective && (!editingDirective || existingDirective.id !== editingDirective.id)) {
+      toast.error("A directive with this code already exists for this aircraft");
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
+    if (formData.applicability_status === "Applies" && !formData.initial_due_type) {
+      toast.error("Initial Due Type is required when directive applies to your aircraft");
+      return;
+    }
+
+    if (formData.initial_due_type === "By Total Time (Hours)") {
+      const counterKey = getCounterKey(formData.counter_type);
+      if (formData.counter_value_mode === "absolute") {
+        const absoluteValue = parseFloat(formData.counter_absolute_value);
+        const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
+        if (isNaN(absoluteValue) || absoluteValue < currentCounterValue) {
+          toast.error(`Absolute value must be greater than or equal to current ${formData.counter_type} value (${currentCounterValue})`);
+          return;
+        }
+      } else {
+        const incrementValue = parseFloat(formData.counter_increment_value);
+        if (isNaN(incrementValue) || incrementValue <= 0) {
+          toast.error("Increment value must be a positive number");
+          return;
+        }
+      }
+    }
+
+    // Show confirmation dialog
+    setShowShareDialog(true);
+  };
+
+  // Actually create and share after confirmation
+  const handleConfirmShare = async () => {
+    setIsSharing(true);
+    try {
+      // Compute initial_due_hours for counter-based
+      let computedInitialDueHours = formData.initial_due_hours ? parseFloat(formData.initial_due_hours) : null;
+      if (formData.initial_due_type === "By Total Time (Hours)") {
+        const counterKey = getCounterKey(formData.counter_type);
+        const currentCounterValue = Number(counters[counterKey as keyof typeof counters]) || 0;
+        if (formData.counter_value_mode === "absolute") {
+          computedInitialDueHours = parseFloat(formData.counter_absolute_value) || null;
+        } else {
+          const increment = parseFloat(formData.counter_increment_value) || 0;
+          computedInitialDueHours = currentCounterValue + increment;
+        }
+      }
+
+      const directiveData = {
+        user_id: userId,
+        aircraft_id: aircraftId,
+        directive_code: formData.directive_code,
+        title: formData.title,
+        directive_type: formData.directive_type as Database["public"]["Enums"]["directive_type"],
+        severity: formData.severity as Database["public"]["Enums"]["directive_severity"],
+        directive_status: formData.directive_status as Database["public"]["Enums"]["directive_status"],
+        category: formData.category as Database["public"]["Enums"]["directive_category"],
+        issuing_authority: formData.issuing_authority || null,
+        issue_date: formData.issue_date ? format(formData.issue_date, "yyyy-MM-dd") : null,
+        effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
+        revision: formData.revision || null,
+        applicability_model: formData.applicability_model || null,
+        applicability_category: formData.category || null, // Use category as applicability_category
+        applicable_serial_range: formData.applicable_serial_range || null,
+        applicability_status: formData.applicability_status || null,
+        applicability_reason: formData.applicability_reason || null,
+        applicability_notes: formData.applicability_notes || null,
+        compliance_scope: formData.compliance_scope as Database["public"]["Enums"]["compliance_scope"],
+        action_types: formData.action_types.length > 0 ? formData.action_types : null,
+        initial_due_type: (formData.initial_due_type || null) as Database["public"]["Enums"]["initial_due_type"] | null,
+        initial_due_hours: computedInitialDueHours,
+        initial_due_months: formData.initial_due_months ? parseInt(formData.initial_due_months) : null,
+        initial_due_date: formData.initial_due_date ? format(formData.initial_due_date, "yyyy-MM-dd") : null,
+        repeat_hours: formData.repeat_hours ? parseFloat(formData.repeat_hours) : null,
+        repeat_months: formData.repeat_months ? parseInt(formData.repeat_months) : null,
+        terminating_action_exists: formData.terminating_action_exists,
+        terminating_action_summary: formData.terminating_action_summary || null,
+        requires_log_entry: formData.requires_log_entry,
+        source_links: formData.source_links.length > 0 ? formData.source_links : null,
+        counter_type: formData.initial_due_type === "By Total Time (Hours)" ? formData.counter_type : null,
+        equipment_id: formData.equipment_id || null,
+        equipment_name: formData.equipment_name || null,
+        equipment_model: formData.equipment_model || null,
+        equipment_serial_number: formData.equipment_serial_number || null,
+        software_version: formData.software_version || null,
+        database_version: formData.database_version || null,
+      };
+
+      // Create the directive
+      const { data: newDirective, error } = await supabase
+        .from("directives")
+        .insert([directiveData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Log Create action to directive history
+      if (newDirective) {
+        await supabase.from("directive_history").insert({
+          user_id: userId,
+          aircraft_id: aircraftId,
+          directive_id: newDirective.id,
+          directive_code: newDirective.directive_code,
+          directive_title: newDirective.title,
+          action_type: "Create",
+        });
+
+        // Create compliance notification for new directives (not "Other")
+        if (formData.initial_due_type && formData.initial_due_type !== "Other") {
+          await createComplianceNotification(newDirective.id, newDirective.directive_code, newDirective.title);
+        }
+
+        // Now share to community
+        await shareToCommmunity(newDirective.id);
+      }
+    } catch (error: any) {
+      console.error("Error creating directive:", error);
+      toast.error("Failed to create directive");
+      setIsSharing(false);
+      setShowShareDialog(false);
+    }
+  };
+
   return (
-    <Card>
+    <>
+      <ConfirmShareDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        onConfirm={handleConfirmShare}
+        isSharing={isSharing}
+      />
+      <Card>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div className="flex justify-between items-center">
@@ -1197,6 +1420,12 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
+            {!editingDirective && (
+              <Button type="button" variant="secondary" onClick={handleCreateAndShare}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Create & Share
+              </Button>
+            )}
             <Button type="submit">
               {editingDirective ? "Update Directive" : "Create Directive"}
             </Button>
@@ -1204,6 +1433,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         </form>
       </CardContent>
     </Card>
+    </>
   );
 };
 
