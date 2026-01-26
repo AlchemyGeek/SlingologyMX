@@ -200,6 +200,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         .from("equipment")
         .select("id, name, category, model_or_part_number, serial_number")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .eq("category", equipmentCategory as any);
       
       if (!error && data) {
@@ -210,7 +211,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     };
     
     fetchEquipment();
-  }, [formData.category, userId]);
+  }, [formData.category, userId, aircraftId]);
 
   // Handle equipment selection
   const handleEquipmentSelect = (equipmentId: string) => {
