@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Edit, Trash2, ExternalLink, Bell, Calendar, Clock, Users, RefreshCw, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, ExternalLink, Bell, Calendar, Clock, Users, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ShareSBDialog from "./community/ShareSBDialog";
 import { useCommunitySBShareStatus } from "@/hooks/useCommunitySBShareStatus";
@@ -111,8 +111,6 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
   
   const shareStatus = useCommunitySBShareStatus(directive, userId);
   
-  // Show button if: not shared yet, OR shared but has changes
-  const showShareButton = !shareStatus.isShared || shareStatus.hasChanges;
 
   const fetchComplianceEvents = async () => {
     try {
@@ -209,25 +207,16 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           Back to List
         </Button>
         <div className="flex gap-2">
-          {showShareButton ? (
-            <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
-              {shareStatus.isShared && shareStatus.hasChanges ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Update Community SB
-                </>
-              ) : (
-                <>
-                  <Users className="h-4 w-4 mr-2" />
-                  Share with Community
-                </>
-              )}
-            </Button>
-          ) : (
+          {shareStatus.isShared ? (
             <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs">Shared (v{shareStatus.communitySB?.version_number})</span>
             </Badge>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
+              <Users className="h-4 w-4 mr-2" />
+              Share with Community
+            </Button>
           )}
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Edit className="h-4 w-4 mr-2" />
