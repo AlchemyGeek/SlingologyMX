@@ -27,6 +27,7 @@ export interface Directive {
   revision: string | null;
   
   applicability_model: string | null;
+  applicability_category: string | null;
   applicable_serial_range: string | null;
   applicability_status: string | null;
   applicability_reason: string | null;
