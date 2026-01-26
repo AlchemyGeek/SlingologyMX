@@ -210,7 +210,7 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
           {shareStatus.isShared ? (
             <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs">Shared (v{shareStatus.communitySB?.version_number})</span>
+              <span className="text-xs">Shared</span>
             </Badge>
           ) : (
             <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
