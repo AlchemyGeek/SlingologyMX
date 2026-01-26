@@ -97,6 +97,20 @@ const CommunitySBDetail = ({
 
     setImporting(true);
     try {
+      // Check if user already has a directive with this code
+      const { data: existing } = await supabase
+        .from("directives")
+        .select("id, directive_code")
+        .eq("user_id", userId)
+        .eq("directive_code", sb.directive_code)
+        .maybeSingle();
+
+      if (existing) {
+        toast.error(`You already have a directive with code "${sb.directive_code}". Please edit your existing directive or delete it first.`);
+        setImporting(false);
+        return;
+      }
+
       // Create a local directive from the community SB
       const { data: newDirective, error: directiveError } = await supabase
         .from("directives")
@@ -159,7 +173,11 @@ const CommunitySBDetail = ({
       onUsed();
     } catch (err: any) {
       console.error("Error using community SB:", err);
-      toast.error("Failed to add community SB to your directives");
+      if (err.code === "23505") {
+        toast.error(`Directive code "${sb.directive_code}" already exists in your directives.`);
+      } else {
+        toast.error("Failed to add community SB to your directives");
+      }
     } finally {
       setImporting(false);
     }
