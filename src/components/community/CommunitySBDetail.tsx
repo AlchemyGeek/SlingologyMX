@@ -97,11 +97,12 @@ const CommunitySBDetail = ({
 
     setImporting(true);
     try {
-      // Check if user already has a directive with this code
+      // Check if user already has a directive with this code on this aircraft
       const { data: existing } = await supabase
         .from("directives")
         .select("id, directive_code")
         .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
         .eq("directive_code", sb.directive_code)
         .maybeSingle();
 
