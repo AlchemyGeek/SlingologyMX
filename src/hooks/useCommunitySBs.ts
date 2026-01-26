@@ -91,6 +91,18 @@ export function useCommunitySBs(userId: string | null) {
     fetchCommunitySBs();
   }, [fetchCommunitySBs]);
 
+  // Refetch when tab regains focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && userId) {
+        fetchCommunitySBs();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchCommunitySBs, userId]);
+
   return { communitySBs, loading, error, refetch: fetchCommunitySBs };
 }
 
