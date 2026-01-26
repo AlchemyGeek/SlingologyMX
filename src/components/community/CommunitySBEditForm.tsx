@@ -28,7 +28,7 @@ const DIRECTIVE_TYPES = ["Service Bulletin", "Airworthiness Directive", "Safety 
 const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
 const CATEGORIES = ["Airframe", "Engine", "Propeller", "Avionics", "System", "Appliance", "Other"];
 const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "As Required"];
-const INITIAL_DUE_TYPES = ["Upon Effective Date", "At Next Inspection", "Within Hours", "Within Calendar Time", "Before Further Flight"];
+const INITIAL_DUE_TYPES = ["Before Next Flight", "By Date", "By Total Time (Hours)", "By Calendar (Months)", "At Next Inspection", "Other"];
 const ACTION_TYPE_OPTIONS = ["Inspection", "Replacement", "Modification", "Repair", "Check", "Lubrication", "Adjustment", "Test", "Other"];
 
 const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps) => {
