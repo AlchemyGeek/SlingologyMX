@@ -24,12 +24,41 @@ interface CommunitySBEditFormProps {
   onSaved: () => void;
 }
 
-const DIRECTIVE_TYPES = ["Service Bulletin", "Airworthiness Directive", "Safety Alert", "Mandatory Service Bulletin", "Optional Service Bulletin"];
+const DIRECTIVE_TYPES = [
+  "FAA Airworthiness Directive",
+  "Manufacturer Alert",
+  "Manufacturer Mandatory",
+  "Service Bulletin",
+  "Service Instruction",
+  "Information Bulletin",
+  "Other",
+];
 const SEVERITIES = ["Emergency", "Mandatory", "Recommended", "Informational"];
 const CATEGORIES = ["Airframe", "Engine", "Propeller", "Avionics", "System", "Appliance", "Other"];
-const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "As Required"];
-const INITIAL_DUE_TYPES = ["Before Next Flight", "By Date", "By Total Time (Hours)", "By Calendar (Months)", "At Next Inspection", "Other"];
-const ACTION_TYPE_OPTIONS = ["Inspection", "Replacement", "Modification", "Repair", "Check", "Lubrication", "Adjustment", "Test", "Other"];
+const COMPLIANCE_SCOPES = ["One-Time", "Recurring", "Conditional", "Informational Only"];
+const INITIAL_DUE_TYPES = [
+  "Before Next Flight",
+  "By Date",
+  "By Total Time (Hours)",
+  "By Calendar",
+  "At Next Inspection",
+  "Other",
+];
+const ACTION_TYPE_OPTIONS = [
+  "Inspection",
+  "Replacement",
+  "Modification",
+  "Software Update",
+  "Operational Limitation",
+  "Documentation Update",
+];
+const COUNTER_TYPES = [
+  { value: "Hobbs", label: "Hobbs" },
+  { value: "Tach", label: "Tach" },
+  { value: "Airframe TT", label: "Airframe TT" },
+  { value: "Engine TT", label: "Engine TT" },
+  { value: "Prop TT", label: "Prop TT" },
+];
 
 const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps) => {
   const [saving, setSaving] = useState(false);
@@ -343,12 +372,32 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           <CardTitle className="text-lg">Compliance Requirements</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Initial Due</Label>
+              <Label>Compliance Scope</Label>
+              <Select
+                value={formData.compliance_scope}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, compliance_scope: value }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COMPLIANCE_SCOPES.map((scope) => (
+                    <SelectItem key={scope} value={scope}>{scope}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Initial Due Type</Label>
               <Select
                 value={formData.initial_due_type || "none"}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, initial_due_type: value === "none" ? "" : value }))}
+                onValueChange={(value) => setFormData((prev) => ({ 
+                  ...prev, 
+                  initial_due_type: value === "none" ? "" : value,
+                  // Reset related fields when type changes
+                  initial_due_hours: "",
+                  initial_due_months: "",
+                }))}
               >
                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
@@ -359,62 +408,92 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="initial_due_hours">Due Hours</Label>
-              <Input
-                id="initial_due_hours"
-                type="number"
-                value={formData.initial_due_hours}
-                onChange={(e) => setFormData((prev) => ({ ...prev, initial_due_hours: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="initial_due_months">Due Months</Label>
-              <Input
-                id="initial_due_months"
-                type="number"
-                value={formData.initial_due_months}
-                onChange={(e) => setFormData((prev) => ({ ...prev, initial_due_months: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Counter Type</Label>
-              <Select
-                value={formData.counter_type}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, counter_type: value }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Hobbs">Hobbs</SelectItem>
-                  <SelectItem value="Tach">Tach</SelectItem>
-                  <SelectItem value="Airframe">Airframe</SelectItem>
-                  <SelectItem value="Engine">Engine</SelectItem>
-                  <SelectItem value="Prop">Prop</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
-          {formData.compliance_scope === "Recurring" && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Conditional fields based on Initial Due Type */}
+          {formData.initial_due_type === "By Calendar" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="repeat_hours">Repeat Hours</Label>
+                <Label htmlFor="initial_due_months">Months from Effective Date *</Label>
                 <Input
-                  id="repeat_hours"
+                  id="initial_due_months"
                   type="number"
-                  value={formData.repeat_hours}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, repeat_hours: e.target.value }))}
+                  min="1"
+                  value={formData.initial_due_months}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, initial_due_months: e.target.value }))}
+                  placeholder="Enter number of months"
                 />
               </div>
+            </div>
+          )}
+
+          {formData.initial_due_type === "By Total Time (Hours)" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="repeat_months">Repeat Months</Label>
-                <Input
-                  id="repeat_months"
-                  type="number"
-                  value={formData.repeat_months}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, repeat_months: e.target.value }))}
-                />
+                <Label>Counter Type *</Label>
+                <Select 
+                  value={formData.counter_type} 
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, counter_type: value }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {COUNTER_TYPES.map((ct) => (
+                      <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="initial_due_hours">Due at Hours *</Label>
+                <Input
+                  id="initial_due_hours"
+                  type="number"
+                  step="0.1"
+                  value={formData.initial_due_hours}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, initial_due_hours: e.target.value }))}
+                  placeholder="Enter counter value"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Users who import this will set their own due value based on their aircraft counters.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Repeat fields - shown only for Recurring scope based on Initial Due Type */}
+          {formData.compliance_scope === "Recurring" && 
+           formData.initial_due_type && 
+           formData.initial_due_type !== "Other" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Date-based repeat: show months field */}
+              {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type) && (
+                <div className="space-y-2">
+                  <Label htmlFor="repeat_months">Repeat Every (Months)</Label>
+                  <Input
+                    id="repeat_months"
+                    type="number"
+                    min="1"
+                    value={formData.repeat_months}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, repeat_months: e.target.value }))}
+                    placeholder="Enter number of months"
+                  />
+                </div>
+              )}
+              {/* Counter-based repeat: show hours field */}
+              {formData.initial_due_type === "By Total Time (Hours)" && (
+                <div className="space-y-2">
+                  <Label htmlFor="repeat_hours">Repeat Every (Hours)</Label>
+                  <Input
+                    id="repeat_hours"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    value={formData.repeat_hours}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, repeat_hours: e.target.value }))}
+                    placeholder="Enter hours interval"
+                  />
+                </div>
+              )}
             </div>
           )}
 
