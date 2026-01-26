@@ -39,6 +39,7 @@ interface DirectiveFormProps {
   editingDirective?: Directive | null;
   onSuccess: () => void;
   onCancel: () => void;
+  onShareSuccess?: () => void;
 }
 
 const DIRECTIVE_TYPES = [
@@ -86,7 +87,7 @@ const getCounterKey = (counterType: string): string => {
   return ct?.counterKey || "hobbs";
 };
 
-const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCancel }: DirectiveFormProps) => {
+const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCancel, onShareSuccess }: DirectiveFormProps) => {
   const { counters } = useAircraftCounters(userId, aircraftId);
   
   const [formData, setFormData] = useState({
@@ -673,6 +674,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       toast.success("Directive created and shared with the community!");
       setShowShareDialog(false);
       setPendingDirectiveId(null);
+      onShareSuccess?.();
       onSuccess();
     } catch (err: any) {
       console.error("Error sharing to community:", err);
