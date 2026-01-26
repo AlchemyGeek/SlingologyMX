@@ -286,12 +286,10 @@ const CommunitySBDetail = ({
               </Button>
             </>
           )}
-          {!isMaintainer && (
-            <Button onClick={() => setShowUseDialog(true)}>
-              <Download className="h-4 w-4 mr-2" />
-              Use This SB
-            </Button>
-          )}
+          <Button onClick={() => setShowUseDialog(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Use This SB
+          </Button>
         </div>
       </div>
 
