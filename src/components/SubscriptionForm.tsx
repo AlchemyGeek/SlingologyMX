@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
-import { format, addWeeks, addMonths } from "date-fns";
+import { format, addWeeks, addMonths, subMonths, isSameDay } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { getCurrencySymbol } from "@/lib/currency";
 import { toast } from "sonner";
+import BackfillTransactionsDialog, { calculateMissedOccurrences } from "./BackfillTransactionsDialog";
 
 // Calculate the next occurrence date based on initial_date and recurrence
 // Returns null if the next occurrence is past the final_date
@@ -93,6 +94,9 @@ const SUBSCRIPTION_TYPES = [
 
 const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubscription, userCurrency = "USD" }: SubscriptionFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [showBackfillDialog, setShowBackfillDialog] = useState(false);
+  const [missedDates, setMissedDates] = useState<Date[]>([]);
+  const [pendingSubscriptionData, setPendingSubscriptionData] = useState<any>(null);
   const [formData, setFormData] = useState({
     subscription_name: editingSubscription?.subscription_name || "",
     notes: editingSubscription?.notes || "",
@@ -102,6 +106,114 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     final_date: editingSubscription?.final_date ? parseLocalDate(editingSubscription.final_date) : null as Date | null,
     recurrence: editingSubscription?.recurrence || "Yearly",
   });
+
+  // Helper to create a single transaction
+  const createTransaction = async (
+    subscriptionId: string,
+    transactionDate: Date,
+    subscriptionData: any
+  ) => {
+    const { error } = await supabase.from("transactions").insert([{
+      user_id: userId,
+      aircraft_id: aircraftId,
+      title: subscriptionData.subscription_name,
+      transaction_date: format(transactionDate, "yyyy-MM-dd"),
+      amount: subscriptionData.cost || 0,
+      currency: userCurrency,
+      direction: "Debit" as const,
+      intent: "Operation" as const,
+      category: subscriptionData.type === "Insurance" ? "Insurance" :
+               subscriptionData.type === "Facilities & Storage" ? "Hangar / Tie-Down" :
+               "Other" as const,
+      status: "Pending" as const,
+      source: "Commitment" as const,
+      reference_id: subscriptionId,
+      reference_type: "Commitment" as const,
+      generated_for_period: format(transactionDate, "yyyy-MM"),
+    }]);
+    
+    if (error) throw error;
+  };
+
+  // Handle backfill confirmation
+  const handleBackfillConfirm = async (count: number) => {
+    if (!pendingSubscriptionData) return;
+    
+    setLoading(true);
+    try {
+      // Create the subscription first
+      const { data: newSubscription, error: subError } = await supabase
+        .from("subscriptions")
+        .insert([pendingSubscriptionData])
+        .select()
+        .single();
+
+      if (subError) throw subError;
+
+      // Create transactions for selected dates
+      if (count > 0) {
+        const datesToCreate = missedDates.slice(-count);
+        for (const date of datesToCreate) {
+          await createTransaction(newSubscription.id, date, pendingSubscriptionData);
+        }
+
+        // Update last_transaction_date to the most recent created transaction
+        const mostRecentDate = datesToCreate[datesToCreate.length - 1];
+        await supabase
+          .from("subscriptions")
+          .update({ last_transaction_date: format(mostRecentDate, "yyyy-MM-dd") })
+          .eq("id", newSubscription.id);
+
+        toast.success(`Commitment created! ${count} pending transaction${count !== 1 ? 's' : ''} created for review.`);
+      } else {
+        toast.success("Commitment created successfully!");
+      }
+
+      // Handle notification creation for recurring subscriptions
+      await handleNotificationCreation(newSubscription.id, pendingSubscriptionData);
+
+      setPendingSubscriptionData(null);
+      setMissedDates([]);
+      onSuccess();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle notification creation (extracted for reuse)
+  const handleNotificationCreation = async (subscriptionId: string, subscriptionData: any) => {
+    const isRecurring = subscriptionData.recurrence !== "None";
+    if (!isRecurring || !subscriptionData.initial_date) return;
+
+    const initialDate = typeof subscriptionData.initial_date === 'string' 
+      ? parseLocalDate(subscriptionData.initial_date) 
+      : subscriptionData.initial_date;
+    
+    const finalDate = subscriptionData.final_date 
+      ? (typeof subscriptionData.final_date === 'string' 
+        ? parseLocalDate(subscriptionData.final_date) 
+        : subscriptionData.final_date)
+      : null;
+
+    const nextOccurrence = getNextOccurrence(initialDate, subscriptionData.recurrence, finalDate);
+    
+    if (nextOccurrence) {
+      const nextOccurrenceStr = format(nextOccurrence, "yyyy-MM-dd");
+      
+      await supabase.from("notifications").insert([{
+        user_id: userId,
+        aircraft_id: aircraftId,
+        description: subscriptionData.subscription_name,
+        notes: subscriptionData.notes || null,
+        type: "Subscription" as const,
+        initial_date: nextOccurrenceStr,
+        recurrence: "None" as const,
+        subscription_id: subscriptionId,
+      }]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +232,17 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
     if (costValue !== null && (isNaN(costValue) || costValue < 0)) {
       toast.error("Cost must be a positive number");
       return;
+    }
+
+    // Validate initial date is not more than 12 months in the past
+    if (formData.initial_date) {
+      const twelveMonthsAgo = subMonths(new Date(), 12);
+      twelveMonthsAgo.setHours(0, 0, 0, 0);
+      
+      if (formData.initial_date < twelveMonthsAgo) {
+        toast.error("Initial date cannot be more than 12 months in the past");
+        return;
+      }
     }
 
     setLoading(true);
@@ -211,7 +334,56 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
 
         toast.success("Commitment updated successfully!");
       } else {
-        // Create subscription
+        // NEW: Check for missed occurrences before creating subscription
+        if (formData.initial_date) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const initialDate = new Date(formData.initial_date);
+          initialDate.setHours(0, 0, 0, 0);
+
+          // Calculate missed occurrences
+          const missed = calculateMissedOccurrences(
+            formData.initial_date,
+            formData.recurrence,
+            formData.final_date
+          );
+
+          if (missed.length > 1) {
+            // Multiple missed occurrences - show dialog
+            setMissedDates(missed);
+            setPendingSubscriptionData(subscriptionData);
+            setShowBackfillDialog(true);
+            setLoading(false);
+            return; // Exit early, dialog will handle creation
+          } else if (missed.length === 1) {
+            // Single occurrence (today or one past date) - create silently
+            const { data: newSubscription, error: subError } = await supabase
+              .from("subscriptions")
+              .insert([subscriptionData])
+              .select()
+              .single();
+
+            if (subError) throw subError;
+
+            // Create the single transaction
+            await createTransaction(newSubscription.id, missed[0], subscriptionData);
+
+            // Update last_transaction_date
+            await supabase
+              .from("subscriptions")
+              .update({ last_transaction_date: format(missed[0], "yyyy-MM-dd") })
+              .eq("id", newSubscription.id);
+
+            // Handle notification
+            await handleNotificationCreation(newSubscription.id, subscriptionData);
+
+            toast.success("Commitment created! 1 pending transaction created for review.");
+            onSuccess();
+            return;
+          }
+        }
+
+        // Future date or no missed occurrences - standard creation
         const { data: newSubscription, error: subError } = await supabase
           .from("subscriptions")
           .insert([subscriptionData])
@@ -373,6 +545,14 @@ const SubscriptionForm = ({ userId, aircraftId, onSuccess, onCancel, editingSubs
           </Button>
         </div>
       </form>
+
+      <BackfillTransactionsDialog
+        open={showBackfillDialog}
+        onOpenChange={setShowBackfillDialog}
+        onConfirm={handleBackfillConfirm}
+        missedDates={missedDates}
+        subscriptionName={formData.subscription_name}
+      />
     </Card>
   );
 };
