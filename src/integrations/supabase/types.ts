@@ -1964,6 +1964,7 @@ export type Database = {
       directive_severity:
         | "Emergency"
         | "Mandatory"
+        | "Obligatory"
         | "Recommended"
         | "Informational"
       directive_status:
@@ -2297,6 +2298,7 @@ export const Constants = {
       directive_severity: [
         "Emergency",
         "Mandatory",
+        "Obligatory",
         "Recommended",
         "Informational",
       ],

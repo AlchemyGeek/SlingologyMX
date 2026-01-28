@@ -31,6 +31,8 @@ const getSeverityColor = (severity: string) => {
       return "destructive";
     case "Mandatory":
       return "default";
+    case "Obligatory":
+      return "default";
     case "Recommended":
       return "secondary";
     case "Informational":
@@ -94,7 +96,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
         return a.directive_code.localeCompare(b.directive_code);
       }
       if (sortBy === "severity") {
-        const severityOrder = ["Emergency", "Mandatory", "Recommended", "Informational"];
+        const severityOrder = ["Emergency", "Mandatory", "Obligatory", "Recommended", "Informational"];
         return severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity);
       }
       return 0;
@@ -147,6 +149,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
             <SelectItem value="all">All Severities</SelectItem>
             <SelectItem value="Emergency">Emergency</SelectItem>
             <SelectItem value="Mandatory">Mandatory</SelectItem>
+            <SelectItem value="Obligatory">Obligatory</SelectItem>
             <SelectItem value="Recommended">Recommended</SelectItem>
             <SelectItem value="Informational">Informational</SelectItem>
           </SelectContent>
