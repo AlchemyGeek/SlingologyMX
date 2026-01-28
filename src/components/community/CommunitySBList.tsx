@@ -35,6 +35,8 @@ const getSeverityColor = (severity: string) => {
       return "destructive";
     case "Mandatory":
       return "default";
+    case "Obligatory":
+      return "default";
     case "Recommended":
       return "secondary";
     case "Informational":
@@ -129,6 +131,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
             <SelectItem value="all">All Severities</SelectItem>
             <SelectItem value="Emergency">Emergency</SelectItem>
             <SelectItem value="Mandatory">Mandatory</SelectItem>
+            <SelectItem value="Obligatory">Obligatory</SelectItem>
             <SelectItem value="Recommended">Recommended</SelectItem>
             <SelectItem value="Informational">Informational</SelectItem>
           </SelectContent>
