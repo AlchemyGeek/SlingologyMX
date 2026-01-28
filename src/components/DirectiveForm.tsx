@@ -919,7 +919,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
               </div>
               <div className="space-y-2">
                 <Label>Category <span className="text-destructive">*</span></Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value, equipment_id: "", equipment_name: "", equipment_model: "", equipment_serial_number: "" })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
