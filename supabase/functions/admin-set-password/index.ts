@@ -64,6 +64,29 @@ serve(async (req: Request) => {
       });
     }
 
+    // Password strength validation
+    if (password.length < 12) {
+      return new Response(JSON.stringify({ error: "Password must be at least 12 characters" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check for complexity: must have lowercase, uppercase, number, and special char
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+    if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecial) {
+      return new Response(JSON.stringify({ 
+        error: "Password must contain lowercase, uppercase, number, and special character" 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Create admin client to update user password
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
