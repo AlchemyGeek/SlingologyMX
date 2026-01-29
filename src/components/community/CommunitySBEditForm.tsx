@@ -40,7 +40,7 @@ const INITIAL_DUE_TYPES = [
   "Before Next Flight",
   "By Date",
   "By Total Time (Hours)",
-  "By Calendar",
+  "By Calendar (Months)",
   "At Next Inspection",
   "Other",
 ];
@@ -411,7 +411,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           </div>
 
           {/* Conditional fields based on Initial Due Type */}
-          {formData.initial_due_type === "By Calendar" && (
+          {formData.initial_due_type === "By Calendar (Months)" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="initial_due_months">Months from Effective Date *</Label>
@@ -466,7 +466,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
            formData.initial_due_type !== "Other" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Date-based repeat: show months field */}
-              {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type) && (
+              {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar (Months)"].includes(formData.initial_due_type) && (
                 <div className="space-y-2">
                   <Label htmlFor="repeat_months">Repeat Every (Months)</Label>
                   <Input

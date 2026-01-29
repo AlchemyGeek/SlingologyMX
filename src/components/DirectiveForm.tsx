@@ -61,7 +61,7 @@ const INITIAL_DUE_TYPES = [
   "Before Next Flight",
   "By Date",
   "By Total Time (Hours)",
-  "By Calendar",
+  "By Calendar (Months)",
   "At Next Inspection",
   "Other",
 ];
@@ -243,9 +243,9 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     }
   };
 
-  // Auto-calculate initial_due_date when months change for "By Calendar"
+  // Auto-calculate initial_due_date when months change for "By Calendar (Months)"
   useEffect(() => {
-    if (formData.initial_due_type === "By Calendar" && formData.initial_due_months) {
+    if (formData.initial_due_type === "By Calendar (Months)" && formData.initial_due_months) {
       const months = parseInt(formData.initial_due_months);
       if (!isNaN(months) && months > 0) {
         const calculatedDate = addMonths(new Date(), months);
@@ -312,7 +312,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         notes: `Directive compliance due by date`,
         directive_id: directiveId,
       });
-    } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
+    } else if (formData.initial_due_type === "By Calendar (Months)" && formData.initial_due_date) {
       // Create date-based notification for the calculated/specified date
       await supabase.from("notifications").insert({
         user_id: userId,
@@ -489,7 +489,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         const existingCounterNotification = existingNotifications?.find(n => n.notification_basis === "Counter");
         
         // Determine if new type is date-based or counter-based
-        const isNewDateBased = ["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type);
+        const isNewDateBased = ["Before Next Flight", "At Next Inspection", "By Date", "By Calendar (Months)"].includes(formData.initial_due_type);
         const isNewCounterBased = formData.initial_due_type === "By Total Time (Hours)";
         const isNewOther = formData.initial_due_type === "Other" || !formData.initial_due_type;
         
@@ -516,7 +516,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
           if (formData.initial_due_type === "By Date" && formData.initial_due_date) {
             initialDate = format(formData.initial_due_date, "yyyy-MM-dd");
             notes = `Directive compliance due by date`;
-          } else if (formData.initial_due_type === "By Calendar" && formData.initial_due_date) {
+          } else if (formData.initial_due_type === "By Calendar (Months)" && formData.initial_due_date) {
             initialDate = format(formData.initial_due_date, "yyyy-MM-dd");
             notes = `Directive compliance due in ${formData.initial_due_months} months`;
           }
@@ -1178,7 +1178,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
               </div>
             )}
 
-            {formData.initial_due_type === "By Calendar" && (
+            {formData.initial_due_type === "By Calendar (Months)" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="initial_due_months">Months from Today *</Label>
@@ -1291,7 +1291,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
              formData.initial_due_type !== "Other" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {/* Date-based repeat: show months field */}
-                {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar"].includes(formData.initial_due_type) && (
+                {["Before Next Flight", "At Next Inspection", "By Date", "By Calendar (Months)"].includes(formData.initial_due_type) && (
                   <div className="space-y-2">
                     <Label htmlFor="repeat_months">Repeat Every (Months)</Label>
                     <Input
