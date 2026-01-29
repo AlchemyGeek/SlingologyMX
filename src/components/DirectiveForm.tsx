@@ -1360,12 +1360,13 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
             {formData.terminating_action_exists && (
               <div className="space-y-2 pt-2">
                 <Label htmlFor="terminating_action_summary">Terminating Action Summary</Label>
-                <Input
+                <Textarea
                   id="terminating_action_summary"
                   value={formData.terminating_action_summary}
                   onChange={(e) => setFormData({ ...formData, terminating_action_summary: e.target.value })}
-                  maxLength={255}
+                  maxLength={1000}
                   placeholder="Describe the terminating action..."
+                  className="min-h-[80px]"
                 />
               </div>
             )}

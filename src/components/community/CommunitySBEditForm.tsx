@@ -540,6 +540,9 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 id="terminating_action_summary"
                 value={formData.terminating_action_summary}
                 onChange={(e) => setFormData((prev) => ({ ...prev, terminating_action_summary: e.target.value }))}
+                maxLength={1000}
+                placeholder="Describe the terminating action..."
+                className="min-h-[80px]"
               />
             </div>
           )}
