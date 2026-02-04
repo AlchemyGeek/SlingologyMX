@@ -155,9 +155,10 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
           <TableHeader>
             <TableRow>
               <TableHead>Issuing Authority</TableHead>
-              <TableHead className="hide-at-1000">Type</TableHead>
+              <TableHead className="hide-at-1000">Equipment Model</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
+              <TableHead className="hide-at-1000">Type</TableHead>
               <TableHead className="hide-at-800">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead className="hide-at-800">Maintainer</TableHead>
