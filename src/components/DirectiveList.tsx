@@ -184,7 +184,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
           <TableBody>
             {filteredAndSortedDirectives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   No directives found
                 </TableCell>
               </TableRow>
@@ -197,6 +197,9 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                 >
                   <TableCell className="text-sm text-muted-foreground">
                     {directive.issuing_authority || "-"}
+                  </TableCell>
+                  <TableCell className="hide-at-1000 text-sm text-muted-foreground">
+                    {directive.equipment_model || "-"}
                   </TableCell>
                   <TableCell className="font-mono font-medium">{directive.directive_code}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{directive.title}</TableCell>
