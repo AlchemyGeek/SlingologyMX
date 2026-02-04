@@ -83,7 +83,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
     counter_type: sb.counter_type || "Hobbs",
     applicable_serial_range: sb.applicable_serial_range || "",
     applicability_notes: sb.applicability_notes || "",
-    equipment_name: sb.equipment_name || "",
     equipment_model: sb.equipment_model || "",
     software_version: sb.software_version || "",
     database_version: sb.database_version || "",
@@ -128,7 +127,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           counter_type: formData.counter_type || null,
           applicable_serial_range: formData.applicable_serial_range || null,
           applicability_notes: formData.applicability_notes || null,
-          equipment_name: formData.equipment_name || null,
           equipment_model: formData.equipment_model || null,
           software_version: formData.software_version || null,
           database_version: formData.database_version || null,
@@ -553,34 +551,26 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           <CardTitle className="text-lg">Applicability</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="applicable_serial_range">Serial Range</Label>
-              <Input
-                id="applicable_serial_range"
-                value={formData.applicable_serial_range}
-                onChange={(e) => setFormData((prev) => ({ ...prev, applicable_serial_range: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="equipment_name">Equipment Name</Label>
-              <Input
-                id="equipment_name"
-                value={formData.equipment_name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, equipment_name: e.target.value }))}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="equipment_model">Equipment Model</Label>
+            <Input
+              id="equipment_model"
+              value={formData.equipment_model}
+              onChange={(e) => setFormData((prev) => ({ ...prev, equipment_model: e.target.value }))}
+              placeholder="e.g., Rotax 916iS, GTN 750Xi"
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="equipment_model">Equipment Model</Label>
-              <Input
-                id="equipment_model"
-                value={formData.equipment_model}
-                onChange={(e) => setFormData((prev) => ({ ...prev, equipment_model: e.target.value }))}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="applicable_serial_range">Serial Range</Label>
+            <Input
+              id="applicable_serial_range"
+              value={formData.applicable_serial_range}
+              onChange={(e) => setFormData((prev) => ({ ...prev, applicable_serial_range: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="software_version">Software Version</Label>
               <Input
