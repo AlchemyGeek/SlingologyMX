@@ -825,7 +825,6 @@ export type Database = {
           action_types: string[] | null
           aircraft_id: string
           applicability_category: string | null
-          applicability_model: string | null
           applicability_notes: string | null
           applicability_reason: string | null
           applicability_status: string | null
@@ -870,7 +869,6 @@ export type Database = {
           action_types?: string[] | null
           aircraft_id: string
           applicability_category?: string | null
-          applicability_model?: string | null
           applicability_notes?: string | null
           applicability_reason?: string | null
           applicability_status?: string | null
@@ -915,7 +913,6 @@ export type Database = {
           action_types?: string[] | null
           aircraft_id?: string
           applicability_category?: string | null
-          applicability_model?: string | null
           applicability_notes?: string | null
           applicability_reason?: string | null
           applicability_status?: string | null
