@@ -155,9 +155,10 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
           <TableHeader>
             <TableRow>
               <TableHead>Issuing Authority</TableHead>
-              <TableHead className="hide-at-1000">Type</TableHead>
+              <TableHead className="hide-at-1000">Equipment Model</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
+              <TableHead className="hide-at-1000">Type</TableHead>
               <TableHead className="hide-at-800">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead className="hide-at-800">Maintainer</TableHead>
@@ -167,7 +168,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
           <TableBody>
             {filteredAndSortedSBs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   {communitySBs.length === 0
                     ? "No community service bulletins yet. Be the first to share one!"
                     : "No community SBs match your filters"}
@@ -185,8 +186,8 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
                     <TableCell className="text-sm text-muted-foreground">
                       {sb.issuing_authority || "-"}
                     </TableCell>
-                    <TableCell className="hide-at-1000 text-sm">
-                      {sb.directive_type}
+                    <TableCell className="hide-at-1000 text-sm text-muted-foreground">
+                      {sb.equipment_model || "-"}
                     </TableCell>
                     <TableCell className="font-mono font-medium">
                       <div className="flex items-center gap-2">
