@@ -435,7 +435,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
       revision: formData.revision || null,
       
-      applicability_model: formData.applicability_model || null,
       applicable_serial_range: formData.applicable_serial_range || null,
       applicability_status: formData.applicability_status || null,
       applicability_reason: formData.applicability_reason || null,
