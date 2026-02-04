@@ -55,11 +55,12 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
   const filteredAndSortedSBs = useMemo(() => {
     return communitySBs
       .filter((sb) => {
+        const searchLower = searchTerm.toLowerCase();
         const matchesSearch =
-          sb.directive_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sb.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sb.equipment_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sb.equipment_model?.toLowerCase().includes(searchTerm.toLowerCase());
+          sb.directive_code.toLowerCase().includes(searchLower) ||
+          sb.title.toLowerCase().includes(searchLower) ||
+          sb.issuing_authority?.toLowerCase().includes(searchLower) ||
+          sb.directive_type.toLowerCase().includes(searchLower);
         const matchesCategory = categoryFilter === "all" || sb.category === categoryFilter;
         const matchesSeverity = severityFilter === "all" || sb.severity === severityFilter;
         return matchesSearch && matchesCategory && matchesSeverity;
@@ -103,7 +104,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
       {/* Filters */}
       <div className="flex gap-4 flex-wrap">
         <Input
-          placeholder="Search by code, title, or equipment..."
+          placeholder="Search by code, title, authority, or type..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-xs"
@@ -153,9 +154,10 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="hide-at-1200">Issuing Authority</TableHead>
+              <TableHead className="hide-at-1000">Type</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead className="hide-at-1000">Equipment</TableHead>
               <TableHead className="hide-at-800">Category</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead className="hide-at-800">Maintainer</TableHead>
@@ -165,7 +167,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
           <TableBody>
             {filteredAndSortedSBs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                   {communitySBs.length === 0
                     ? "No community service bulletins yet. Be the first to share one!"
                     : "No community SBs match your filters"}
@@ -180,6 +182,12 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onViewDetail(sb)}
                   >
+                    <TableCell className="hide-at-1200 text-sm text-muted-foreground">
+                      {sb.issuing_authority || "-"}
+                    </TableCell>
+                    <TableCell className="hide-at-1000 text-sm">
+                      {sb.directive_type}
+                    </TableCell>
                     <TableCell className="font-mono font-medium">
                       <div className="flex items-center gap-2">
                         {sb.directive_code}
@@ -196,9 +204,6 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
                       {sb.version_number > 1 && (
                         <span className="text-xs text-muted-foreground">v{sb.version_number}</span>
                       )}
-                    </TableCell>
-                    <TableCell className="hide-at-1000 text-sm text-muted-foreground">
-                      {sb.equipment_name || sb.equipment_model || "-"}
                     </TableCell>
                     <TableCell className="hide-at-800">{sb.category}</TableCell>
                     <TableCell>
