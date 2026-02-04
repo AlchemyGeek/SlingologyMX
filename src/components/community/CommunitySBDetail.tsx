@@ -176,6 +176,22 @@ const CommunitySBDetail = ({
 
       if (directiveError) throw directiveError;
 
+      // Create history entry for the adoption
+      const { error: historyError } = await supabase.from("directive_history").insert({
+        user_id: userId,
+        aircraft_id: aircraftId,
+        directive_id: newDirective.id,
+        directive_code: sb.directive_code,
+        directive_title: sb.title,
+        action_type: "Adopted from Community",
+        notes: `Adopted from community SB (v${sb.version_number}) maintained by ${sb.maintainer_display_name || "Unknown"}`,
+      });
+
+      if (historyError) {
+        console.error("Failed to create history record:", historyError);
+        // Don't fail the operation for this
+      }
+
       // Create usage tracking record
       const { error: usageError } = await supabase.from("community_sb_usage").insert({
         community_sb_id: sb.id,
