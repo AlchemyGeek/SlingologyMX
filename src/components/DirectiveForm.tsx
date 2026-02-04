@@ -184,6 +184,14 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     }
   }, [editingDirective]);
 
+  // Determine the effective category for equipment filtering
+  // When editing, wait for the editing directive's category to be loaded
+  const effectiveCategory = editingDirective 
+    ? (formData.category !== "Airframe" || editingDirective.category === "Airframe" 
+        ? formData.category 
+        : editingDirective.category)
+    : formData.category;
+
   // Fetch equipment based on selected category
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -197,7 +205,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         "Appliance": "Appliances",
         "Other": "Other",
       };
-      const equipmentCategory = categoryMap[formData.category] || formData.category;
+      const equipmentCategory = categoryMap[effectiveCategory] || effectiveCategory;
       
       const { data, error } = await supabase
         .from("equipment")
@@ -214,7 +222,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     };
     
     fetchEquipment();
-  }, [formData.category, userId, aircraftId]);
+  }, [effectiveCategory, userId, aircraftId]);
 
   // Handle equipment selection
   const handleEquipmentSelect = (equipmentId: string) => {
