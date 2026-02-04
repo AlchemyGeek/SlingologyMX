@@ -154,7 +154,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="hide-at-1200">Issuing Authority</TableHead>
+              <TableHead>Issuing Authority</TableHead>
               <TableHead className="hide-at-1000">Type</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
@@ -182,7 +182,7 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onViewDetail(sb)}
                   >
-                    <TableCell className="hide-at-1200 text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground">
                       {sb.issuing_authority || "-"}
                     </TableCell>
                     <TableCell className="hide-at-1000 text-sm">
