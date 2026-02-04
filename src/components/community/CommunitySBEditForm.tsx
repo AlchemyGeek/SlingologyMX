@@ -128,7 +128,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           counter_type: formData.counter_type || null,
           applicable_serial_range: formData.applicable_serial_range || null,
           applicability_notes: formData.applicability_notes || null,
-          applicability_model: formData.applicability_model || null,
           equipment_name: formData.equipment_name || null,
           equipment_model: formData.equipment_model || null,
           software_version: formData.software_version || null,
