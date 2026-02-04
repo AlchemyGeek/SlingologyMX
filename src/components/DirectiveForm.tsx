@@ -154,7 +154,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         effective_date: editingDirective.effective_date ? parseLocalDate(editingDirective.effective_date) : null,
         revision: editingDirective.revision || "",
         
-        applicability_model: (editingDirective as any).applicability_model || "",
         applicable_serial_range: editingDirective.applicable_serial_range || "",
         applicability_status: (editingDirective as any).applicability_status || "Unsure",
         applicability_reason: (editingDirective as any).applicability_reason || "",
