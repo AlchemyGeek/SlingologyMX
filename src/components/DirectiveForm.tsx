@@ -102,7 +102,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     effective_date: null as Date | null,
     revision: "",
     
-    applicability_model: "",
     applicable_serial_range: "",
     applicability_status: "Applies" as string,
     applicability_reason: "",
