@@ -170,6 +170,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Issuing Authority</TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Title</TableHead>
               <TableHead className="hide-at-1000">Type</TableHead>
@@ -182,7 +183,7 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
           <TableBody>
             {filteredAndSortedDirectives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No directives found
                 </TableCell>
               </TableRow>
@@ -193,6 +194,9 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => onViewDetail(directive)}
                 >
+                  <TableCell className="text-sm text-muted-foreground">
+                    {directive.issuing_authority || "-"}
+                  </TableCell>
                   <TableCell className="font-mono font-medium">{directive.directive_code}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{directive.title}</TableCell>
                   <TableCell className="hide-at-1000 text-sm">{directive.directive_type}</TableCell>
