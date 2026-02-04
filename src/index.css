@@ -247,6 +247,12 @@ All colors MUST be HSL.
 }
 
 /* Hide columns based on container width */
+@container (max-width: 1200px) {
+  .hide-at-1200 {
+    display: none !important;
+  }
+}
+
 @container (max-width: 1000px) {
   .hide-at-1000 {
     display: none !important;
