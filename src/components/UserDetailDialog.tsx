@@ -63,6 +63,9 @@ interface RecordCounts {
   aircraft_directive_status: number;
   directive_history: number;
   maintenance_directive_compliance: number;
+  transactions: number;
+  reserves: number;
+  equipment: number;
 }
 
 interface UserDetailDialogProps {
@@ -114,6 +117,9 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
         aircraftDirectiveStatus,
         directiveHistory,
         maintenanceDirectiveCompliance,
+        transactions,
+        reserves,
+        equipment,
       ] = await Promise.all([
         supabase.from("maintenance_logs").select("id", { count: "exact", head: true }).eq("user_id", userId),
         supabase.from("directives").select("id", { count: "exact", head: true }).eq("user_id", userId),
@@ -124,6 +130,9 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
         supabase.from("aircraft_directive_status").select("id", { count: "exact", head: true }).eq("user_id", userId),
         supabase.from("directive_history").select("id", { count: "exact", head: true }).eq("user_id", userId),
         supabase.from("maintenance_directive_compliance").select("id", { count: "exact", head: true }).eq("user_id", userId),
+        supabase.from("transactions").select("id", { count: "exact", head: true }).eq("user_id", userId),
+        supabase.from("reserves").select("id", { count: "exact", head: true }).eq("user_id", userId),
+        supabase.from("equipment").select("id", { count: "exact", head: true }).eq("user_id", userId),
       ]);
 
       setRecordCounts({
@@ -136,6 +145,9 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
         aircraft_directive_status: aircraftDirectiveStatus.count || 0,
         directive_history: directiveHistory.count || 0,
         maintenance_directive_compliance: maintenanceDirectiveCompliance.count || 0,
+        transactions: transactions.count || 0,
+        reserves: reserves.count || 0,
+        equipment: equipment.count || 0,
       });
     } catch (error) {
       console.error("Error fetching record counts:", error);
@@ -368,7 +380,10 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
                     <RecordCountCard label="Maintenance Logs" count={recordCounts.maintenance_logs} />
                     <RecordCountCard label="Directives" count={recordCounts.directives} />
                     <RecordCountCard label="Notifications" count={recordCounts.notifications} />
-                    <RecordCountCard label="Subscriptions" count={recordCounts.subscriptions} />
+                    <RecordCountCard label="Commitments" count={recordCounts.subscriptions} />
+                    <RecordCountCard label="Transactions" count={recordCounts.transactions} />
+                    <RecordCountCard label="Reserves" count={recordCounts.reserves} />
+                    <RecordCountCard label="Equipment" count={recordCounts.equipment} />
                     <RecordCountCard label="Counter History" count={recordCounts.aircraft_counter_history} />
                     <RecordCountCard label="Directive History" count={recordCounts.directive_history} />
                   </div>
