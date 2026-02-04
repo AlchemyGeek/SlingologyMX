@@ -83,7 +83,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
     counter_type: sb.counter_type || "Hobbs",
     applicable_serial_range: sb.applicable_serial_range || "",
     applicability_notes: sb.applicability_notes || "",
-    applicability_model: sb.applicability_model || "",
     equipment_name: sb.equipment_name || "",
     equipment_model: sb.equipment_model || "",
     software_version: sb.software_version || "",
