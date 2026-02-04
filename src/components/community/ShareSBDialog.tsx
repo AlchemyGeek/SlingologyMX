@@ -66,7 +66,6 @@ const ShareSBDialog = ({
         applicable_serial_range: directive.applicable_serial_range,
         applicability_notes: directive.applicability_notes,
         applicability_category: directive.applicability_category,
-        applicability_model: directive.applicability_model,
         equipment_name: directive.equipment_name,
         equipment_model: directive.equipment_model,
         software_version: directive.software_version,

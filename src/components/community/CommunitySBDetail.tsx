@@ -159,7 +159,6 @@ const CommunitySBDetail = ({
           counter_type: sb.counter_type,
           applicable_serial_range: sb.applicable_serial_range,
           applicability_notes: sb.applicability_notes,
-          applicability_model: sb.applicability_model,
           equipment_name: sb.equipment_name,
           equipment_model: sb.equipment_model,
           software_version: sb.software_version,
@@ -488,14 +487,9 @@ const CommunitySBDetail = ({
           )}
 
           {/* Applicability */}
-          {(sb.applicability_model || sb.applicable_serial_range || sb.applicability_notes) && (
+          {(sb.applicable_serial_range || sb.applicability_notes) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
               <span className="font-medium text-muted-foreground">Applicability:</span>
-              {sb.applicability_model && (
-                <span>
-                  <span className="text-muted-foreground">Model:</span> {sb.applicability_model}
-                </span>
-              )}
               {sb.applicable_serial_range && (
                 <span>
                   <span className="text-muted-foreground">S/N Range:</span>{" "}

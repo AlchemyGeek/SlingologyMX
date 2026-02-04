@@ -102,7 +102,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     effective_date: null as Date | null,
     revision: "",
     
-    applicability_model: "",
     applicable_serial_range: "",
     applicability_status: "Applies" as string,
     applicability_reason: "",
@@ -155,7 +154,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         effective_date: editingDirective.effective_date ? parseLocalDate(editingDirective.effective_date) : null,
         revision: editingDirective.revision || "",
         
-        applicability_model: (editingDirective as any).applicability_model || "",
         applicable_serial_range: editingDirective.applicable_serial_range || "",
         applicability_status: (editingDirective as any).applicability_status || "Unsure",
         applicability_reason: (editingDirective as any).applicability_reason || "",
@@ -437,7 +435,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
       revision: formData.revision || null,
       
-      applicability_model: formData.applicability_model || null,
       applicable_serial_range: formData.applicable_serial_range || null,
       applicability_status: formData.applicability_status || null,
       applicability_reason: formData.applicability_reason || null,
@@ -656,7 +653,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         applicable_serial_range: directive.applicable_serial_range,
         applicability_notes: directive.applicability_notes,
         applicability_category: directive.applicability_category,
-        applicability_model: directive.applicability_model,
         equipment_name: directive.equipment_name,
         equipment_model: directive.equipment_model,
         software_version: directive.software_version,
@@ -770,7 +766,6 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
         issue_date: formData.issue_date ? format(formData.issue_date, "yyyy-MM-dd") : null,
         effective_date: formData.effective_date ? format(formData.effective_date, "yyyy-MM-dd") : null,
         revision: formData.revision || null,
-        applicability_model: formData.applicability_model || null,
         applicability_category: formData.category || null, // Use category as applicability_category
         applicable_serial_range: formData.applicable_serial_range || null,
         applicability_status: formData.applicability_status || null,

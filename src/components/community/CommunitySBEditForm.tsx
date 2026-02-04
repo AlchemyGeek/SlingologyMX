@@ -83,7 +83,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
     counter_type: sb.counter_type || "Hobbs",
     applicable_serial_range: sb.applicable_serial_range || "",
     applicability_notes: sb.applicability_notes || "",
-    applicability_model: sb.applicability_model || "",
     equipment_name: sb.equipment_name || "",
     equipment_model: sb.equipment_model || "",
     software_version: sb.software_version || "",
@@ -129,7 +128,6 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           counter_type: formData.counter_type || null,
           applicable_serial_range: formData.applicable_serial_range || null,
           applicability_notes: formData.applicability_notes || null,
-          applicability_model: formData.applicability_model || null,
           equipment_name: formData.equipment_name || null,
           equipment_model: formData.equipment_model || null,
           software_version: formData.software_version || null,
@@ -555,15 +553,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           <CardTitle className="text-lg">Applicability</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="applicability_model">Model</Label>
-              <Input
-                id="applicability_model"
-                value={formData.applicability_model}
-                onChange={(e) => setFormData((prev) => ({ ...prev, applicability_model: e.target.value }))}
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="applicable_serial_range">Serial Range</Label>
               <Input
