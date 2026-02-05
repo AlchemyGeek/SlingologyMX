@@ -32,11 +32,8 @@ export interface CommunitySB {
   // Applicability (generic)
   applicable_serial_range: string | null;
   applicability_notes: string | null;
-  applicability_category: string | null;
-  applicability_model: string | null;
   
   // Equipment reference (generic)
-  equipment_name: string | null;
   equipment_model: string | null;
   
   // Version info
