@@ -43,8 +43,8 @@ const FeatureRequestEditDialog = ({
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (adminComment.length > 50) {
-      toast.error("Admin comment must be 50 characters or less");
+    if (adminComment.length > 250) {
+      toast.error("Admin comment must be 250 characters or less");
       return;
     }
 
