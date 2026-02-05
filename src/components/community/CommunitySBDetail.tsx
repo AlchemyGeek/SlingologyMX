@@ -469,19 +469,12 @@ const CommunitySBDetail = ({
           </div>
 
           {/* Equipment Info */}
-          {(sb.equipment_name || sb.equipment_model) && (
+          {sb.equipment_model && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t pt-3">
               <span className="font-medium text-muted-foreground">Equipment:</span>
-              {sb.equipment_name && (
-                <span>
-                  <span className="text-muted-foreground">Name:</span> {sb.equipment_name}
-                </span>
-              )}
-              {sb.equipment_model && (
-                <span>
-                  <span className="text-muted-foreground">Model:</span> {sb.equipment_model}
-                </span>
-              )}
+              <span>
+                <span className="text-muted-foreground">Model:</span> {sb.equipment_model}
+              </span>
             </div>
           )}
 
