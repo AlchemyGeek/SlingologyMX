@@ -35,6 +35,11 @@ export function useCommunitySBVisit(
         return null;
       }
 
+      // Don't show notification for user's own SBs
+      if (userId && sb.maintainer_id === userId) {
+        return null;
+      }
+
       const lastVisitedDate = new Date(lastVisited);
       const createdAt = sb.created_at ? new Date(sb.created_at) : null;
       const updatedAt = sb.updated_at ? new Date(sb.updated_at) : null;
@@ -51,29 +56,15 @@ export function useCommunitySBVisit(
 
       return null;
     },
-    [lastVisited]
+    [lastVisited, userId]
   );
 
-  // Debug: Log the comparison values
   const hasNewOrUpdated = useMemo(() => {
     if (!lastVisited || communitySBs.length === 0) {
-      console.log('[CommunitySBVisit] No lastVisited or no SBs:', { lastVisited, sbCount: communitySBs.length });
       return false;
     }
 
-    const newOrUpdatedItems = communitySBs.filter((sb) => getItemStatus(sb) !== null);
-    if (newOrUpdatedItems.length > 0) {
-      console.log('[CommunitySBVisit] Items triggering red dot:', newOrUpdatedItems.map(sb => ({
-        title: sb.title,
-        status: getItemStatus(sb),
-        created_at: sb.created_at,
-        updated_at: sb.updated_at,
-        version: sb.version_number,
-        lastVisited
-      })));
-    }
-
-    return newOrUpdatedItems.length > 0;
+    return communitySBs.some((sb) => getItemStatus(sb) !== null);
   }, [lastVisited, communitySBs, getItemStatus]);
 
   return {
