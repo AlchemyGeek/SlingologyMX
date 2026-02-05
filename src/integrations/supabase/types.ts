@@ -629,8 +629,6 @@ export type Database = {
       community_service_bulletins: {
         Row: {
           action_types: string[] | null
-          applicability_category: string | null
-          applicability_model: string | null
           applicability_notes: string | null
           applicable_serial_range: string | null
           category: Database["public"]["Enums"]["directive_category"]
@@ -644,7 +642,6 @@ export type Database = {
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date: string | null
           equipment_model: string | null
-          equipment_name: string | null
           id: string
           initial_due_hours: number | null
           initial_due_months: number | null
@@ -670,8 +667,6 @@ export type Database = {
         }
         Insert: {
           action_types?: string[] | null
-          applicability_category?: string | null
-          applicability_model?: string | null
           applicability_notes?: string | null
           applicable_serial_range?: string | null
           category: Database["public"]["Enums"]["directive_category"]
@@ -685,7 +680,6 @@ export type Database = {
           directive_type: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
           equipment_model?: string | null
-          equipment_name?: string | null
           id?: string
           initial_due_hours?: number | null
           initial_due_months?: number | null
@@ -711,8 +705,6 @@ export type Database = {
         }
         Update: {
           action_types?: string[] | null
-          applicability_category?: string | null
-          applicability_model?: string | null
           applicability_notes?: string | null
           applicable_serial_range?: string | null
           category?: Database["public"]["Enums"]["directive_category"]
@@ -726,7 +718,6 @@ export type Database = {
           directive_type?: Database["public"]["Enums"]["directive_type"]
           effective_date?: string | null
           equipment_model?: string | null
-          equipment_name?: string | null
           id?: string
           initial_due_hours?: number | null
           initial_due_months?: number | null
