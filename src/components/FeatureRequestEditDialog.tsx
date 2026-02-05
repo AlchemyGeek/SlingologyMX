@@ -94,17 +94,18 @@ const FeatureRequestEditDialog = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="admin-comment">
-              Admin Comment (optional, max 50 characters)
+              Admin Comment (optional, max 250 characters)
             </Label>
-            <Input
+            <Textarea
               id="admin-comment"
               value={adminComment}
               onChange={(e) => setAdminComment(e.target.value)}
-              maxLength={50}
+              maxLength={250}
               placeholder="Optional comment about this feature"
+              className="min-h-[80px]"
             />
             <p className="text-xs text-muted-foreground">
-              {adminComment.length}/50 characters
+              {adminComment.length}/250 characters
             </p>
           </div>
         </div>

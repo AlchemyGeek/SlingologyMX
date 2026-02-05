@@ -260,8 +260,8 @@ const FeatureRequestList = ({
                         size="sm"
                         onClick={() => setEditingFeature(feature)}
                       >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Resolve
                       </Button>
                     )}
                   </div>
