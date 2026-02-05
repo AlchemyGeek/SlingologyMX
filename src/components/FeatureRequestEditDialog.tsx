@@ -60,7 +60,7 @@ const FeatureRequestEditDialog = ({
 
       if (error) throw error;
 
-      toast.success("Feature request updated");
+      toast.success("Feature request resolved");
       onSuccess();
       onClose();
     } catch (error) {
