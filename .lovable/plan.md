@@ -1,67 +1,31 @@
 
+# Feature Request Resolution - Character Limit Increase
 
-## Update Community SB List View Columns
+## Summary
+Increase the admin comment character limit from 50 to 250 characters and rename "Edit" to "Resolve" throughout the Feature Request admin functionality.
 
-### Summary
-Update the Community Directives & Bulletins list view to display discovery-focused columns while removing user-specific Equipment data.
+## Changes Required
 
----
+### 1. Database Migration
+- Alter the `admin_comment` column in `feature_requests` table from `varchar(50)` to `varchar(250)`
 
-### Column Changes
+### 2. FeatureRequestEditDialog.tsx
+- Rename dialog title from "Edit Feature Request Status" to "Resolve Feature Request"
+- Update validation from 50 to 250 characters
+- Update label text from "max 50 characters" to "max 250 characters"
+- Update `maxLength` attribute from 50 to 250
+- Update character counter from `/50` to `/250`
+- Change the `Input` component to a `Textarea` for better UX with longer text
+- Update success toast message from "Feature request updated" to "Feature request resolved"
 
-**Current columns:** Code, Title, Equipment, Category, Severity, Maintainer, Votes
+### 3. FeatureRequestList.tsx
+- Change the admin button icon from `Edit` to `CheckCircle` (more appropriate for "resolve")
+- Rename button text from "Edit" to "Resolve"
 
-**New columns (in order):**
-1. Issuing Authority
-2. Type
-3. Code
-4. Title
-5. Category
-6. Severity
-7. Maintainer
-8. Votes
+## Technical Details
 
----
-
-### File to Modify
-
-**`src/components/community/CommunitySBList.tsx`**
-
-#### 1. Update Table Header
-- Add "Issuing Authority" column (first position)
-- Add "Type" column (second position)
-- Remove "Equipment" column header
-
-#### 2. Update Table Body Cells
-- Add cell for `issuing_authority` with fallback to "-"
-- Add cell for `directive_type`
-- Remove Equipment cell rendering
-
-#### 3. Update Search Filter
-- Remove `equipment_name` and `equipment_model` from search logic
-- Add `issuing_authority` and `directive_type` to searchable fields
-- Update placeholder text to reflect new searchable fields
-
-#### 4. Responsive Visibility
-Apply appropriate hide classes for smaller screens:
-- Issuing Authority: `hide-at-1200` (hide on narrow screens)
-- Type: `hide-at-1000`
-- Category: `hide-at-800` (existing)
-- Maintainer: `hide-at-800` (existing)
-
----
-
-### Technical Details
-
-The fields already exist in the `CommunitySB` type:
-- `issuing_authority: string | null`
-- `directive_type: string`
-
-No database or type changes required - this is purely a presentation change.
-
----
-
-### CSS Note
-
-May need to add `hide-at-1200` class to the index.css if it doesn't exist, following the pattern of existing responsive hide classes.
-
+| File | Change |
+|------|--------|
+| Database | `ALTER TABLE feature_requests ALTER COLUMN admin_comment TYPE varchar(250)` |
+| `FeatureRequestEditDialog.tsx` | Update character limits, labels, use Textarea |
+| `FeatureRequestList.tsx` | Rename button from "Edit" to "Resolve", change icon |
