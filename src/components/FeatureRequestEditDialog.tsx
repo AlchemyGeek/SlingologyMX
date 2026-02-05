@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -43,8 +43,8 @@ const FeatureRequestEditDialog = ({
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (adminComment.length > 50) {
-      toast.error("Admin comment must be 50 characters or less");
+    if (adminComment.length > 250) {
+      toast.error("Admin comment must be 250 characters or less");
       return;
     }
 
@@ -60,7 +60,7 @@ const FeatureRequestEditDialog = ({
 
       if (error) throw error;
 
-      toast.success("Feature request updated");
+      toast.success("Feature request resolved");
       onSuccess();
       onClose();
     } catch (error) {
@@ -75,7 +75,7 @@ const FeatureRequestEditDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Feature Request Status</DialogTitle>
+          <DialogTitle>Resolve Feature Request</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -94,17 +94,18 @@ const FeatureRequestEditDialog = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="admin-comment">
-              Admin Comment (optional, max 50 characters)
+              Admin Comment (optional, max 250 characters)
             </Label>
-            <Input
+            <Textarea
               id="admin-comment"
               value={adminComment}
               onChange={(e) => setAdminComment(e.target.value)}
-              maxLength={50}
+              maxLength={250}
               placeholder="Optional comment about this feature"
+              className="min-h-[80px]"
             />
             <p className="text-xs text-muted-foreground">
-              {adminComment.length}/50 characters
+              {adminComment.length}/250 characters
             </p>
           </div>
         </div>
