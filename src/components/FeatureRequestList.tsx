@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown, Edit } from "lucide-react";
+import { ThumbsUp, ThumbsDown, CheckCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import FeatureRequestEditDialog from "./FeatureRequestEditDialog";
 import type { Database } from "@/integrations/supabase/types";
