@@ -54,12 +54,26 @@ export function useCommunitySBVisit(
     [lastVisited]
   );
 
+  // Debug: Log the comparison values
   const hasNewOrUpdated = useMemo(() => {
     if (!lastVisited || communitySBs.length === 0) {
+      console.log('[CommunitySBVisit] No lastVisited or no SBs:', { lastVisited, sbCount: communitySBs.length });
       return false;
     }
 
-    return communitySBs.some((sb) => getItemStatus(sb) !== null);
+    const newOrUpdatedItems = communitySBs.filter((sb) => getItemStatus(sb) !== null);
+    if (newOrUpdatedItems.length > 0) {
+      console.log('[CommunitySBVisit] Items triggering red dot:', newOrUpdatedItems.map(sb => ({
+        title: sb.title,
+        status: getItemStatus(sb),
+        created_at: sb.created_at,
+        updated_at: sb.updated_at,
+        version: sb.version_number,
+        lastVisited
+      })));
+    }
+
+    return newOrUpdatedItems.length > 0;
   }, [lastVisited, communitySBs, getItemStatus]);
 
   return {
