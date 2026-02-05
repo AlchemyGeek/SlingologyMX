@@ -75,7 +75,7 @@ const FeatureRequestEditDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Feature Request Status</DialogTitle>
+          <DialogTitle>Resolve Feature Request</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
