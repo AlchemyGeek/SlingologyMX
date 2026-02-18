@@ -125,6 +125,7 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
 
   // Track the history record ID so we can delete it on undo
   let lastDeleteHistoryId: string | null = null;
+  let cascadedNotifications: any[] = [];
 
   const { deleteWithUndo } = useUndoDelete({
     tableName: "directives",
@@ -141,6 +142,13 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
         }).select("id").single();
         lastDeleteHistoryId = data?.id || null;
       }
+      // Snapshot notifications before deleting
+      const { data: notifData } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("directive_id", id)
+        .eq("user_modified", false);
+      cascadedNotifications = notifData || [];
       await supabase
         .from("notifications")
         .delete()
@@ -157,6 +165,11 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
       if (lastDeleteHistoryId) {
         await supabase.from("directive_history").delete().eq("id", lastDeleteHistoryId);
         lastDeleteHistoryId = null;
+      }
+      // Restore cascaded notifications
+      if (cascadedNotifications.length > 0) {
+        await supabase.from("notifications").insert(cascadedNotifications);
+        cascadedNotifications = [];
       }
       fetchDirectives();
       onRecordChanged?.();

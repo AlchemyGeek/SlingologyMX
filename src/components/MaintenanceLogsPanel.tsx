@@ -128,9 +128,38 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
     setShowForm(true);
   };
 
+  let cascadedNotifications: any[] = [];
+  let cascadedCompliance: any[] = [];
+  let voidedTransactionIds: string[] = [];
+
   const { deleteWithUndo } = useUndoDelete({
     tableName: "maintenance_logs",
     onBeforeDelete: async (id) => {
+      // Snapshot notifications before deleting
+      const { data: notifData } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("maintenance_log_id", id)
+        .eq("user_modified", false);
+      cascadedNotifications = notifData || [];
+
+      // Snapshot compliance records before deleting
+      const { data: compData } = await supabase
+        .from("maintenance_directive_compliance")
+        .select("*")
+        .eq("maintenance_log_id", id);
+      cascadedCompliance = compData || [];
+
+      // Snapshot which transactions will be voided (to unvoid on restore)
+      const { data: txData } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("reference_id", id)
+        .eq("reference_type", "Maintenance")
+        .eq("user_id", userId)
+        .neq("status", "Voided");
+      voidedTransactionIds = (txData || []).map(t => t.id);
+
       await voidMaintenanceTransactions(id, userId);
       await supabase
         .from("notifications")
@@ -147,7 +176,25 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
       fetchLogs();
       onRecordChanged?.();
     },
-    onAfterRestore: () => {
+    onAfterRestore: async () => {
+      // Unvoid transactions
+      if (voidedTransactionIds.length > 0) {
+        await supabase
+          .from("transactions")
+          .update({ status: "Pending" as any })
+          .in("id", voidedTransactionIds);
+        voidedTransactionIds = [];
+      }
+      // Restore notifications
+      if (cascadedNotifications.length > 0) {
+        await supabase.from("notifications").insert(cascadedNotifications);
+        cascadedNotifications = [];
+      }
+      // Restore compliance records
+      if (cascadedCompliance.length > 0) {
+        await supabase.from("maintenance_directive_compliance").insert(cascadedCompliance);
+        cascadedCompliance = [];
+      }
       fetchLogs();
       onRecordChanged?.();
     },

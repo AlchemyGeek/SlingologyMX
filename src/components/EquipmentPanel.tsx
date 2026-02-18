@@ -73,9 +73,17 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
     setSelectedEquipment(null);
   };
 
+  let cascadedNotifications: any[] = [];
+
   const { deleteWithUndo } = useUndoDelete({
     tableName: "equipment",
     onBeforeDelete: async (id) => {
+      // Snapshot notifications before deleting
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("equipment_id", id);
+      cascadedNotifications = data || [];
       await supabase.from("notifications").delete().eq("equipment_id", id);
     },
     onAfterDelete: () => {
@@ -83,7 +91,12 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
       fetchEquipment();
       onRecordChanged?.();
     },
-    onAfterRestore: () => {
+    onAfterRestore: async () => {
+      // Restore cascaded notifications
+      if (cascadedNotifications.length > 0) {
+        await supabase.from("notifications").insert(cascadedNotifications);
+        cascadedNotifications = [];
+      }
       fetchEquipment();
       onRecordChanged?.();
     },
