@@ -157,6 +157,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             }}
             onEdit={handleEdit}
             onSelect={handleSelect}
+            onDelete={handleDelete}
           />
         )}
       </CardContent>
