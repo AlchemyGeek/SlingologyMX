@@ -8,6 +8,7 @@ import SubscriptionList from "./SubscriptionList";
 import SubscriptionDetail from "./SubscriptionDetail";
 import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 
 interface SubscriptionsPanelProps {
   userId: string;
@@ -75,18 +76,25 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
     setSelectedSubscription(null);
   };
 
-  const handleDelete = async (subscriptionId: string) => {
-    try {
-      const { error } = await supabase.from("subscriptions").delete().eq("id", subscriptionId);
-      if (error) throw error;
-      toast.success("Commitment deleted");
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "subscriptions",
+    onAfterDelete: () => {
       setSelectedSubscription(null);
       fetchSubscriptions();
       onNotificationChanged?.();
       onRecordChanged?.();
-    } catch (error: any) {
-      toast.error("Failed to delete commitment");
-    }
+    },
+    onAfterRestore: () => {
+      fetchSubscriptions();
+      onNotificationChanged?.();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (subscriptionId: string) => {
+    const snapshot = subscriptions.find(s => s.id === subscriptionId);
+    if (!snapshot) return;
+    await deleteWithUndo(subscriptionId, snapshot);
   };
 
   // Show detail view

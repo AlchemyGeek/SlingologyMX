@@ -9,6 +9,7 @@ import MaintenanceLogDetail from "./MaintenanceLogDetail";
 import { AircraftCounters } from "@/hooks/useAircraftCounters";
 import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { voidMaintenanceTransactions } from "@/hooks/useMaintenanceTransactions";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 
 interface MaintenanceLog {
   id: string;
@@ -127,38 +128,37 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
     setShowForm(true);
   };
 
-  const handleDelete = async (logId: string) => {
-    try {
-      // Void associated transactions before deleting the maintenance log
-      await voidMaintenanceTransactions(logId, userId);
-      
-      // Delete linked notifications that haven't been modified by user
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "maintenance_logs",
+    onBeforeDelete: async (id) => {
+      await voidMaintenanceTransactions(id, userId);
       await supabase
         .from("notifications")
         .delete()
-        .eq("maintenance_log_id", logId)
+        .eq("maintenance_log_id", id)
         .eq("user_modified", false);
-      
-      // Delete linked compliance records
       await supabase
         .from("maintenance_directive_compliance")
         .delete()
-        .eq("maintenance_log_id", logId);
-      
-      const { error } = await supabase
-        .from("maintenance_logs")
-        .delete()
-        .eq("id", logId);
-
-      if (error) throw error;
-      toast.success("Maintenance log deleted");
+        .eq("maintenance_log_id", id);
+    },
+    onAfterDelete: () => {
       setSelectedLog(null);
       fetchLogs();
       onRecordChanged?.();
-    } catch (error) {
-      console.error("Error deleting maintenance log:", error);
-      toast.error("Failed to delete maintenance log");
-    }
+    },
+    onAfterRestore: () => {
+      fetchLogs();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (logId: string) => {
+    const snapshot = logs.find(l => l.id === logId);
+    if (!snapshot) return;
+    // Remove the enriched field before snapshot
+    const { has_linked_compliance, ...cleanSnapshot } = snapshot as any;
+    await deleteWithUndo(logId, cleanSnapshot);
   };
 
   const handleCancelForm = () => {

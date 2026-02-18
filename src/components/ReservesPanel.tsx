@@ -8,6 +8,7 @@ import ReserveList from "./ReserveList";
 import ReserveDetail from "./ReserveDetail";
 import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 
 export interface Reserve {
   id: string;
@@ -110,17 +111,23 @@ const ReservesPanel = ({ userId, aircraftId, currentCounters, onRecordChanged }:
     setSelectedReserve(null);
   };
 
-  const handleDelete = async (reserveId: string) => {
-    try {
-      const { error } = await supabase.from("reserves" as any).delete().eq("id", reserveId);
-      if (error) throw error;
-      toast.success("Reserve deleted");
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "reserves",
+    onAfterDelete: () => {
       setSelectedReserve(null);
       fetchReserves();
       onRecordChanged?.();
-    } catch (error: any) {
-      toast.error("Failed to delete reserve");
-    }
+    },
+    onAfterRestore: () => {
+      fetchReserves();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (reserveId: string) => {
+    const snapshot = reserves.find(r => r.id === reserveId);
+    if (!snapshot) return;
+    await deleteWithUndo(reserveId, snapshot);
   };
 
   // Show detail view

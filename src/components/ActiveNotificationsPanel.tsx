@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CheckCircle, Plus, Pencil, Trash2, AlertCircle, Link } from "lucide-react";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { addDays, addMonths } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
 import NotificationForm from "./NotificationForm";
@@ -259,20 +260,24 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      toast.success("Notification deleted");
-      await fetchActiveNotifications();
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "notifications",
+    onAfterDelete: () => {
+      fetchActiveNotifications();
       onNotificationCompleted?.();
-    } catch (error: any) {
-      toast.error("Failed to delete notification");
-    }
+    },
+    onAfterRestore: () => {
+      fetchActiveNotifications();
+      onNotificationCompleted?.();
+    },
+  });
+
+  const handleDelete = async (id: string) => {
+    const snapshot = notifications.find(n => n.id === id);
+    if (!snapshot) return;
+    // Remove enriched field
+    const { derived_recurrence, ...cleanSnapshot } = snapshot;
+    await deleteWithUndo(id, cleanSnapshot);
   };
 
   const handleFormSuccess = () => {
