@@ -17,6 +17,7 @@ interface EquipmentListProps {
   onUpdate: () => void;
   onEdit: (equipment: Equipment) => void;
   onSelect: (equipment: Equipment) => void;
+  onDelete?: (equipmentId: string) => void;
 }
 
 const CATEGORIES = [
@@ -46,24 +47,25 @@ const getContextColor = (context: string | null) => {
   }
 };
 
-const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect }: EquipmentListProps) => {
+const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete }: EquipmentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [contextFilter, setContextFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "category" | "date">("name");
 
   const handleDelete = async (id: string) => {
-    try {
-      // Delete linked notification first (if any)
-      await supabase.from("notifications").delete().eq("equipment_id", id);
-      
-      // Delete the equipment
-      const { error } = await supabase.from("equipment").delete().eq("id", id);
-      if (error) throw error;
-      toast.success("Equipment deleted");
-      onUpdate();
-    } catch (error: any) {
-      toast.error("Failed to delete equipment");
+    if (onDelete) {
+      onDelete(id);
+    } else {
+      try {
+        await supabase.from("notifications").delete().eq("equipment_id", id);
+        const { error } = await supabase.from("equipment").delete().eq("id", id);
+        if (error) throw error;
+        toast.success("Equipment deleted");
+        onUpdate();
+      } catch (error: any) {
+        toast.error("Failed to delete equipment");
+      }
     }
   };
 
