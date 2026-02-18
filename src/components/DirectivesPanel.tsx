@@ -13,6 +13,8 @@ import { useCommunitySBs } from "@/hooks/useCommunitySBs";
 import { useCommunitySBVisit } from "@/hooks/useCommunitySBVisit";
 import type { CommunitySBWithMaintainer } from "@/types/communitySB";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
+
 export interface Directive {
   id: string;
   user_id: string;
@@ -121,44 +123,50 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
     setSelectedDirective(null);
   };
 
-  const handleDelete = async (directiveId: string) => {
-    try {
-      // Find the directive to get its details for history
-      const directiveToDelete = directives.find(d => d.id === directiveId);
-      
-      // Log Delete action to directive history before deleting
-      if (directiveToDelete) {
-        await supabase.from("directive_history").insert({
+  // Track the history record ID so we can delete it on undo
+  let lastDeleteHistoryId: string | null = null;
+
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "directives",
+    onBeforeDelete: async (id) => {
+      const directive = directives.find(d => d.id === id);
+      if (directive) {
+        const { data } = await supabase.from("directive_history").insert({
           user_id: userId,
           aircraft_id: aircraftId,
-          directive_id: directiveId,
-          directive_code: directiveToDelete.directive_code,
-          directive_title: directiveToDelete.title,
+          directive_id: id,
+          directive_code: directive.directive_code,
+          directive_title: directive.title,
           action_type: "Delete",
-        });
+        }).select("id").single();
+        lastDeleteHistoryId = data?.id || null;
       }
-      
-      // Delete linked notifications that haven't been modified by user
       await supabase
         .from("notifications")
         .delete()
-        .eq("directive_id", directiveId)
+        .eq("directive_id", id)
         .eq("user_modified", false);
-      
-      const { error } = await supabase
-        .from("directives")
-        .delete()
-        .eq("id", directiveId);
-
-      if (error) throw error;
-      toast.success("Directive deleted successfully");
+    },
+    onAfterDelete: () => {
+      setSelectedDirective(null);
       fetchDirectives();
       onRecordChanged?.();
-      setSelectedDirective(null);
-    } catch (error: any) {
-      toast.error("Failed to delete directive");
-      console.error("Error deleting directive:", error);
-    }
+    },
+    onAfterRestore: async () => {
+      // Clean up the history record on undo
+      if (lastDeleteHistoryId) {
+        await supabase.from("directive_history").delete().eq("id", lastDeleteHistoryId);
+        lastDeleteHistoryId = null;
+      }
+      fetchDirectives();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (directiveId: string) => {
+    const snapshot = directives.find(d => d.id === directiveId);
+    if (!snapshot) return;
+    await deleteWithUndo(directiveId, snapshot as any);
   };
 
   const handleCancelForm = () => {

@@ -7,6 +7,7 @@ import EquipmentForm from "./EquipmentForm";
 import EquipmentList from "./EquipmentList";
 import EquipmentDetail from "./EquipmentDetail";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import type { Database } from "@/integrations/supabase/types";
 
 type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
@@ -72,18 +73,26 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
     setSelectedEquipment(null);
   };
 
-  const handleDelete = async (equipmentId: string) => {
-    try {
-      await supabase.from("notifications").delete().eq("equipment_id", equipmentId);
-      const { error } = await supabase.from("equipment").delete().eq("id", equipmentId);
-      if (error) throw error;
-      toast.success("Equipment deleted");
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "equipment",
+    onBeforeDelete: async (id) => {
+      await supabase.from("notifications").delete().eq("equipment_id", id);
+    },
+    onAfterDelete: () => {
       setSelectedEquipment(null);
       fetchEquipment();
       onRecordChanged?.();
-    } catch (error: any) {
-      toast.error("Failed to delete equipment");
-    }
+    },
+    onAfterRestore: () => {
+      fetchEquipment();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (equipmentId: string) => {
+    const snapshot = equipment.find(e => e.id === equipmentId);
+    if (!snapshot) return;
+    await deleteWithUndo(equipmentId, snapshot);
   };
 
   // Show detail view

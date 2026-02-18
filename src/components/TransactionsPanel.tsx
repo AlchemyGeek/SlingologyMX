@@ -8,6 +8,7 @@ import TransactionList from "./TransactionList";
 import TransactionDetail from "./TransactionDetail";
 import { useUserCurrency } from "@/hooks/useUserCurrency";
 import { toast } from "sonner";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 
 interface TransactionsPanelProps {
   userId: string;
@@ -73,17 +74,23 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: Transactions
     setSelectedTransaction(null);
   };
 
-  const handleDelete = async (transactionId: string) => {
-    try {
-      const { error } = await supabase.from("transactions").delete().eq("id", transactionId);
-      if (error) throw error;
-      toast.success("Transaction deleted");
+  const { deleteWithUndo } = useUndoDelete({
+    tableName: "transactions",
+    onAfterDelete: () => {
       setSelectedTransaction(null);
       fetchTransactions();
       onRecordChanged?.();
-    } catch (error: any) {
-      toast.error("Failed to delete transaction");
-    }
+    },
+    onAfterRestore: () => {
+      fetchTransactions();
+      onRecordChanged?.();
+    },
+  });
+
+  const handleDelete = async (transactionId: string) => {
+    const snapshot = transactions.find(t => t.id === transactionId);
+    if (!snapshot) return;
+    await deleteWithUndo(transactionId, snapshot);
   };
 
   // Show detail view
