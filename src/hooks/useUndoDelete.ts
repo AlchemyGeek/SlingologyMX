@@ -5,7 +5,7 @@ interface UseUndoDeleteOptions {
   tableName: string;
   onBeforeDelete?: (id: string) => Promise<void>;
   onAfterDelete?: () => void;
-  onAfterRestore?: () => void;
+  onAfterRestore?: () => Promise<void> | void;
 }
 
 export function useUndoDelete({ tableName, onBeforeDelete, onAfterDelete, onAfterRestore }: UseUndoDeleteOptions) {
@@ -36,7 +36,7 @@ export function useUndoDelete({ tableName, onBeforeDelete, onAfterDelete, onAfte
 
           if (insertError) throw insertError;
 
-          onAfterRestore?.();
+          await onAfterRestore?.();
           toast.success("Restored.");
         } catch {
           toast.error("Undo unavailable.");
