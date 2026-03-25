@@ -82,7 +82,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (filteredTransactions.length === 0) {
       toast.error("No transactions to export");
       return;
