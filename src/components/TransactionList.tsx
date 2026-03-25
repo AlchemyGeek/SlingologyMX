@@ -116,10 +116,20 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
       "Created At": t.created_at ? new Date(t.created_at).toLocaleString() : "",
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-    XLSX.writeFile(workbook, `transactions-export-${new Date().toISOString().split("T")[0]}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Transactions");
+    if (exportData.length > 0) {
+      worksheet.columns = Object.keys(exportData[0]).map(key => ({ header: key, key }));
+      exportData.forEach(row => worksheet.addRow(row));
+    }
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
     toast.success(`Exported ${filteredTransactions.length} transactions`);
   };
 
