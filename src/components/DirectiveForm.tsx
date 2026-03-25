@@ -378,6 +378,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       .from("directives")
       .select("id")
       .eq("user_id", userId)
+      .eq("aircraft_id", aircraftId)
       .eq("directive_code", formData.directive_code.trim())
       .maybeSingle();
 
