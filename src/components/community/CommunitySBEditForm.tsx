@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -254,8 +255,10 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 id="directive_code"
                 value={formData.directive_code}
                 onChange={(e) => setFormData((prev) => ({ ...prev, directive_code: e.target.value }))}
+                maxLength={40}
                 required
               />
+              <p className={cn("text-xs text-right", formData.directive_code.length >= 40 ? "text-destructive" : "text-muted-foreground")}>{formData.directive_code.length}/40</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
@@ -263,8 +266,10 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                maxLength={500}
                 required
               />
+              <p className={cn("text-xs text-right", formData.title.length >= 500 ? "text-destructive" : "text-muted-foreground")}>{formData.title.length}/500</p>
             </div>
           </div>
 
@@ -540,6 +545,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 placeholder="Describe the terminating action..."
                 className="min-h-[80px]"
               />
+              <p className={cn("text-xs text-right", (formData.terminating_action_summary?.length || 0) >= 1000 ? "text-destructive" : "text-muted-foreground")}>{formData.terminating_action_summary?.length || 0}/1000</p>
             </div>
           )}
         </CardContent>
@@ -557,6 +563,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
               id="equipment_model"
               value={formData.equipment_model}
               onChange={(e) => setFormData((prev) => ({ ...prev, equipment_model: e.target.value }))}
+              maxLength={200}
               placeholder="e.g., Rotax 916iS, GTN 750Xi"
             />
           </div>
@@ -567,6 +574,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
               id="applicable_serial_range"
               value={formData.applicable_serial_range}
               onChange={(e) => setFormData((prev) => ({ ...prev, applicable_serial_range: e.target.value }))}
+              maxLength={255}
             />
           </div>
 
@@ -577,6 +585,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 id="software_version"
                 value={formData.software_version}
                 onChange={(e) => setFormData((prev) => ({ ...prev, software_version: e.target.value }))}
+                maxLength={100}
               />
             </div>
             <div className="space-y-2">
@@ -585,6 +594,7 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
                 id="database_version"
                 value={formData.database_version}
                 onChange={(e) => setFormData((prev) => ({ ...prev, database_version: e.target.value }))}
+                maxLength={100}
               />
             </div>
           </div>
@@ -595,7 +605,9 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
               id="applicability_notes"
               value={formData.applicability_notes}
               onChange={(e) => setFormData((prev) => ({ ...prev, applicability_notes: e.target.value }))}
+              maxLength={1000}
             />
+            <p className={cn("text-xs text-right", (formData.applicability_notes?.length || 0) >= 1000 ? "text-destructive" : "text-muted-foreground")}>{formData.applicability_notes?.length || 0}/1000</p>
           </div>
         </CardContent>
       </Card>
