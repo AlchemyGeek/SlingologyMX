@@ -622,7 +622,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       onSuccess();
     } catch (error: any) {
       console.error("Error saving directive:", error);
-      toast.error("Failed to save directive");
+      toast.error(`Failed to save directive: ${error?.message || "Unknown error"}`);
     }
   };
 
