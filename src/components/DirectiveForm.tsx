@@ -871,6 +871,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   placeholder="e.g., AD 2024-01-01"
                   required
                 />
+                <p className={cn("text-xs text-right", formData.directive_code.length >= 40 ? "text-destructive" : "text-muted-foreground")}>{formData.directive_code.length}/40</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
@@ -878,9 +879,10 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  maxLength={200}
+                  maxLength={500}
                   required
                 />
+                <p className={cn("text-xs text-right", formData.title.length >= 500 ? "text-destructive" : "text-muted-foreground")}>{formData.title.length}/500</p>
               </div>
               <div className="space-y-2">
                 <Label>Directive Type <span className="text-destructive">*</span></Label>
@@ -1372,6 +1374,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   placeholder="Describe the terminating action..."
                   className="min-h-[80px]"
                 />
+                <p className={cn("text-xs text-right", (formData.terminating_action_summary?.length || 0) >= 1000 ? "text-destructive" : "text-muted-foreground")}>{formData.terminating_action_summary?.length || 0}/1000</p>
               </div>
             )}
           </div>
