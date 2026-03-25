@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2, FileSpreadsheet, Plane } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { Label } from "@/components/ui/label";
 import {
   Table,

@@ -10,7 +10,7 @@ import { parseLocalDate } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Constants } from "@/integrations/supabase/types";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 const TRANSACTION_CATEGORIES = Constants.public.Enums.transaction_category;
 const TRANSACTION_STATUSES = Constants.public.Enums.transaction_status;
