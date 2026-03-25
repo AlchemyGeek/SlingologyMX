@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, Upload, FileJson, Check, AlertTriangle, Loader2, FileSpreadsheet, Plane } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -362,16 +362,26 @@ const DataManagement = () => {
       };
 
       // Create workbook with separate worksheets
-      const workbook = XLSX.utils.book_new();
+      const workbook = new ExcelJS.Workbook();
       
       Object.entries(tables).forEach(([sheetName, data]) => {
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+        const worksheet = workbook.addWorksheet(sheetName);
+        if (data.length > 0) {
+          worksheet.columns = Object.keys(data[0]).map(key => ({ header: key, key }));
+          data.forEach(row => worksheet.addRow(row));
+        }
       });
 
       // Download file
       const aircraftReg = currentAircraft?.registration || "aircraft";
-      XLSX.writeFile(workbook, `slingologymx-${aircraftReg}-export-${new Date().toISOString().split("T")[0]}.xlsx`);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `slingologymx-${aircraftReg}-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
 
       toast.success("Excel file exported successfully!");
     } catch (error) {
