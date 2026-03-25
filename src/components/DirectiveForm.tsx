@@ -1024,6 +1024,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   id="equipment_name"
                   value={formData.equipment_name}
                   onChange={(e) => setFormData({ ...formData, equipment_name: e.target.value })}
+                  maxLength={255}
                   placeholder="Enter or auto-fill from equipment"
                 />
               </div>
@@ -1047,6 +1048,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   id="equipment_serial_number"
                   value={formData.equipment_serial_number}
                   onChange={(e) => setFormData({ ...formData, equipment_serial_number: e.target.value })}
+                  maxLength={255}
                   placeholder="Enter or auto-fill from equipment"
                 />
               </div>
@@ -1081,6 +1083,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   id="applicable_serial_range"
                   value={formData.applicable_serial_range}
                   onChange={(e) => setFormData({ ...formData, applicable_serial_range: e.target.value })}
+                  maxLength={255}
                   placeholder="e.g., S/N 001-500"
                 />
               </div>
@@ -1104,12 +1107,15 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
               </div>
               <div className="space-y-2">
                 <Label htmlFor="applicability_reason">Reason / Explanation</Label>
-                <Input
+                <Textarea
                   id="applicability_reason"
                   value={formData.applicability_reason}
                   onChange={(e) => setFormData({ ...formData, applicability_reason: e.target.value })}
+                  maxLength={500}
                   placeholder="e.g., Serial number not in affected range"
+                  className="min-h-[60px]"
                 />
+                <p className={cn("text-xs text-right", (formData.applicability_reason?.length || 0) >= 500 ? "text-destructive" : "text-muted-foreground")}>{formData.applicability_reason?.length || 0}/500</p>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="applicability_notes">Applicability Notes</Label>
@@ -1117,8 +1123,10 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                   id="applicability_notes"
                   value={formData.applicability_notes}
                   onChange={(e) => setFormData({ ...formData, applicability_notes: e.target.value })}
+                  maxLength={1000}
                   placeholder="Additional notes about applicability..."
                 />
+                <p className={cn("text-xs text-right", (formData.applicability_notes?.length || 0) >= 1000 ? "text-destructive" : "text-muted-foreground")}>{formData.applicability_notes?.length || 0}/1000</p>
               </div>
             </div>
           </div>
