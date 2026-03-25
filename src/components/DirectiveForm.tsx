@@ -378,6 +378,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       .from("directives")
       .select("id")
       .eq("user_id", userId)
+      .eq("aircraft_id", aircraftId)
       .eq("directive_code", formData.directive_code.trim())
       .maybeSingle();
 
@@ -621,7 +622,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       onSuccess();
     } catch (error: any) {
       console.error("Error saving directive:", error);
-      toast.error("Failed to save directive");
+      toast.error(`Failed to save directive: ${error?.message || "Unknown error"}`);
     }
   };
 
