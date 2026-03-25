@@ -172,11 +172,11 @@ const BugReportForm = ({ userId, onBugSubmitted }: BugReportFormProps) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Short summary of the problem"
-              maxLength={255}
+              maxLength={200}
               required
             />
             <p className="text-xs text-muted-foreground">
-              {title.length}/255 characters
+              {title.length}/200 characters
             </p>
           </div>
 
