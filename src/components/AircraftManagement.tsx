@@ -282,6 +282,36 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 maxLength={100}
               />
             </div>
+
+            {/* Counter Tracking Modes */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="text-sm font-medium">Counter Tracking Modes</Label>
+              <p className="text-xs text-muted-foreground">
+                Choose how each Total Time counter is updated when you log counter changes.
+              </p>
+              {([
+                { key: "airframe_tt_mode" as const, label: "Airframe TT" },
+                { key: "engine_tt_mode" as const, label: "Engine TT" },
+                { key: "prop_tt_mode" as const, label: "Prop TT" },
+              ]).map(({ key, label }) => (
+                <div key={key} className="grid grid-cols-2 items-center gap-4">
+                  <Label className="text-sm">{label}</Label>
+                  <Select
+                    value={formData[key]}
+                    onValueChange={(val) => setFormData({ ...formData, [key]: val as TtTrackingMode })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tach">Linked to Tach</SelectItem>
+                      <SelectItem value="hobbs">Linked to Hobbs</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
