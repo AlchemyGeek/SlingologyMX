@@ -56,30 +56,74 @@ const INITIAL_COUNTER_KEYS = [
   { key: "initial_prop_total_time" as const, label: "Prop TT" },
 ] as const;
 
+const emptyInitialCounters = {
+  initial_hobbs: "",
+  initial_tach: "",
+  initial_airframe_total_time: "",
+  initial_engine_total_time: "",
+  initial_prop_total_time: "",
+};
+
+const formatInitialValue = (v: number | null): string => v !== null ? String(v) : "";
+
 export function AircraftManagement({ userId }: { userId: string }) {
   const { aircraft, refetchAircraft, canAddMore, maxAircraft } = useAircraft();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
   const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
   const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
+  const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
+  const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
+  const [initialCountersOpen, setInitialCountersOpen] = useState(false);
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
   const MODE_CHANGE_PHRASE = "I UNDERSTAND";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
+    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+    setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (a: Aircraft) => {
     setEditingAircraft(a);
-    setFormData({ registration: a.registration, model_make: a.model_make || "", airframe_tt_mode: a.airframe_tt_mode, engine_tt_mode: a.engine_tt_mode, prop_tt_mode: a.prop_tt_mode });
+    setFormData({
+      registration: a.registration,
+      model_make: a.model_make || "",
+      airframe_tt_mode: a.airframe_tt_mode,
+      engine_tt_mode: a.engine_tt_mode,
+      prop_tt_mode: a.prop_tt_mode,
+      initial_hobbs: formatInitialValue(a.initial_hobbs),
+      initial_tach: formatInitialValue(a.initial_tach),
+      initial_airframe_total_time: formatInitialValue(a.initial_airframe_total_time),
+      initial_engine_total_time: formatInitialValue(a.initial_engine_total_time),
+      initial_prop_total_time: formatInitialValue(a.initial_prop_total_time),
+    });
+    setInitialCountersOpen(false);
     setIsDialogOpen(true);
+  };
+
+  // Check if any initial values were previously set on the aircraft being edited
+  const hadInitialValues = (a: Aircraft | null): boolean => {
+    if (!a) return false;
+    return a.initial_hobbs !== null || a.initial_tach !== null || 
+           a.initial_airframe_total_time !== null || a.initial_engine_total_time !== null || 
+           a.initial_prop_total_time !== null;
+  };
+
+  // Check if initial counter values changed
+  const initialValuesChanged = (a: Aircraft | null): boolean => {
+    if (!a) return false;
+    return formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs ||
+           formatInitialValue(a.initial_tach) !== formData.initial_tach ||
+           formatInitialValue(a.initial_airframe_total_time) !== formData.initial_airframe_total_time ||
+           formatInitialValue(a.initial_engine_total_time) !== formData.initial_engine_total_time ||
+           formatInitialValue(a.initial_prop_total_time) !== formData.initial_prop_total_time;
   };
 
   const handleSave = async (skipModeWarning = false) => {
