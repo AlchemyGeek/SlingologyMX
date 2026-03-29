@@ -23,12 +23,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plane, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react";
 import { toast } from "sonner";
+import type { TtTrackingMode } from "@/contexts/AircraftContext";
 
 interface AircraftFormData {
   registration: string;
   model_make: string;
+  airframe_tt_mode: TtTrackingMode;
+  engine_tt_mode: TtTrackingMode;
+  prop_tt_mode: TtTrackingMode;
 }
 
 export function AircraftManagement({ userId }: { userId: string }) {

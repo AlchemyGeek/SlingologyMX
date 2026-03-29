@@ -2,12 +2,17 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
+export type TtTrackingMode = 'hobbs' | 'tach' | 'manual';
+
 export interface Aircraft {
   id: string;
   user_id: string;
   registration: string;
   model_make: string | null;
   is_primary: boolean;
+  airframe_tt_mode: TtTrackingMode;
+  engine_tt_mode: TtTrackingMode;
+  prop_tt_mode: TtTrackingMode;
   created_at: string;
   updated_at: string;
 }
