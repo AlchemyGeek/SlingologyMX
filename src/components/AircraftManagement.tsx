@@ -55,13 +55,13 @@ export function AircraftManagement({ userId }: { userId: string }) {
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "" });
+    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (a: Aircraft) => {
     setEditingAircraft(a);
-    setFormData({ registration: a.registration, model_make: a.model_make || "" });
+    setFormData({ registration: a.registration, model_make: a.model_make || "", airframe_tt_mode: a.airframe_tt_mode, engine_tt_mode: a.engine_tt_mode, prop_tt_mode: a.prop_tt_mode });
     setIsDialogOpen(true);
   };
 

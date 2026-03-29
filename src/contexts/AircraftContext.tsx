@@ -59,7 +59,12 @@ export function AircraftProvider({ children, user }: { children: ReactNode; user
       console.error("Error fetching aircraft:", error);
       setAircraft([]);
     } else {
-      setAircraft(data || []);
+      setAircraft((data || []).map(d => ({
+        ...d,
+        airframe_tt_mode: d.airframe_tt_mode as TtTrackingMode,
+        engine_tt_mode: d.engine_tt_mode as TtTrackingMode,
+        prop_tt_mode: d.prop_tt_mode as TtTrackingMode,
+      })));
     }
     setLoading(false);
   }, [user?.id]);
