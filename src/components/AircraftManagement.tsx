@@ -81,6 +81,9 @@ export function AircraftManagement({ userId }: { userId: string }) {
           .update({
             registration: formData.registration.trim().toUpperCase(),
             model_make: formData.model_make.trim() || null,
+            airframe_tt_mode: formData.airframe_tt_mode,
+            engine_tt_mode: formData.engine_tt_mode,
+            prop_tt_mode: formData.prop_tt_mode,
           })
           .eq("id", editingAircraft.id);
 
