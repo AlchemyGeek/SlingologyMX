@@ -118,19 +118,19 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
       
       let usageAssumptions: UsageAssumptions;
       
+      // Get initial value for counter offset (owner hours)
+      const initialValueMap: Record<CounterType, number | null> = {
+        hobbs: selectedAircraft.initial_hobbs ?? null,
+        tach: selectedAircraft.initial_tach ?? null,
+        airframe_total_time: selectedAircraft.initial_airframe_total_time ?? null,
+        engine_total_time: selectedAircraft.initial_engine_total_time ?? null,
+        prop_total_time: selectedAircraft.initial_prop_total_time ?? null,
+      };
+      const initialVal = initialValueMap[counterType];
+
       if (!usageRate || usageRate.rate <= 0) {
         gaps.push("Insufficient counter history for usage projection");
         fallbacks.push("Using zero hours for variable cost projections");
-        
-        // Get initial value for counter offset (owner hours)
-        const initialValueMap: Record<CounterType, number | null> = {
-          hobbs: selectedAircraft.initial_hobbs ?? null,
-          tach: selectedAircraft.initial_tach ?? null,
-          airframe_total_time: selectedAircraft.initial_airframe_total_time ?? null,
-          engine_total_time: selectedAircraft.initial_engine_total_time ?? null,
-          prop_total_time: selectedAircraft.initial_prop_total_time ?? null,
-        };
-        const initialVal = initialValueMap[counterType];
 
         // Still build chart data if we have entries - apply owner-hours offset
         const chartData: UsageChartDataPoint[] = windowEntries.map(entry => ({
