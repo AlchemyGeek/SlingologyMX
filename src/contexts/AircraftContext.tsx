@@ -13,6 +13,11 @@ export interface Aircraft {
   airframe_tt_mode: TtTrackingMode;
   engine_tt_mode: TtTrackingMode;
   prop_tt_mode: TtTrackingMode;
+  initial_hobbs: number | null;
+  initial_tach: number | null;
+  initial_airframe_total_time: number | null;
+  initial_engine_total_time: number | null;
+  initial_prop_total_time: number | null;
   created_at: string;
   updated_at: string;
 }
