@@ -50,6 +50,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
   const [saving, setSaving] = useState(false);
+  const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
+  const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
 
