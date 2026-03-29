@@ -570,6 +570,57 @@ export function AircraftManagement({ userId }: { userId: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Initial Counter Change Warning */}
+      <AlertDialog
+        open={showInitialChangeWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowInitialChangeWarning(false);
+            setInitialChangeConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Acquisition Counters?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Changing acquisition counter values will <strong>reset your current counters</strong> to these new values and <strong>delete all counter history</strong>. This will impact all of your records and may invalidate your existing financial analysis.
+                </p>
+                <p className="font-medium text-foreground">
+                  This action cannot be undone. Make sure you understand the implications.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{MODE_CHANGE_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={initialChangeConfirmText}
+                    onChange={(e) => setInitialChangeConfirmText(e.target.value.toUpperCase())}
+                    placeholder={MODE_CHANGE_PHRASE}
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setInitialChangeConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowInitialChangeWarning(false);
+                setInitialChangeConfirmText("");
+                handleSave(true, true);
+              }}
+              disabled={initialChangeConfirmText !== MODE_CHANGE_PHRASE}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
