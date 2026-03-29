@@ -23,12 +23,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plane, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react";
 import { toast } from "sonner";
+import type { TtTrackingMode } from "@/contexts/AircraftContext";
 
 interface AircraftFormData {
   registration: string;
   model_make: string;
+  airframe_tt_mode: TtTrackingMode;
+  engine_tt_mode: TtTrackingMode;
+  prop_tt_mode: TtTrackingMode;
 }
 
 export function AircraftManagement({ userId }: { userId: string }) {
@@ -37,20 +48,20 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "" });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
   const [saving, setSaving] = useState(false);
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "" });
+    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (a: Aircraft) => {
     setEditingAircraft(a);
-    setFormData({ registration: a.registration, model_make: a.model_make || "" });
+    setFormData({ registration: a.registration, model_make: a.model_make || "", airframe_tt_mode: a.airframe_tt_mode, engine_tt_mode: a.engine_tt_mode, prop_tt_mode: a.prop_tt_mode });
     setIsDialogOpen(true);
   };
 
@@ -70,6 +81,9 @@ export function AircraftManagement({ userId }: { userId: string }) {
           .update({
             registration: formData.registration.trim().toUpperCase(),
             model_make: formData.model_make.trim() || null,
+            airframe_tt_mode: formData.airframe_tt_mode,
+            engine_tt_mode: formData.engine_tt_mode,
+            prop_tt_mode: formData.prop_tt_mode,
           })
           .eq("id", editingAircraft.id);
 
@@ -267,6 +281,36 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 placeholder="e.g., Sling TSi"
                 maxLength={100}
               />
+            </div>
+
+            {/* Counter Tracking Modes */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="text-sm font-medium">Counter Tracking Modes</Label>
+              <p className="text-xs text-muted-foreground">
+                Choose how each Total Time counter is updated when you log counter changes.
+              </p>
+              {([
+                { key: "airframe_tt_mode" as const, label: "Airframe TT" },
+                { key: "engine_tt_mode" as const, label: "Engine TT" },
+                { key: "prop_tt_mode" as const, label: "Prop TT" },
+              ]).map(({ key, label }) => (
+                <div key={key} className="grid grid-cols-2 items-center gap-4">
+                  <Label className="text-sm">{label}</Label>
+                  <Select
+                    value={formData[key]}
+                    onValueChange={(val) => setFormData({ ...formData, [key]: val as TtTrackingMode })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tach">Linked to Tach</SelectItem>
+                      <SelectItem value="hobbs">Linked to Hobbs</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
             </div>
           </div>
           <DialogFooter>

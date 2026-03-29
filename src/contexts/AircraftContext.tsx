@@ -2,12 +2,17 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
+export type TtTrackingMode = 'hobbs' | 'tach' | 'manual';
+
 export interface Aircraft {
   id: string;
   user_id: string;
   registration: string;
   model_make: string | null;
   is_primary: boolean;
+  airframe_tt_mode: TtTrackingMode;
+  engine_tt_mode: TtTrackingMode;
+  prop_tt_mode: TtTrackingMode;
   created_at: string;
   updated_at: string;
 }
@@ -54,7 +59,12 @@ export function AircraftProvider({ children, user }: { children: ReactNode; user
       console.error("Error fetching aircraft:", error);
       setAircraft([]);
     } else {
-      setAircraft(data || []);
+      setAircraft((data || []).map(d => ({
+        ...d,
+        airframe_tt_mode: d.airframe_tt_mode as TtTrackingMode,
+        engine_tt_mode: d.engine_tt_mode as TtTrackingMode,
+        prop_tt_mode: d.prop_tt_mode as TtTrackingMode,
+      })));
     }
     setLoading(false);
   }, [user?.id]);

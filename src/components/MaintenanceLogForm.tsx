@@ -36,6 +36,7 @@ import {
 } from "@/hooks/useMaintenanceTransactions";
 import { validateCounterUpdates } from "@/lib/counterValidation";
 import { getCurrencySymbol } from "@/lib/currency";
+import { useAircraft, TtTrackingMode } from "@/contexts/AircraftContext";
 
 interface DirectiveComplianceLink {
   id?: string;
@@ -79,6 +80,26 @@ interface MaintenanceLogFormProps {
 }
 
 const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters, userCurrency = "USD" }: MaintenanceLogFormProps) => {
+  const { selectedAircraft } = useAircraft();
+  
+  // Get tracking modes from aircraft context
+  const counterModes = {
+    airframe_total_time: (selectedAircraft?.airframe_tt_mode ?? "tach") as TtTrackingMode,
+    engine_total_time: (selectedAircraft?.engine_tt_mode ?? "tach") as TtTrackingMode,
+    prop_total_time: (selectedAircraft?.prop_tt_mode ?? "tach") as TtTrackingMode,
+  };
+  
+  const isCounterLinked = (field: string): boolean => {
+    const mode = counterModes[field as keyof typeof counterModes];
+    return mode === "hobbs" || mode === "tach";
+  };
+  
+  const getLinkedSource = (field: string): string | null => {
+    const mode = counterModes[field as keyof typeof counterModes];
+    if (mode === "hobbs") return "hobbs_at_event";
+    if (mode === "tach") return "tach_at_event";
+    return null;
+  };
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
@@ -122,45 +143,46 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       (editingLog.other_cost !== null && editingLog.other_cost > 0)
     ) : false
   );
-  const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
   const [countersManuallyEdited, setCountersManuallyEdited] = useState(!!editingLog);
 
-  // All syncable counters including Hobbs
-  const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
-  type SyncableCounterField = typeof syncableCounterFields[number];
+  // Only manual TT counters are "syncable" with the old toggle — linked ones auto-derive
+  const manualSyncableFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"]
+    .filter(f => {
+      if (f === "tach_at_event") return true; // tach is always editable / syncable source
+      return !isCounterLinked(f);
+    });
 
   const handleCounterChange = (field: string, newValue: string) => {
     // Mark counters as manually edited
     setCountersManuallyEdited(true);
     
-    const isSyncable = syncableCounterFields.includes(field as SyncableCounterField);
-    
-    if (counterSyncEnabled && isSyncable) {
-      setFormData(prev => {
-        const currentValue = prev[field as keyof typeof prev] ? parseFloat(prev[field as keyof typeof prev] as string) : 0;
+    setFormData(prev => {
+      const updates: Partial<typeof prev> = { [field]: newValue };
+      
+      // When hobbs or tach changes, auto-update any TT counters linked to it
+      const sourceFormField = field; // e.g. "hobbs_at_event" or "tach_at_event"
+      const sourceMode = field === "hobbs_at_event" ? "hobbs" : field === "tach_at_event" ? "tach" : null;
+      
+      if (sourceMode) {
         const numValue = newValue ? parseFloat(newValue) : 0;
+        const currentValue = prev[field as keyof typeof prev] ? parseFloat(prev[field as keyof typeof prev] as string) : 0;
         
-        if (isNaN(numValue) || isNaN(currentValue)) {
-          return { ...prev, [field]: newValue };
-        }
-        
-        const diff = numValue - currentValue;
-        
-        // Apply the same difference to all syncable counters
-        const updates: Partial<typeof prev> = { [field]: newValue };
-        syncableCounterFields.forEach(syncField => {
-          if (syncField !== field) {
-            const syncCurrentValue = prev[syncField] ? parseFloat(prev[syncField] as string) : 0;
-            const newSyncValue = Math.max(0, syncCurrentValue + diff);
-            updates[syncField] = newSyncValue.toFixed(1);
+        if (!isNaN(numValue) && !isNaN(currentValue)) {
+          const diff = numValue - currentValue;
+          
+          const ttFields = ["airframe_total_time", "engine_total_time", "prop_total_time"] as const;
+          for (const ttField of ttFields) {
+            const mode = counterModes[ttField];
+            if (mode === sourceMode) {
+              const ttCurrent = prev[ttField] ? parseFloat(prev[ttField] as string) : 0;
+              updates[ttField] = Math.max(0, ttCurrent + diff).toFixed(1);
+            }
           }
-        });
-        
-        return { ...prev, ...updates };
-      });
-    } else {
-      setFormData(prev => ({ ...prev, [field]: newValue }));
-    }
+        }
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   useEffect(() => {
@@ -1187,16 +1209,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       <div className="space-y-4 border-b pb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Time & Usage</h3>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="counter-sync-toggle" className="text-sm text-muted-foreground">
-              Sync all counters
-            </Label>
-            <Switch
-              id="counter-sync-toggle"
-              checked={counterSyncEnabled}
-              onCheckedChange={setCounterSyncEnabled}
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Linked counters auto-update from their source
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -1232,37 +1247,58 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="airframe_total_time">Airframe Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="airframe_total_time">
+              Airframe Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("airframe_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.airframe_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="airframe_total_time"
               type="number"
               step="0.1"
               max="19999.9"
               required
+              disabled={isCounterLinked("airframe_total_time")}
+              className={isCounterLinked("airframe_total_time") ? "bg-muted" : ""}
               value={formData.airframe_total_time}
               onChange={(e) => handleCounterChange("airframe_total_time", e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="engine_total_time">Engine Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="engine_total_time">
+              Engine Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("engine_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.engine_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="engine_total_time"
               type="number"
               step="0.1"
               max="19999.9"
+              disabled={isCounterLinked("engine_total_time")}
+              className={isCounterLinked("engine_total_time") ? "bg-muted" : ""}
               value={formData.engine_total_time}
               onChange={(e) => handleCounterChange("engine_total_time", e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="prop_total_time">Prop Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="prop_total_time">
+              Prop Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("prop_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.prop_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="prop_total_time"
               type="number"
               step="0.1"
               max="19999.9"
               required
+              disabled={isCounterLinked("prop_total_time")}
+              className={isCounterLinked("prop_total_time") ? "bg-muted" : ""}
               value={formData.prop_total_time}
               onChange={(e) => handleCounterChange("prop_total_time", e.target.value)}
             />
