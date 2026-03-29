@@ -1209,16 +1209,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       <div className="space-y-4 border-b pb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Time & Usage</h3>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="counter-sync-toggle" className="text-sm text-muted-foreground">
-              Sync all counters
-            </Label>
-            <Switch
-              id="counter-sync-toggle"
-              checked={counterSyncEnabled}
-              onCheckedChange={setCounterSyncEnabled}
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Linked counters auto-update from their source
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
