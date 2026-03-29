@@ -73,6 +73,20 @@ export function AircraftManagement({ userId }: { userId: string }) {
       return;
     }
 
+    // Check if tracking modes changed on an existing aircraft
+    if (editingAircraft) {
+      const modesChanged =
+        formData.airframe_tt_mode !== editingAircraft.airframe_tt_mode ||
+        formData.engine_tt_mode !== editingAircraft.engine_tt_mode ||
+        formData.prop_tt_mode !== editingAircraft.prop_tt_mode;
+
+      if (modesChanged && !showModeChangeWarning) {
+        setShowModeChangeWarning(true);
+        setModeChangeConfirmText("");
+        return;
+      }
+    }
+
     setSaving(true);
 
     try {
