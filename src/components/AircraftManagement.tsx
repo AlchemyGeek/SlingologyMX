@@ -50,8 +50,11 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
   const [saving, setSaving] = useState(false);
+  const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
+  const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
+  const MODE_CHANGE_PHRASE = "I UNDERSTAND";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
@@ -65,10 +68,24 @@ export function AircraftManagement({ userId }: { userId: string }) {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (skipModeWarning = false) => {
     if (!formData.registration.trim()) {
       toast.error("Registration number is required");
       return;
+    }
+
+    // Check if tracking modes changed on an existing aircraft
+    if (editingAircraft && !skipModeWarning) {
+      const modesChanged =
+        formData.airframe_tt_mode !== editingAircraft.airframe_tt_mode ||
+        formData.engine_tt_mode !== editingAircraft.engine_tt_mode ||
+        formData.prop_tt_mode !== editingAircraft.prop_tt_mode;
+
+      if (modesChanged) {
+        setShowModeChangeWarning(true);
+        setModeChangeConfirmText("");
+        return;
+      }
     }
 
     setSaving(true);
@@ -317,7 +334,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={() => handleSave()} disabled={saving}>
               {saving ? "Saving..." : editingAircraft ? "Update" : "Add Aircraft"}
             </Button>
           </DialogFooter>
@@ -366,6 +383,57 @@ export function AircraftManagement({ userId }: { userId: string }) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Counter Mode Change Warning */}
+      <AlertDialog
+        open={showModeChangeWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowModeChangeWarning(false);
+            setModeChangeConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Counter Tracking Mode?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  The FAA requires consistency in the methodology used to maintain time-in-service counters in aircraft maintenance records. Changing how Total Time counters are tracked may affect the continuity of your maintenance documentation.
+                </p>
+                <p className="font-medium text-foreground">
+                  Make sure you understand the implications before proceeding.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{MODE_CHANGE_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={modeChangeConfirmText}
+                    onChange={(e) => setModeChangeConfirmText(e.target.value.toUpperCase())}
+                    placeholder={MODE_CHANGE_PHRASE}
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setModeChangeConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowModeChangeWarning(false);
+                setModeChangeConfirmText("");
+                handleSave(true);
+              }}
+              disabled={modeChangeConfirmText !== MODE_CHANGE_PHRASE}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm Change
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
