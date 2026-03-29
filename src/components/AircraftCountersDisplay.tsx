@@ -67,19 +67,32 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
           </Button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {counterConfig.map((config) => (
-            <Card
-              key={config.key}
-              className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
-              onClick={() => setIsBatchEditOpen(true)}
-            >
-              <CardContent className="p-4 text-center relative">
-                <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-                <p className="text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {counterConfig.map((config) => {
+            const modeKey = {
+              airframe_total_time: selectedAircraft?.airframe_tt_mode,
+              engine_total_time: selectedAircraft?.engine_tt_mode,
+              prop_total_time: selectedAircraft?.prop_tt_mode,
+            }[config.key as string];
+            const linked = modeKey === "hobbs" || modeKey === "tach";
+            const linkedLabel = modeKey === "hobbs" ? "Hobbs" : modeKey === "tach" ? "Tach" : null;
+
+            return (
+              <Card
+                key={config.key}
+                className={`${config.color} border ${!linked ? "cursor-pointer hover:opacity-80" : ""} transition-opacity`}
+                onClick={() => !linked && setIsBatchEditOpen(true)}
+              >
+                <CardContent className="p-4 text-center relative">
+                  {!linked && <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />}
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
+                  <p className="text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
+                  {linked && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Linked to {linkedLabel}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
