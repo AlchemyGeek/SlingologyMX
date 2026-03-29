@@ -36,6 +36,7 @@ import {
 } from "@/hooks/useMaintenanceTransactions";
 import { validateCounterUpdates } from "@/lib/counterValidation";
 import { getCurrencySymbol } from "@/lib/currency";
+import { useAircraft, TtTrackingMode } from "@/contexts/AircraftContext";
 
 interface DirectiveComplianceLink {
   id?: string;
