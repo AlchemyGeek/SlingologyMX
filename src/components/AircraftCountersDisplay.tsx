@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, History } from "lucide-react";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
+import { getOwnerHours } from "@/lib/counterInterpolation";
 import CounterHistoryDialog from "./CounterHistoryDialog";
 import { BatchCounterEditDialog } from "./BatchCounterEditDialog";
 import { useAircraft } from "@/contexts/AircraftContext";

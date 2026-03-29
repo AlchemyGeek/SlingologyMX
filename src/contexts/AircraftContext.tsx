@@ -69,6 +69,11 @@ export function AircraftProvider({ children, user }: { children: ReactNode; user
         airframe_tt_mode: d.airframe_tt_mode as TtTrackingMode,
         engine_tt_mode: d.engine_tt_mode as TtTrackingMode,
         prop_tt_mode: d.prop_tt_mode as TtTrackingMode,
+        initial_hobbs: d.initial_hobbs ?? null,
+        initial_tach: d.initial_tach ?? null,
+        initial_airframe_total_time: d.initial_airframe_total_time ?? null,
+        initial_engine_total_time: d.initial_engine_total_time ?? null,
+        initial_prop_total_time: d.initial_prop_total_time ?? null,
       })));
     }
     setLoading(false);
