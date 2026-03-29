@@ -143,45 +143,46 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       (editingLog.other_cost !== null && editingLog.other_cost > 0)
     ) : false
   );
-  const [counterSyncEnabled, setCounterSyncEnabled] = useState(true);
   const [countersManuallyEdited, setCountersManuallyEdited] = useState(!!editingLog);
 
-  // All syncable counters including Hobbs
-  const syncableCounterFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"] as const;
-  type SyncableCounterField = typeof syncableCounterFields[number];
+  // Only manual TT counters are "syncable" with the old toggle — linked ones auto-derive
+  const manualSyncableFields = ["tach_at_event", "airframe_total_time", "engine_total_time", "prop_total_time"]
+    .filter(f => {
+      if (f === "tach_at_event") return true; // tach is always editable / syncable source
+      return !isCounterLinked(f);
+    });
 
   const handleCounterChange = (field: string, newValue: string) => {
     // Mark counters as manually edited
     setCountersManuallyEdited(true);
     
-    const isSyncable = syncableCounterFields.includes(field as SyncableCounterField);
-    
-    if (counterSyncEnabled && isSyncable) {
-      setFormData(prev => {
-        const currentValue = prev[field as keyof typeof prev] ? parseFloat(prev[field as keyof typeof prev] as string) : 0;
+    setFormData(prev => {
+      const updates: Partial<typeof prev> = { [field]: newValue };
+      
+      // When hobbs or tach changes, auto-update any TT counters linked to it
+      const sourceFormField = field; // e.g. "hobbs_at_event" or "tach_at_event"
+      const sourceMode = field === "hobbs_at_event" ? "hobbs" : field === "tach_at_event" ? "tach" : null;
+      
+      if (sourceMode) {
         const numValue = newValue ? parseFloat(newValue) : 0;
+        const currentValue = prev[field as keyof typeof prev] ? parseFloat(prev[field as keyof typeof prev] as string) : 0;
         
-        if (isNaN(numValue) || isNaN(currentValue)) {
-          return { ...prev, [field]: newValue };
-        }
-        
-        const diff = numValue - currentValue;
-        
-        // Apply the same difference to all syncable counters
-        const updates: Partial<typeof prev> = { [field]: newValue };
-        syncableCounterFields.forEach(syncField => {
-          if (syncField !== field) {
-            const syncCurrentValue = prev[syncField] ? parseFloat(prev[syncField] as string) : 0;
-            const newSyncValue = Math.max(0, syncCurrentValue + diff);
-            updates[syncField] = newSyncValue.toFixed(1);
+        if (!isNaN(numValue) && !isNaN(currentValue)) {
+          const diff = numValue - currentValue;
+          
+          const ttFields = ["airframe_total_time", "engine_total_time", "prop_total_time"] as const;
+          for (const ttField of ttFields) {
+            const mode = counterModes[ttField];
+            if (mode === sourceMode) {
+              const ttCurrent = prev[ttField] ? parseFloat(prev[ttField] as string) : 0;
+              updates[ttField] = Math.max(0, ttCurrent + diff).toFixed(1);
+            }
           }
-        });
-        
-        return { ...prev, ...updates };
-      });
-    } else {
-      setFormData(prev => ({ ...prev, [field]: newValue }));
-    }
+        }
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   useEffect(() => {
