@@ -33,6 +33,19 @@ const formatCounterDisplay = (counters: AircraftCounters, key: NumericCounterKey
   return typeof value === "number" ? value.toFixed(1) : "—";
 };
 
+// Helper to get owner hours display if initial values are set
+const getOwnerHoursDisplay = (
+  counters: AircraftCounters,
+  key: NumericCounterKey,
+  initialValue: number | null
+): string | null => {
+  if (!counters.isInitialized || initialValue === null) return null;
+  const value = counters[key];
+  if (typeof value !== "number") return null;
+  const ownerHrs = getOwnerHours(value, initialValue);
+  return ownerHrs.toFixed(1);
+};
+
 const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
   const { selectedAircraft } = useAircraft();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -77,6 +90,17 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
             const linked = modeKey === "hobbs" || modeKey === "tach";
             const linkedLabel = modeKey === "hobbs" ? "Hobbs" : modeKey === "tach" ? "Tach" : null;
 
+            // Get initial value for this counter
+            const initialValueMap: Record<string, number | null> = {
+              hobbs: selectedAircraft?.initial_hobbs ?? null,
+              tach: selectedAircraft?.initial_tach ?? null,
+              airframe_total_time: selectedAircraft?.initial_airframe_total_time ?? null,
+              engine_total_time: selectedAircraft?.initial_engine_total_time ?? null,
+              prop_total_time: selectedAircraft?.initial_prop_total_time ?? null,
+            };
+            const initialVal = initialValueMap[config.key] ?? null;
+            const ownerHrs = getOwnerHoursDisplay(counters, config.key, initialVal);
+
             return (
               <Card
                 key={config.key}
@@ -89,6 +113,9 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
                   <p className="text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
                   {linked && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">Linked to {linkedLabel}</p>
+                  )}
+                  {ownerHrs !== null && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Owner: {ownerHrs} hrs</p>
                   )}
                 </CardContent>
               </Card>
@@ -113,6 +140,13 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
           airframe_tt_mode: selectedAircraft?.airframe_tt_mode ?? "tach",
           engine_tt_mode: selectedAircraft?.engine_tt_mode ?? "tach",
           prop_tt_mode: selectedAircraft?.prop_tt_mode ?? "tach",
+        }}
+        initialValues={{
+          hobbs: selectedAircraft?.initial_hobbs ?? null,
+          tach: selectedAircraft?.initial_tach ?? null,
+          airframe_total_time: selectedAircraft?.initial_airframe_total_time ?? null,
+          engine_total_time: selectedAircraft?.initial_engine_total_time ?? null,
+          prop_total_time: selectedAircraft?.initial_prop_total_time ?? null,
         }}
         onSave={onUpdateAllCounters}
       />
