@@ -33,6 +33,7 @@ const formatCounterDisplay = (counters: AircraftCounters, key: NumericCounterKey
 };
 
 const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpdateAllCounters, onRefetch }: AircraftCountersDisplayProps) => {
+  const { selectedAircraft } = useAircraft();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
 
