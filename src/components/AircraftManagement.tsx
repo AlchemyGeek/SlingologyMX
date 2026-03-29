@@ -30,7 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plane, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react";
+import { Plane, Plus, Pencil, Trash2, Star, StarOff, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import type { TtTrackingMode } from "@/contexts/AircraftContext";
 
@@ -40,7 +41,20 @@ interface AircraftFormData {
   airframe_tt_mode: TtTrackingMode;
   engine_tt_mode: TtTrackingMode;
   prop_tt_mode: TtTrackingMode;
+  initial_hobbs: string;
+  initial_tach: string;
+  initial_airframe_total_time: string;
+  initial_engine_total_time: string;
+  initial_prop_total_time: string;
 }
+
+const INITIAL_COUNTER_KEYS = [
+  { key: "initial_hobbs" as const, label: "Hobbs" },
+  { key: "initial_tach" as const, label: "Tach" },
+  { key: "initial_airframe_total_time" as const, label: "Airframe TT" },
+  { key: "initial_engine_total_time" as const, label: "Engine TT" },
+  { key: "initial_prop_total_time" as const, label: "Prop TT" },
+] as const;
 
 export function AircraftManagement({ userId }: { userId: string }) {
   const { aircraft, refetchAircraft, canAddMore, maxAircraft } = useAircraft();
