@@ -73,28 +73,37 @@ export type Database = {
       }
       aircraft: {
         Row: {
+          airframe_tt_mode: string
           created_at: string | null
+          engine_tt_mode: string
           id: string
           is_primary: boolean
           model_make: string | null
+          prop_tt_mode: string
           registration: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          airframe_tt_mode?: string
           created_at?: string | null
+          engine_tt_mode?: string
           id?: string
           is_primary?: boolean
           model_make?: string | null
+          prop_tt_mode?: string
           registration: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          airframe_tt_mode?: string
           created_at?: string | null
+          engine_tt_mode?: string
           id?: string
           is_primary?: boolean
           model_make?: string | null
+          prop_tt_mode?: string
           registration?: string
           updated_at?: string | null
           user_id?: string
