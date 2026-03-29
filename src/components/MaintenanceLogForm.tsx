@@ -1247,37 +1247,58 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="airframe_total_time">Airframe Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="airframe_total_time">
+              Airframe Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("airframe_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.airframe_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="airframe_total_time"
               type="number"
               step="0.1"
               max="19999.9"
               required
+              disabled={isCounterLinked("airframe_total_time")}
+              className={isCounterLinked("airframe_total_time") ? "bg-muted" : ""}
               value={formData.airframe_total_time}
               onChange={(e) => handleCounterChange("airframe_total_time", e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="engine_total_time">Engine Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="engine_total_time">
+              Engine Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("engine_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.engine_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="engine_total_time"
               type="number"
               step="0.1"
               max="19999.9"
+              disabled={isCounterLinked("engine_total_time")}
+              className={isCounterLinked("engine_total_time") ? "bg-muted" : ""}
               value={formData.engine_total_time}
               onChange={(e) => handleCounterChange("engine_total_time", e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="prop_total_time">Prop Total Time <span className="text-destructive">*</span></Label>
+            <Label htmlFor="prop_total_time">
+              Prop Total Time <span className="text-destructive">*</span>
+              {isCounterLinked("prop_total_time") && (
+                <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.prop_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
+              )}
+            </Label>
             <Input
               id="prop_total_time"
               type="number"
               step="0.1"
               max="19999.9"
               required
+              disabled={isCounterLinked("prop_total_time")}
+              className={isCounterLinked("prop_total_time") ? "bg-muted" : ""}
               value={formData.prop_total_time}
               onChange={(e) => handleCounterChange("prop_total_time", e.target.value)}
             />
