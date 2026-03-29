@@ -80,6 +80,26 @@ interface MaintenanceLogFormProps {
 }
 
 const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters, userCurrency = "USD" }: MaintenanceLogFormProps) => {
+  const { selectedAircraft } = useAircraft();
+  
+  // Get tracking modes from aircraft context
+  const counterModes = {
+    airframe_total_time: (selectedAircraft?.airframe_tt_mode ?? "tach") as TtTrackingMode,
+    engine_total_time: (selectedAircraft?.engine_tt_mode ?? "tach") as TtTrackingMode,
+    prop_total_time: (selectedAircraft?.prop_tt_mode ?? "tach") as TtTrackingMode,
+  };
+  
+  const isCounterLinked = (field: string): boolean => {
+    const mode = counterModes[field as keyof typeof counterModes];
+    return mode === "hobbs" || mode === "tach";
+  };
+  
+  const getLinkedSource = (field: string): string | null => {
+    const mode = counterModes[field as keyof typeof counterModes];
+    if (mode === "hobbs") return "hobbs_at_event";
+    if (mode === "tach") return "tach_at_event";
+    return null;
+  };
   const [formData, setFormData] = useState({
     entry_title: "",
     category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
