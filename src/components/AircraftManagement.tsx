@@ -126,7 +126,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
            formatInitialValue(a.initial_prop_total_time) !== formData.initial_prop_total_time;
   };
 
-  const handleSave = async (skipModeWarning = false) => {
+  const handleSave = async (skipModeWarning = false, skipInitialWarning = false) => {
     if (!formData.registration.trim()) {
       toast.error("Registration number is required");
       return;
@@ -146,11 +146,32 @@ export function AircraftManagement({ userId }: { userId: string }) {
       }
     }
 
+    // Check if initial counter values changed on existing aircraft that already had them
+    if (editingAircraft && !skipInitialWarning && hadInitialValues(editingAircraft) && initialValuesChanged(editingAircraft)) {
+      setShowInitialChangeWarning(true);
+      setInitialChangeConfirmText("");
+      return;
+    }
+
     setSaving(true);
+
+    const parseInitial = (v: string): number | null => {
+      if (v.trim() === "") return null;
+      const n = parseFloat(v);
+      return isNaN(n) ? null : n;
+    };
 
     try {
       if (editingAircraft) {
-        // Update existing
+        const initialUpdates = {
+          initial_hobbs: parseInitial(formData.initial_hobbs),
+          initial_tach: parseInitial(formData.initial_tach),
+          initial_airframe_total_time: parseInitial(formData.initial_airframe_total_time),
+          initial_engine_total_time: parseInitial(formData.initial_engine_total_time),
+          initial_prop_total_time: parseInitial(formData.initial_prop_total_time),
+        };
+
+        // Update aircraft record
         const { error } = await supabase
           .from("aircraft")
           .update({
@@ -159,11 +180,37 @@ export function AircraftManagement({ userId }: { userId: string }) {
             airframe_tt_mode: formData.airframe_tt_mode,
             engine_tt_mode: formData.engine_tt_mode,
             prop_tt_mode: formData.prop_tt_mode,
+            ...initialUpdates,
           })
           .eq("id", editingAircraft.id);
 
         if (error) throw error;
-        toast.success("Aircraft updated successfully");
+
+        // If initial values changed and we skipped warning (meaning user confirmed),
+        // reset counters to initial values and delete history
+        if (skipInitialWarning && hadInitialValues(editingAircraft) && initialValuesChanged(editingAircraft)) {
+          // Reset counters to initial values
+          await supabase
+            .from("aircraft_counters")
+            .update({
+              hobbs: initialUpdates.initial_hobbs ?? 0,
+              tach: initialUpdates.initial_tach ?? 0,
+              airframe_total_time: initialUpdates.initial_airframe_total_time ?? 0,
+              engine_total_time: initialUpdates.initial_engine_total_time ?? 0,
+              prop_total_time: initialUpdates.initial_prop_total_time ?? 0,
+            })
+            .eq("aircraft_id", editingAircraft.id);
+
+          // Delete all counter history
+          await supabase
+            .from("aircraft_counter_history")
+            .delete()
+            .eq("aircraft_id", editingAircraft.id);
+
+          toast.success("Aircraft updated. Counters reset to acquisition values and history cleared.");
+        } else {
+          toast.success("Aircraft updated successfully");
+        }
       } else {
         // Create new - set as primary if it's the first one
         const isPrimary = aircraft.length === 0;
