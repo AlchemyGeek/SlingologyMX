@@ -405,6 +405,33 @@ export function AircraftManagement({ userId }: { userId: string }) {
               />
             </div>
 
+            {/* Acquisition Counters */}
+            <Collapsible open={initialCountersOpen} onOpenChange={setInitialCountersOpen}>
+              <div className="pt-2 border-t">
+                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
+                  {initialCountersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <Label className="text-sm font-medium cursor-pointer">Acquisition Counters</Label>
+                </CollapsibleTrigger>
+                <p className="text-xs text-muted-foreground mt-1 ml-6">
+                  Counter values when you acquired this aircraft. Used to calculate owner-specific usage for financial analysis.
+                </p>
+                <CollapsibleContent className="space-y-3 mt-3">
+                  {INITIAL_COUNTER_KEYS.map(({ key, label }) => (
+                    <div key={key} className="grid grid-cols-2 items-center gap-4">
+                      <Label className="text-sm">{label}</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData[key]}
+                        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                        placeholder="Not set"
+                      />
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
             {/* Counter Tracking Modes */}
             <div className="space-y-3 pt-2 border-t">
               <Label className="text-sm font-medium">Counter Tracking Modes</Label>
