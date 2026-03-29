@@ -334,7 +334,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={() => handleSave()} disabled={saving}>
               {saving ? "Saving..." : editingAircraft ? "Update" : "Add Aircraft"}
             </Button>
           </DialogFooter>
