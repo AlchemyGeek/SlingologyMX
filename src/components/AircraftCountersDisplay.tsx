@@ -5,6 +5,7 @@ import { Pencil, History } from "lucide-react";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import CounterHistoryDialog from "./CounterHistoryDialog";
 import { BatchCounterEditDialog } from "./BatchCounterEditDialog";
+import { useAircraft } from "@/contexts/AircraftContext";
 
 interface AircraftCountersDisplayProps {
   counters: AircraftCounters;
@@ -93,6 +94,11 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
         open={isBatchEditOpen}
         onOpenChange={setIsBatchEditOpen}
         counters={counters}
+        counterModes={{
+          airframe_tt_mode: selectedAircraft?.airframe_tt_mode ?? "tach",
+          engine_tt_mode: selectedAircraft?.engine_tt_mode ?? "tach",
+          prop_tt_mode: selectedAircraft?.prop_tt_mode ?? "tach",
+        }}
         onSave={onUpdateAllCounters}
       />
     </>
