@@ -68,20 +68,20 @@ export function AircraftManagement({ userId }: { userId: string }) {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (skipModeWarning = false) => {
     if (!formData.registration.trim()) {
       toast.error("Registration number is required");
       return;
     }
 
     // Check if tracking modes changed on an existing aircraft
-    if (editingAircraft) {
+    if (editingAircraft && !skipModeWarning) {
       const modesChanged =
         formData.airframe_tt_mode !== editingAircraft.airframe_tt_mode ||
         formData.engine_tt_mode !== editingAircraft.engine_tt_mode ||
         formData.prop_tt_mode !== editingAircraft.prop_tt_mode;
 
-      if (modesChanged && !showModeChangeWarning) {
+      if (modesChanged) {
         setShowModeChangeWarning(true);
         setModeChangeConfirmText("");
         return;
