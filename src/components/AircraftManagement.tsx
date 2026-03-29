@@ -428,7 +428,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
               onClick={() => {
                 setShowModeChangeWarning(false);
                 setModeChangeConfirmText("");
-                handleSave();
+                handleSave(true);
               }}
               disabled={modeChangeConfirmText !== MODE_CHANGE_PHRASE}
               className="disabled:opacity-50 disabled:cursor-not-allowed"
