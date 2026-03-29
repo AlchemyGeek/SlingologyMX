@@ -30,7 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plane, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react";
+import { Plane, Plus, Pencil, Trash2, Star, StarOff, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import type { TtTrackingMode } from "@/contexts/AircraftContext";
 
@@ -40,7 +41,30 @@ interface AircraftFormData {
   airframe_tt_mode: TtTrackingMode;
   engine_tt_mode: TtTrackingMode;
   prop_tt_mode: TtTrackingMode;
+  initial_hobbs: string;
+  initial_tach: string;
+  initial_airframe_total_time: string;
+  initial_engine_total_time: string;
+  initial_prop_total_time: string;
 }
+
+const INITIAL_COUNTER_KEYS = [
+  { key: "initial_hobbs" as const, label: "Hobbs" },
+  { key: "initial_tach" as const, label: "Tach" },
+  { key: "initial_airframe_total_time" as const, label: "Airframe TT" },
+  { key: "initial_engine_total_time" as const, label: "Engine TT" },
+  { key: "initial_prop_total_time" as const, label: "Prop TT" },
+] as const;
+
+const emptyInitialCounters = {
+  initial_hobbs: "",
+  initial_tach: "",
+  initial_airframe_total_time: "",
+  initial_engine_total_time: "",
+  initial_prop_total_time: "",
+};
+
+const formatInitialValue = (v: number | null): string => v !== null ? String(v) : "";
 
 export function AircraftManagement({ userId }: { userId: string }) {
   const { aircraft, refetchAircraft, canAddMore, maxAircraft } = useAircraft();
@@ -48,27 +72,61 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
   const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
   const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
+  const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
+  const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
+  const [initialCountersOpen, setInitialCountersOpen] = useState(false);
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
   const MODE_CHANGE_PHRASE = "I UNDERSTAND";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach" });
+    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+    setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (a: Aircraft) => {
     setEditingAircraft(a);
-    setFormData({ registration: a.registration, model_make: a.model_make || "", airframe_tt_mode: a.airframe_tt_mode, engine_tt_mode: a.engine_tt_mode, prop_tt_mode: a.prop_tt_mode });
+    setFormData({
+      registration: a.registration,
+      model_make: a.model_make || "",
+      airframe_tt_mode: a.airframe_tt_mode,
+      engine_tt_mode: a.engine_tt_mode,
+      prop_tt_mode: a.prop_tt_mode,
+      initial_hobbs: formatInitialValue(a.initial_hobbs),
+      initial_tach: formatInitialValue(a.initial_tach),
+      initial_airframe_total_time: formatInitialValue(a.initial_airframe_total_time),
+      initial_engine_total_time: formatInitialValue(a.initial_engine_total_time),
+      initial_prop_total_time: formatInitialValue(a.initial_prop_total_time),
+    });
+    setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
 
-  const handleSave = async (skipModeWarning = false) => {
+  // Check if any initial values were previously set on the aircraft being edited
+  const hadInitialValues = (a: Aircraft | null): boolean => {
+    if (!a) return false;
+    return a.initial_hobbs !== null || a.initial_tach !== null || 
+           a.initial_airframe_total_time !== null || a.initial_engine_total_time !== null || 
+           a.initial_prop_total_time !== null;
+  };
+
+  // Check if initial counter values changed
+  const initialValuesChanged = (a: Aircraft | null): boolean => {
+    if (!a) return false;
+    return formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs ||
+           formatInitialValue(a.initial_tach) !== formData.initial_tach ||
+           formatInitialValue(a.initial_airframe_total_time) !== formData.initial_airframe_total_time ||
+           formatInitialValue(a.initial_engine_total_time) !== formData.initial_engine_total_time ||
+           formatInitialValue(a.initial_prop_total_time) !== formData.initial_prop_total_time;
+  };
+
+  const handleSave = async (skipModeWarning = false, skipInitialWarning = false) => {
     if (!formData.registration.trim()) {
       toast.error("Registration number is required");
       return;
@@ -88,11 +146,32 @@ export function AircraftManagement({ userId }: { userId: string }) {
       }
     }
 
+    // Check if initial counter values changed on existing aircraft that already had them
+    if (editingAircraft && !skipInitialWarning && hadInitialValues(editingAircraft) && initialValuesChanged(editingAircraft)) {
+      setShowInitialChangeWarning(true);
+      setInitialChangeConfirmText("");
+      return;
+    }
+
     setSaving(true);
+
+    const parseInitial = (v: string): number | null => {
+      if (v.trim() === "") return null;
+      const n = parseFloat(v);
+      return isNaN(n) ? null : n;
+    };
 
     try {
       if (editingAircraft) {
-        // Update existing
+        const initialUpdates = {
+          initial_hobbs: parseInitial(formData.initial_hobbs),
+          initial_tach: parseInitial(formData.initial_tach),
+          initial_airframe_total_time: parseInitial(formData.initial_airframe_total_time),
+          initial_engine_total_time: parseInitial(formData.initial_engine_total_time),
+          initial_prop_total_time: parseInitial(formData.initial_prop_total_time),
+        };
+
+        // Update aircraft record
         const { error } = await supabase
           .from("aircraft")
           .update({
@@ -101,11 +180,37 @@ export function AircraftManagement({ userId }: { userId: string }) {
             airframe_tt_mode: formData.airframe_tt_mode,
             engine_tt_mode: formData.engine_tt_mode,
             prop_tt_mode: formData.prop_tt_mode,
+            ...initialUpdates,
           })
           .eq("id", editingAircraft.id);
 
         if (error) throw error;
-        toast.success("Aircraft updated successfully");
+
+        // If initial values changed and we skipped warning (meaning user confirmed),
+        // reset counters to initial values and delete history
+        if (skipInitialWarning && hadInitialValues(editingAircraft) && initialValuesChanged(editingAircraft)) {
+          // Reset counters to initial values
+          await supabase
+            .from("aircraft_counters")
+            .update({
+              hobbs: initialUpdates.initial_hobbs ?? 0,
+              tach: initialUpdates.initial_tach ?? 0,
+              airframe_total_time: initialUpdates.initial_airframe_total_time ?? 0,
+              engine_total_time: initialUpdates.initial_engine_total_time ?? 0,
+              prop_total_time: initialUpdates.initial_prop_total_time ?? 0,
+            })
+            .eq("aircraft_id", editingAircraft.id);
+
+          // Delete all counter history
+          await supabase
+            .from("aircraft_counter_history")
+            .delete()
+            .eq("aircraft_id", editingAircraft.id);
+
+          toast.success("Aircraft updated. Counters reset to acquisition values and history cleared.");
+        } else {
+          toast.success("Aircraft updated successfully");
+        }
       } else {
         // Create new - set as primary if it's the first one
         const isPrimary = aircraft.length === 0;
@@ -300,6 +405,33 @@ export function AircraftManagement({ userId }: { userId: string }) {
               />
             </div>
 
+            {/* Acquisition Counters */}
+            <Collapsible open={initialCountersOpen} onOpenChange={setInitialCountersOpen}>
+              <div className="pt-2 border-t">
+                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
+                  {initialCountersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <Label className="text-sm font-medium cursor-pointer">Acquisition Counters</Label>
+                </CollapsibleTrigger>
+                <p className="text-xs text-muted-foreground mt-1 ml-6">
+                  Counter values when you acquired this aircraft. Used to calculate owner-specific usage for financial analysis.
+                </p>
+                <CollapsibleContent className="space-y-3 mt-3">
+                  {INITIAL_COUNTER_KEYS.map(({ key, label }) => (
+                    <div key={key} className="grid grid-cols-2 items-center gap-4">
+                      <Label className="text-sm">{label}</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData[key]}
+                        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                        placeholder="Not set"
+                      />
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
             {/* Counter Tracking Modes */}
             <div className="space-y-3 pt-2 border-t">
               <Label className="text-sm font-medium">Counter Tracking Modes</Label>
@@ -434,6 +566,57 @@ export function AircraftManagement({ userId }: { userId: string }) {
               className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm Change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Initial Counter Change Warning */}
+      <AlertDialog
+        open={showInitialChangeWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowInitialChangeWarning(false);
+            setInitialChangeConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Acquisition Counters?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Changing acquisition counter values will <strong>reset your current counters</strong> to these new values and <strong>delete all counter history</strong>. This will impact all of your records and may invalidate your existing financial analysis.
+                </p>
+                <p className="font-medium text-foreground">
+                  This action cannot be undone. Make sure you understand the implications.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{MODE_CHANGE_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={initialChangeConfirmText}
+                    onChange={(e) => setInitialChangeConfirmText(e.target.value.toUpperCase())}
+                    placeholder={MODE_CHANGE_PHRASE}
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setInitialChangeConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowInitialChangeWarning(false);
+                setInitialChangeConfirmText("");
+                handleSave(true, true);
+              }}
+              disabled={initialChangeConfirmText !== MODE_CHANGE_PHRASE}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm Reset
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

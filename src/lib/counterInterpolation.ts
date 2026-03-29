@@ -273,6 +273,18 @@ export function calculateUsageRate(
   };
 }
 
+/**
+ * Calculates owner-specific hours by subtracting the initial (acquisition) value.
+ * Returns 0 if absolute value is less than initial.
+ */
+export function getOwnerHours(
+  absoluteValue: number,
+  initialValue: number | null
+): number {
+  const offset = initialValue ?? 0;
+  return Math.max(0, absoluteValue - offset);
+}
+
 // Helper functions
 function daysBetween(dateA: string, dateB: string): number {
   const a = new Date(dateA + "T00:00:00");

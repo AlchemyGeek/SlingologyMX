@@ -26,6 +26,13 @@ interface BatchCounterEditDialogProps {
   onOpenChange: (open: boolean) => void;
   counters: AircraftCounters;
   counterModes: CounterModes;
+  initialValues?: {
+    hobbs: number | null;
+    tach: number | null;
+    airframe_total_time: number | null;
+    engine_total_time: number | null;
+    prop_total_time: number | null;
+  };
   onSave: (updates: Partial<Pick<AircraftCounters, NumericCounterKey>>) => Promise<void>;
 }
 
@@ -61,6 +68,7 @@ export function BatchCounterEditDialog({
   onOpenChange,
   counters,
   counterModes,
+  initialValues,
   onSave,
 }: BatchCounterEditDialogProps) {
   const [values, setValues] = useState<Record<NumericCounterKey, string>>({
@@ -154,6 +162,13 @@ export function BatchCounterEditDialog({
 
       if (isNaN(newValue) || newValue < 0) {
         errors.push(`${config.label}: Please enter a valid positive number`);
+        continue;
+      }
+
+      // Check against initial (acquisition) values
+      const initialVal = initialValues?.[config.key] ?? null;
+      if (initialVal !== null && newValue < initialVal) {
+        errors.push(`${config.label}: Value cannot be less than acquisition value (${initialVal.toFixed(1)})`);
         continue;
       }
 

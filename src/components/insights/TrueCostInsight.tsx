@@ -190,16 +190,28 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
       console.log("[TrueCost] startResult:", startResult);
       console.log("[TrueCost] endResult:", endResult);
 
-      // If start date is before first entry, use first entry as start
+      // If start date is before first entry, use initial (acquisition) value as fallback if available
       const firstEntry = log.entries[0];
+      const initialValueMap: Record<CounterType, number | null> = {
+        hobbs: selectedAircraft.initial_hobbs ?? null,
+        tach: selectedAircraft.initial_tach ?? null,
+        airframe_total_time: selectedAircraft.initial_airframe_total_time ?? null,
+        engine_total_time: selectedAircraft.initial_engine_total_time ?? null,
+        prop_total_time: selectedAircraft.initial_prop_total_time ?? null,
+      };
+      const initialVal = initialValueMap[counterType];
+
       if (!startResult && firstEntry && startDateStr < firstEntry.date) {
+        const fallbackValue = initialVal !== null ? initialVal : firstEntry.value;
         startResult = {
-          value: firstEntry.value,
+          value: fallbackValue,
           type: "actual",
-          confidence: "high",
-          explanation: `First recorded value on ${firstEntry.date} (counter history starts after selected period start)`,
+          confidence: initialVal !== null ? "high" : "low",
+          explanation: initialVal !== null
+            ? `Using acquisition value for ${counterType}`
+            : `First recorded value on ${firstEntry.date} (analysis date precedes counter history)`,
         };
-        console.log("[TrueCost] Using first entry as start fallback:", startResult);
+        console.log("[TrueCost] Using fallback start:", startResult);
       }
 
       // If end date is after last entry, extrapolate or use last entry

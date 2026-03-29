@@ -77,6 +77,11 @@ export type Database = {
           created_at: string | null
           engine_tt_mode: string
           id: string
+          initial_airframe_total_time: number | null
+          initial_engine_total_time: number | null
+          initial_hobbs: number | null
+          initial_prop_total_time: number | null
+          initial_tach: number | null
           is_primary: boolean
           model_make: string | null
           prop_tt_mode: string
@@ -89,6 +94,11 @@ export type Database = {
           created_at?: string | null
           engine_tt_mode?: string
           id?: string
+          initial_airframe_total_time?: number | null
+          initial_engine_total_time?: number | null
+          initial_hobbs?: number | null
+          initial_prop_total_time?: number | null
+          initial_tach?: number | null
           is_primary?: boolean
           model_make?: string | null
           prop_tt_mode?: string
@@ -101,6 +111,11 @@ export type Database = {
           created_at?: string | null
           engine_tt_mode?: string
           id?: string
+          initial_airframe_total_time?: number | null
+          initial_engine_total_time?: number | null
+          initial_hobbs?: number | null
+          initial_prop_total_time?: number | null
+          initial_tach?: number | null
           is_primary?: boolean
           model_make?: string | null
           prop_tt_mode?: string
