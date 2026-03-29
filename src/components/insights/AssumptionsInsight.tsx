@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Info, CheckCircle2, AlertTriangle, HelpCircle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAircraft } from "@/contexts/AircraftContext";
-import { fetchCounterLog, calculateUsageRate, CounterType, CounterEntry } from "@/lib/counterInterpolation";
+import { fetchCounterLog, calculateUsageRate, getOwnerHours, CounterType, CounterEntry } from "@/lib/counterInterpolation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -122,11 +122,21 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
         gaps.push("Insufficient counter history for usage projection");
         fallbacks.push("Using zero hours for variable cost projections");
         
-        // Still build chart data if we have entries
+        // Get initial value for counter offset (owner hours)
+        const initialValueMap: Record<CounterType, number | null> = {
+          hobbs: selectedAircraft.initial_hobbs ?? null,
+          tach: selectedAircraft.initial_tach ?? null,
+          airframe_total_time: selectedAircraft.initial_airframe_total_time ?? null,
+          engine_total_time: selectedAircraft.initial_engine_total_time ?? null,
+          prop_total_time: selectedAircraft.initial_prop_total_time ?? null,
+        };
+        const initialVal = initialValueMap[counterType];
+
+        // Still build chart data if we have entries - apply owner-hours offset
         const chartData: UsageChartDataPoint[] = windowEntries.map(entry => ({
           date: entry.date,
           displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
-          value: entry.value,
+          value: getOwnerHours(entry.value, initialVal),
         }));
         
         usageAssumptions = {
@@ -151,17 +161,19 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
           // Calculate trend line using first and last points in window
           const firstEntry = windowEntries[0];
           const lastEntry = windowEntries[windowEntries.length - 1];
+          const firstOwner = getOwnerHours(firstEntry.value, initialVal);
+          const lastOwner = getOwnerHours(lastEntry.value, initialVal);
           const daysBetween = (new Date(lastEntry.date).getTime() - new Date(firstEntry.date).getTime()) / (1000 * 60 * 60 * 24);
-          const slope = daysBetween > 0 ? (lastEntry.value - firstEntry.value) / daysBetween : 0;
+          const slope = daysBetween > 0 ? (lastOwner - firstOwner) / daysBetween : 0;
           
           windowEntries.forEach(entry => {
             const daysFromFirst = (new Date(entry.date).getTime() - new Date(firstEntry.date).getTime()) / (1000 * 60 * 60 * 24);
-            const trendValue = firstEntry.value + slope * daysFromFirst;
+            const trendValue = firstOwner + slope * daysFromFirst;
             
             chartData.push({
               date: entry.date,
               displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
-              value: entry.value,
+              value: getOwnerHours(entry.value, initialVal),
               trendValue: Math.round(trendValue * 10) / 10,
             });
           });
@@ -170,7 +182,7 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
             chartData.push({
               date: entry.date,
               displayDate: format(new Date(entry.date + "T00:00:00"), "MMM d"),
-              value: entry.value,
+              value: getOwnerHours(entry.value, initialVal),
             });
           });
         }
