@@ -1,99 +1,66 @@
-# Client-Local Undo Delete
 
-## Approach
 
-Use a **custom React hook** (`useUndoDelete`) that captures the deleted record's data before deletion, shows a sonner toast with an "Undo" action button, and re-inserts the record if the user clicks Undo within 20 seconds. No database or schema changes needed.
+# Counter Tracking Mode Configuration
 
-## Architecture
+## Summary
 
-### 1. Create `src/hooks/useUndoDelete.ts`
+Add per-aircraft configuration for how each TT counter (Airframe TT, Engine TT, Prop TT) is tracked: linked to Hobbs, linked to Tach (default), or Manual. When linked, TT counters auto-increment by the same delta as the linked counter. When Manual, users enter TT values independently.
 
-A reusable hook that encapsulates all undo logic:
+## Changes Required
 
-- Accepts a table name and optional cleanup/restore callbacks
-- On delete: snapshots the full record, performs the delete, shows a sonner toast with "Undo" action
-- On undo: re-inserts the snapshot into the database, calls a refresh callback
-- Only tracks the most recent deletion (new delete replaces previous undo opportunity)
-- 20-second timeout via sonner's `duration` prop
-- If re-insert fails, shows "Undo unavailable" error toast
+### 1. Database: Add columns to `aircraft` table
 
-```text
-Hook API:
+Add three new columns to store each TT counter's tracking mode:
 
-useUndoDelete({
-  tableName: string,
-  onBeforeDelete?: (id) => Promise<void>,   // cascade deletes (notifications, compliance, etc.)
-  onAfterDelete?: () => void,                // refresh list, call onRecordChanged
-  onAfterRestore?: () => void,               // refresh list after undo
-  onBeforeRestore?: (record) => Promise<void> // re-create cascaded records if needed
-})
-
-Returns:
-  deleteWithUndo(id: string, snapshot: Record) => Promise<void>
+```sql
+ALTER TABLE aircraft
+  ADD COLUMN airframe_tt_mode text NOT NULL DEFAULT 'tach',
+  ADD COLUMN engine_tt_mode text NOT NULL DEFAULT 'tach',
+  ADD COLUMN prop_tt_mode text NOT NULL DEFAULT 'tach';
 ```
 
-### 2. Integration Pattern for Each Panel
+Valid values: `'hobbs'`, `'tach'`, `'manual'`
 
-Each panel's `handleDelete` will change from "delete then toast success" to "call deleteWithUndo with the record snapshot." The hook handles the toast.
+### 2. AircraftManagement.tsx — Add counter mode settings
 
-**Simple panels** (Transactions, Subscriptions, Reserves, Equipment):
+In the aircraft edit dialog (or as a new expandable section per aircraft card), add three dropdowns:
+- **Airframe TT tracking**: Linked to Hobbs / Linked to Tach / Manual
+- **Engine TT tracking**: Linked to Hobbs / Linked to Tach / Manual
+- **Prop TT tracking**: Linked to Hobbs / Linked to Tach / Manual
 
-- Straightforward: snapshot record, delete, re-insert on undo
-- For Equipment: also delete linked notifications before delete; on undo, notifications are NOT restored (acceptable -- they were auto-generated and can be recreated)
+Save these to the `aircraft` table on update.
 
-**Complex panels** (Maintenance Logs, Directives):
+### 3. AircraftContext.tsx — Expose tracking modes
 
-- Maintenance Logs: currently voids linked transactions, deletes notifications, deletes compliance records before deleting the log. On undo, the log is re-inserted. Voided transactions and deleted notifications/compliance are NOT restored (acceptable trade-off for simplicity -- the spec says this is a quick safety net, not full recovery).
-- Directives: currently inserts a history record ("Delete" action), deletes linked notifications, then deletes. On undo, re-insert the directive and delete the history record that was just created.
+Add the three mode fields to the `Aircraft` type so they're available app-wide.
 
-### 3. Panels to Update
+### 4. BatchCounterEditDialog.tsx — Respect tracking modes
 
+- Pass counter modes as a prop (from the selected aircraft context)
+- **Linked counters**: Show as read-only with a label like "Linked to Tach". Their values are computed from the delta of the linked counter, not editable
+- **Manual counters**: Editable as today
+- **Sync toggle**: Remove the current sync toggle. The linking replaces it — linked counters auto-sync to their source, manual ones are independent
+- Hobbs and Tach remain always editable (they are source counters, never linked)
 
-| Panel            | File                           | Cascade Complexity                                     |
-| ---------------- | ------------------------------ | ------------------------------------------------------ |
-| Transactions     | `TransactionsPanel.tsx`        | Simple delete                                          |
-| Subscriptions    | `SubscriptionsPanel.tsx`       | Simple delete                                          |
-| Reserves         | `ReservesPanel.tsx`            | Simple delete                                          |
-| Equipment        | `EquipmentPanel.tsx`           | Deletes linked notifications first                     |
-| Maintenance Logs | `MaintenanceLogsPanel.tsx`     | Voids transactions, deletes notifications + compliance |
-| Directives       | `DirectivesPanel.tsx`          | Inserts history, deletes notifications                 |
-| Notifications    | `ActiveNotificationsPanel.tsx` | Simple delete                                          |
+### 5. useAircraftCounters.ts — Apply tracking logic on save
 
+When `updateAllCounters` is called:
+- For each TT counter in `'hobbs'` or `'tach'` mode, compute the delta from the linked source counter and apply it automatically
+- For `'manual'` mode counters, use the explicitly provided value
+- This replaces the current `syncableKeys` logic
 
-### 4. Sonner Toast Configuration
+### 6. Maintenance Log counter sync
 
-The toast will use sonner's built-in action button:
-
-```text
-toast("Deleted.", {
-  duration: 15000,
-  action: {
-    label: "Undo",
-    onClick: () => restoreRecord()
-  }
-})
-```
-
-This gives us the 15-second window, single-undo behavior (new toast replaces old), and automatic disappearance -- all matching the spec requirements without custom state management for timers.
-
-## Key Design Decisions
-
-- **No soft-delete / no new DB columns**: Records are truly deleted. Undo works by re-inserting a JavaScript-held snapshot. This keeps the database clean and avoids schema changes.
-- **Cascade side-effects are not fully reversible**: For maintenance logs and directives, some cascaded changes (voided transactions, deleted compliance records) won't be restored on undo. The log/directive itself will be restored. This is an acceptable trade-off per the spec's "fast safety net" principle.
-- **Sonner handles timing and replacement natively**: No custom timer logic needed. Sonner's `duration` and toast replacement behavior match the spec exactly.
+The maintenance log form's "Sync Tach, Airframe, Engine & Prop" toggle should respect these modes too. Linked counters auto-derive from their source; manual ones are independent unless the user explicitly edits them.
 
 ## Technical Details
 
-### Files to Create
+| Area | Detail |
+|------|--------|
+| Migration | 3 new `text` columns on `aircraft`, default `'tach'` |
+| AircraftContext | Add `airframe_tt_mode`, `engine_tt_mode`, `prop_tt_mode` to `Aircraft` interface |
+| BatchCounterEditDialog | Read modes from aircraft context; disable input for linked counters; compute deltas |
+| useAircraftCounters | Replace sync logic with mode-aware delta computation |
+| AircraftManagement | Add 3 Select dropdowns in edit dialog |
+| MaintenanceLogForm | Adjust sync behavior to respect per-counter modes |
 
-- `src/hooks/useUndoDelete.ts`
-
-### Files to Modify
-
-- `src/components/TransactionsPanel.tsx`
-- `src/components/SubscriptionsPanel.tsx`
-- `src/components/ReservesPanel.tsx`
-- `src/components/EquipmentPanel.tsx`
-- `src/components/MaintenanceLogsPanel.tsx`
-- `src/components/DirectivesPanel.tsx`
-- `src/components/ActiveNotificationsPanel.tsx`
