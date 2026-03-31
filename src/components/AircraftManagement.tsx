@@ -79,9 +79,14 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
   const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
   const [initialCountersOpen, setInitialCountersOpen] = useState(false);
+  const [showResetCounterWarning, setShowResetCounterWarning] = useState(false);
+  const [resetCounterType, setResetCounterType] = useState<"engine_total_time" | "prop_total_time" | null>(null);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
   const MODE_CHANGE_PHRASE = "I UNDERSTAND";
+  const RESET_PHRASE = "RESET";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
