@@ -210,6 +210,9 @@ export function DashboardSidebar({ activeView, onViewChange, hasActiveAlerts, ad
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <div className="mt-auto border-t px-4 py-2">
+        <p className="text-[10px] text-muted-foreground text-center">v26.06</p>
+      </div>
     </Sidebar>
   );
 }
