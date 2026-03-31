@@ -510,6 +510,42 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 </div>
               ))}
             </div>
+
+            {/* Counter Reset (Overhaul) - only show when editing */}
+            {editingAircraft && (
+              <div className="space-y-3 pt-2 border-t">
+                <Label className="text-sm font-medium">Counter Reset (Overhaul)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Reset a counter to 0 after an engine or propeller overhaul/replacement. The reset will be recorded in counter history.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setResetCounterType("engine_total_time");
+                      setShowResetCounterWarning(true);
+                      setResetConfirmText("");
+                    }}
+                  >
+                    Reset Engine TT to 0
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setResetCounterType("prop_total_time");
+                      setShowResetCounterWarning(true);
+                      setResetConfirmText("");
+                    }}
+                  >
+                    Reset Prop TT to 0
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
