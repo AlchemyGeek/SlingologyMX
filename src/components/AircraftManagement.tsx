@@ -287,13 +287,6 @@ export function AircraftManagement({ userId }: { userId: string }) {
     if (!editingAircraft || !resetCounterType) return;
     setResetting(true);
     try {
-      // Set counter to 0
-      await supabase
-        .from("aircraft_counters")
-        .update({ [resetCounterType]: 0 })
-        .eq("aircraft_id", editingAircraft.id);
-
-      // Log a history entry with 0 for this counter
       // First get current counter values to preserve them in history
       const { data: currentCounters } = await supabase
         .from("aircraft_counters")
@@ -301,8 +294,17 @@ export function AircraftManagement({ userId }: { userId: string }) {
         .eq("aircraft_id", editingAircraft.id)
         .maybeSingle();
 
+      // Set counter to 0
+      const { error: updateError } = await supabase
+        .from("aircraft_counters")
+        .update({ [resetCounterType]: 0 })
+        .eq("aircraft_id", editingAircraft.id);
+
+      if (updateError) throw updateError;
+
+      // Log a history entry with 0 for the reset counter
       const today = new Date().toISOString().split("T")[0];
-      await supabase.from("aircraft_counter_history").insert({
+      const { error: historyError } = await supabase.from("aircraft_counter_history").insert({
         user_id: userId,
         aircraft_id: editingAircraft.id,
         hobbs: currentCounters?.hobbs ?? null,
@@ -313,6 +315,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
         source: "Profile",
         change_date: today,
       });
+
+      if (historyError) throw historyError;
 
       const label = resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT";
       toast.success(`${label} reset to 0. A history entry has been recorded.`);
