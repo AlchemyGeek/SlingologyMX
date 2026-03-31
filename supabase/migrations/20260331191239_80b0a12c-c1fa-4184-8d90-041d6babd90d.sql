@@ -1,0 +1,2 @@
+ALTER TABLE aircraft_counter_history DROP CONSTRAINT aircraft_counter_history_source_check;
+ALTER TABLE aircraft_counter_history ADD CONSTRAINT aircraft_counter_history_source_check CHECK (source = ANY (ARRAY['Dashboard'::text, 'Maintenance Record'::text, 'Profile'::text]));
