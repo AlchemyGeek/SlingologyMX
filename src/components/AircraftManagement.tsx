@@ -283,7 +283,51 @@ export function AircraftManagement({ userId }: { userId: string }) {
     }
   };
 
-  return (
+  const handleResetCounter = async () => {
+    if (!editingAircraft || !resetCounterType) return;
+    setResetting(true);
+    try {
+      // Set counter to 0
+      await supabase
+        .from("aircraft_counters")
+        .update({ [resetCounterType]: 0 })
+        .eq("aircraft_id", editingAircraft.id);
+
+      // Log a history entry with 0 for this counter
+      // First get current counter values to preserve them in history
+      const { data: currentCounters } = await supabase
+        .from("aircraft_counters")
+        .select("hobbs, tach, airframe_total_time, engine_total_time, prop_total_time")
+        .eq("aircraft_id", editingAircraft.id)
+        .maybeSingle();
+
+      const today = new Date().toISOString().split("T")[0];
+      await supabase.from("aircraft_counter_history").insert({
+        user_id: userId,
+        aircraft_id: editingAircraft.id,
+        hobbs: currentCounters?.hobbs ?? null,
+        tach: currentCounters?.tach ?? null,
+        airframe_total_time: currentCounters?.airframe_total_time ?? null,
+        engine_total_time: resetCounterType === "engine_total_time" ? 0 : (currentCounters?.engine_total_time ?? null),
+        prop_total_time: resetCounterType === "prop_total_time" ? 0 : (currentCounters?.prop_total_time ?? null),
+        source: "Dashboard",
+        change_date: today,
+      });
+
+      const label = resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT";
+      toast.success(`${label} reset to 0. A history entry has been recorded.`);
+      setShowResetCounterWarning(false);
+      setResetCounterType(null);
+      setResetConfirmText("");
+    } catch (error: any) {
+      console.error("Error resetting counter:", error);
+      toast.error("Failed to reset counter");
+    } finally {
+      setResetting(false);
+    }
+  };
+
+
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
