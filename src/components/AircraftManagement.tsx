@@ -79,9 +79,14 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
   const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
   const [initialCountersOpen, setInitialCountersOpen] = useState(false);
+  const [showResetCounterWarning, setShowResetCounterWarning] = useState(false);
+  const [resetCounterType, setResetCounterType] = useState<"engine_total_time" | "prop_total_time" | null>(null);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
   const MODE_CHANGE_PHRASE = "I UNDERSTAND";
+  const RESET_PHRASE = "RESET";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
@@ -278,6 +283,50 @@ export function AircraftManagement({ userId }: { userId: string }) {
     }
   };
 
+  const handleResetCounter = async () => {
+    if (!editingAircraft || !resetCounterType) return;
+    setResetting(true);
+    try {
+      // Set counter to 0
+      await supabase
+        .from("aircraft_counters")
+        .update({ [resetCounterType]: 0 })
+        .eq("aircraft_id", editingAircraft.id);
+
+      // Log a history entry with 0 for this counter
+      // First get current counter values to preserve them in history
+      const { data: currentCounters } = await supabase
+        .from("aircraft_counters")
+        .select("hobbs, tach, airframe_total_time, engine_total_time, prop_total_time")
+        .eq("aircraft_id", editingAircraft.id)
+        .maybeSingle();
+
+      const today = new Date().toISOString().split("T")[0];
+      await supabase.from("aircraft_counter_history").insert({
+        user_id: userId,
+        aircraft_id: editingAircraft.id,
+        hobbs: currentCounters?.hobbs ?? null,
+        tach: currentCounters?.tach ?? null,
+        airframe_total_time: currentCounters?.airframe_total_time ?? null,
+        engine_total_time: resetCounterType === "engine_total_time" ? 0 : (currentCounters?.engine_total_time ?? null),
+        prop_total_time: resetCounterType === "prop_total_time" ? 0 : (currentCounters?.prop_total_time ?? null),
+        source: "Dashboard",
+        change_date: today,
+      });
+
+      const label = resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT";
+      toast.success(`${label} reset to 0. A history entry has been recorded.`);
+      setShowResetCounterWarning(false);
+      setResetCounterType(null);
+      setResetConfirmText("");
+    } catch (error: any) {
+      console.error("Error resetting counter:", error);
+      toast.error("Failed to reset counter");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -461,6 +510,42 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 </div>
               ))}
             </div>
+
+            {/* Counter Reset (Overhaul) - only show when editing */}
+            {editingAircraft && (
+              <div className="space-y-3 pt-2 border-t">
+                <Label className="text-sm font-medium">Counter Reset (Overhaul)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Reset a counter to 0 after an engine or propeller overhaul/replacement. The reset will be recorded in counter history.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setResetCounterType("engine_total_time");
+                      setShowResetCounterWarning(true);
+                      setResetConfirmText("");
+                    }}
+                  >
+                    Reset Engine TT to 0
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setResetCounterType("prop_total_time");
+                      setShowResetCounterWarning(true);
+                      setResetConfirmText("");
+                    }}
+                  >
+                    Reset Prop TT to 0
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -617,6 +702,56 @@ export function AircraftManagement({ userId }: { userId: string }) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Counter Reset Warning */}
+      <AlertDialog
+        open={showResetCounterWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowResetCounterWarning(false);
+            setResetCounterType(null);
+            setResetConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Reset {resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT"} to 0?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  This will set the {resetCounterType === "engine_total_time" ? "Engine Total Time" : "Prop Total Time"} counter to <strong>0</strong> and record a history entry. Use this after an engine or propeller overhaul/replacement.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  You can revert this change later from the counter history panel on the Dashboard.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{RESET_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={resetConfirmText}
+                    onChange={(e) => setResetConfirmText(e.target.value.toUpperCase())}
+                    placeholder={RESET_PHRASE}
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setResetConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetCounter}
+              disabled={resetConfirmText !== RESET_PHRASE || resetting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resetting ? "Resetting..." : "Reset Counter"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
