@@ -327,7 +327,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
     }
   };
 
-
+  return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
