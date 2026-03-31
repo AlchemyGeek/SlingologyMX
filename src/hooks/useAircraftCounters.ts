@@ -22,7 +22,7 @@ const defaultCounters: AircraftCounters = {
   isInitialized: false,
 };
 
-export type CounterChangeSource = "Dashboard" | "Maintenance Record";
+export type CounterChangeSource = "Dashboard" | "Maintenance Record" | "Profile";
 
 export const useAircraftCounters = (userId: string, aircraftId: string | undefined) => {
   const [counters, setCounters] = useState<AircraftCounters>(defaultCounters);

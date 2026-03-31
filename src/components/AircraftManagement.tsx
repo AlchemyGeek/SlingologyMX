@@ -310,7 +310,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
         airframe_total_time: currentCounters?.airframe_total_time ?? null,
         engine_total_time: resetCounterType === "engine_total_time" ? 0 : (currentCounters?.engine_total_time ?? null),
         prop_total_time: resetCounterType === "prop_total_time" ? 0 : (currentCounters?.prop_total_time ?? null),
-        source: "Dashboard",
+        source: "Profile",
         change_date: today,
       });
 
