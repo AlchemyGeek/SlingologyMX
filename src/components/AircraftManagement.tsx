@@ -706,6 +706,56 @@ export function AircraftManagement({ userId }: { userId: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Counter Reset Warning */}
+      <AlertDialog
+        open={showResetCounterWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowResetCounterWarning(false);
+            setResetCounterType(null);
+            setResetConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Reset {resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT"} to 0?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  This will set the {resetCounterType === "engine_total_time" ? "Engine Total Time" : "Prop Total Time"} counter to <strong>0</strong> and record a history entry. Use this after an engine or propeller overhaul/replacement.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  You can revert this change later from the counter history panel on the Dashboard.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    To confirm, type "<span className="font-semibold">{RESET_PHRASE}</span>" below:
+                  </p>
+                  <Input
+                    value={resetConfirmText}
+                    onChange={(e) => setResetConfirmText(e.target.value.toUpperCase())}
+                    placeholder={RESET_PHRASE}
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setResetConfirmText("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetCounter}
+              disabled={resetConfirmText !== RESET_PHRASE || resetting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resetting ? "Resetting..." : "Reset Counter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
