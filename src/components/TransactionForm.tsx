@@ -328,7 +328,10 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
         {/* Cost Allocation */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Cost Allocation</h3>
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Cost Allocation</h3>
+              <p className="text-xs text-muted-foreground mt-1">Spread this cost evenly across a time period so reports reflect gradual usage instead of a one-time spike.</p>
+            </div>
             <div className="flex items-center space-x-2">
               <Label htmlFor="allocate_over_time" className="cursor-pointer text-sm">Allocate over time</Label>
               <Switch
