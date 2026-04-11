@@ -66,6 +66,7 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
     allocation_period_value: editingTransaction?.allocation_period_value?.toString() || "",
     allocation_period_unit: editingTransaction?.allocation_period_unit || null,
     allocation_start_date: editingTransaction?.allocation_start_date ? parseLocalDate(editingTransaction.allocation_start_date) : null,
+    allocation_end_date: editingTransaction?.allocation_end_date ? parseLocalDate(editingTransaction.allocation_end_date) : null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,16 +96,20 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
       
       // Calculate allocation end date if applicable
       let allocationEndDateStr = null;
-      if (formData.allocate_over_time && formData.allocation_method === "Straight-line" && formData.allocation_period_value && formData.allocation_period_unit) {
-        const startDate = formData.allocation_start_date || formData.transaction_date || new Date();
-        const periodValue = parseInt(formData.allocation_period_value);
-        const endDate = new Date(startDate);
-        if (formData.allocation_period_unit === "Days") {
-          endDate.setDate(endDate.getDate() + periodValue);
-        } else if (formData.allocation_period_unit === "Months") {
-          endDate.setMonth(endDate.getMonth() + periodValue);
+      if (formData.allocate_over_time) {
+        if (formData.allocation_method === "Straight-line" && formData.allocation_period_value && formData.allocation_period_unit) {
+          const startDate = formData.allocation_start_date || formData.transaction_date || new Date();
+          const periodValue = parseInt(formData.allocation_period_value);
+          const endDate = new Date(startDate);
+          if (formData.allocation_period_unit === "Days") {
+            endDate.setDate(endDate.getDate() + periodValue);
+          } else if (formData.allocation_period_unit === "Months") {
+            endDate.setMonth(endDate.getMonth() + periodValue);
+          }
+          allocationEndDateStr = format(endDate, "yyyy-MM-dd");
+        } else if (formData.allocation_end_date) {
+          allocationEndDateStr = format(formData.allocation_end_date, "yyyy-MM-dd");
         }
-        allocationEndDateStr = format(endDate, "yyyy-MM-dd");
       }
 
       const transactionData = {
@@ -411,6 +416,17 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
                   onChange={(date) => setFormData({ ...formData, allocation_start_date: date })}
                 />
               </div>
+
+              {(formData.allocation_method === "Custom" || formData.allocation_method === "By Flight Hours") && (
+                <div className="space-y-2">
+                  <Label htmlFor="allocation_end_date">End Date</Label>
+                  <DateInput
+                    id="allocation_end_date"
+                    value={formData.allocation_end_date}
+                    onChange={(date) => setFormData({ ...formData, allocation_end_date: date })}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
