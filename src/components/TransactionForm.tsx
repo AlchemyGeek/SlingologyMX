@@ -359,6 +359,15 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
                     ))}
                   </SelectContent>
                 </Select>
+                {formData.allocation_method === "Straight-line" && (
+                  <p className="text-xs text-muted-foreground">Spreads the cost evenly over a fixed number of days or months.</p>
+                )}
+                {formData.allocation_method === "By Flight Hours" && (
+                  <p className="text-xs text-muted-foreground">Distributes the cost proportionally based on hours flown during the period.</p>
+                )}
+                {formData.allocation_method === "Custom" && (
+                  <p className="text-xs text-muted-foreground">Lets you manually define the allocation start date and range.</p>
+                )}
               </div>
 
               {formData.allocation_method === "Straight-line" && (
