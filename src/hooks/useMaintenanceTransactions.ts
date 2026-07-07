@@ -201,18 +201,17 @@ export const updateMaintenanceTransactions = async (
   for (const [category, { amount, label }] of neededTransactions) {
     const existingId = existingByCategory.get(category);
     
-    const transactionData = {
+    const baseData = {
       title: `${log.entry_title}:${label}`,
       transaction_date: log.date_performed,
       amount,
-      status: "Pending" as const,
     };
-    
+
     if (existingId) {
-      // Update existing transaction
+      // Update existing transaction — preserve its current status (Pending/Posted/etc.)
       const { error } = await supabase
         .from("transactions")
-        .update(transactionData)
+        .update(baseData)
         .eq("id", existingId);
       
       if (error) {
@@ -225,7 +224,8 @@ export const updateMaintenanceTransactions = async (
       const { error } = await supabase
         .from("transactions")
         .insert([{
-          ...transactionData,
+          ...baseData,
+          status: "Pending" as const,
           user_id: userId,
           aircraft_id: aircraftId,
           direction: "Debit" as const,
