@@ -80,7 +80,15 @@ const COUNTER_OPTIONS: { value: CounterType; label: string }[] = [
 ];
 
 // Variable cost categories - from transactions
-const VARIABLE_CATEGORIES = ["Fuel", "Oil & Consumables", "Travel"];
+// Maintenance categories are variable when the user has flagged them as cost-per-hour relevant
+const VARIABLE_CATEGORIES = [
+  "Fuel",
+  "Oil & Consumables",
+  "Travel",
+  "Maintenance Labor",
+  "Maintenance Parts",
+  "Maintenance (Unspecified)",
+];
 
 const BREAKDOWN_COLORS = {
   variable: "hsl(220, 70%, 50%)",
@@ -142,12 +150,14 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
 
     // 1. Fetch transactions - separate handling for amortized vs non-amortized
     // 1a. Non-amortized transactions within the period
+    // Only include transactions the user flagged for cost-per-hour analysis
     const { data: regularTransactions } = await supabase
       .from("transactions")
-      .select("category, amount")
+      .select("category, amount, include_in_cost_per_hour")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
+      .eq("include_in_cost_per_hour", true)
       .eq("allocate_over_time", false)
       .gte("transaction_date", startDateStr)
       .lte("transaction_date", endDateStr);
@@ -159,6 +169,7 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
+      .eq("include_in_cost_per_hour", true)
       .eq("allocate_over_time", true)
       .not("allocation_start_date", "is", null)
       .not("allocation_end_date", "is", null)
