@@ -80,7 +80,15 @@ const COUNTER_OPTIONS: { value: CounterType; label: string }[] = [
 ];
 
 // Variable cost categories - from transactions
-const VARIABLE_CATEGORIES = ["Fuel", "Oil & Consumables", "Travel"];
+// Maintenance categories are variable when the user has flagged them as cost-per-hour relevant
+const VARIABLE_CATEGORIES = [
+  "Fuel",
+  "Oil & Consumables",
+  "Travel",
+  "Maintenance Labor",
+  "Maintenance Parts",
+  "Maintenance (Unspecified)",
+];
 
 const BREAKDOWN_COLORS = {
   variable: "hsl(220, 70%, 50%)",
@@ -144,7 +152,7 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
     // 1a. Non-amortized transactions within the period
     const { data: regularTransactions } = await supabase
       .from("transactions")
-      .select("category, amount")
+      .select("category, amount, include_in_cost_per_hour")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
@@ -155,7 +163,7 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
     // 1b. Amortized transactions - fetch those whose allocation window overlaps analysis period
     const { data: amortizedTransactions } = await supabase
       .from("transactions")
-      .select("title, category, amount, allocation_start_date, allocation_end_date")
+      .select("title, category, amount, allocation_start_date, allocation_end_date, include_in_cost_per_hour")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
@@ -165,12 +173,24 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
       .lte("allocation_start_date", endDateStr)
       .gte("allocation_end_date", startDateStr);
 
-    // Process regular transactions
-    const categoryTotals = new Map<string, number>();
+    // Categorize by category name, but demote to "fixed" when a variable-category
+    // transaction is NOT flagged for cost-per-hour (user considers it fixed).
+    type Bucket = "variable" | "fixed";
+    const bucketFor = (category: string, includeCPH: boolean | null | undefined): Bucket => {
+      const isVariableCat = VARIABLE_CATEGORIES.includes(category);
+      return isVariableCat && includeCPH !== false ? "variable" : "fixed";
+    };
+    // Aggregate by (category, bucket) so the same category can split across buckets.
+    const bucketTotals = new Map<string, { name: string; bucket: Bucket; amount: number }>();
+    const addToBucket = (category: string, bucket: Bucket, amount: number) => {
+      const key = `${bucket}::${category}`;
+      const existing = bucketTotals.get(key);
+      if (existing) existing.amount += amount;
+      else bucketTotals.set(key, { name: category, bucket, amount });
+    };
     if (regularTransactions) {
       regularTransactions.forEach((tx) => {
-        const existing = categoryTotals.get(tx.category) || 0;
-        categoryTotals.set(tx.category, existing + (tx.amount || 0));
+        addToBucket(tx.category, bucketFor(tx.category, tx.include_in_cost_per_hour), tx.amount || 0);
       });
     }
 
@@ -178,30 +198,25 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
     if (amortizedTransactions) {
       amortizedTransactions.forEach((tx) => {
         if (!tx.amount || !tx.allocation_start_date || !tx.allocation_end_date) return;
-        
         const config: TimeBasedAmortization = {
           basis: "time",
           totalCost: tx.amount,
           startDate: tx.allocation_start_date,
           endDate: tx.allocation_end_date,
         };
-
         const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
-        
         if (result && result.amortizedCost > 0) {
-          const existing = categoryTotals.get(tx.category) || 0;
-          categoryTotals.set(tx.category, existing + result.amortizedCost);
+          addToBucket(tx.category, bucketFor(tx.category, tx.include_in_cost_per_hour), result.amortizedCost);
         }
       });
     }
 
-    categoryTotals.forEach((amount, category) => {
-      const isVariable = VARIABLE_CATEGORIES.includes(category);
+    bucketTotals.forEach(({ name, bucket, amount }) => {
       items.push({
-        name: category,
+        name,
         amount: Math.round(amount * 100) / 100,
         type: "actual",
-        category: isVariable ? "variable" : "fixed",
+        category: bucket,
       });
     });
 
