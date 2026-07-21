@@ -258,7 +258,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     // Fetch variable transactions from last 90 days
     const { data: transactions } = await supabase
       .from("transactions")
-      .select("category, amount")
+      .select("category, amount, reference_id, reference_type")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
@@ -271,9 +271,41 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       return;
     }
 
-    // Group costs by category
+    // Identify which referenced maintenance logs are recurring tasks.
+    // Transactions tied to a recurring maintenance task are excluded from the
+    // historical per-hour "Maintenance" bucket because those costs are already
+    // projected separately as their own scheduled recurring line items.
+    const maintenanceRefIds = Array.from(
+      new Set(
+        transactions
+          .filter((tx: any) => tx.reference_type === "Maintenance" && tx.reference_id)
+          .map((tx: any) => tx.reference_id as string)
+      )
+    );
+
+    let recurringMaintIds = new Set<string>();
+    if (maintenanceRefIds.length > 0) {
+      const { data: logs } = await supabase
+        .from("maintenance_logs")
+        .select("id, is_recurring_task")
+        .in("id", maintenanceRefIds);
+      recurringMaintIds = new Set(
+        (logs || [])
+          .filter((l: any) => l.is_recurring_task)
+          .map((l: any) => l.id as string)
+      );
+    }
+
+    // Group costs by category, skipping transactions linked to recurring maintenance
     const costByCategory: Record<string, number> = {};
-    transactions.forEach((tx) => {
+    transactions.forEach((tx: any) => {
+      if (
+        tx.reference_type === "Maintenance" &&
+        tx.reference_id &&
+        recurringMaintIds.has(tx.reference_id)
+      ) {
+        return;
+      }
       const cat = rollupCategory(tx.category as string);
       costByCategory[cat] = (costByCategory[cat] || 0) + (tx.amount || 0);
     });
