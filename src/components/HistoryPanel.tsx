@@ -21,6 +21,7 @@ import NotificationForm from "./NotificationForm";
 import EquipmentForm from "./EquipmentForm";
 import MaintenanceLogForm from "./MaintenanceLogForm";
 import DirectiveForm from "./DirectiveForm";
+import TransactionForm from "./TransactionForm";
 import type { Directive } from "./DirectivesPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 
@@ -34,7 +35,7 @@ interface UnifiedHistoryItem {
   id: string;
   date: Date;
   name: string;
-  recordType: "Notification" | "Maintenance" | "Directive" | "Equipment" | "Counter";
+  recordType: "Notification" | "Maintenance" | "Directive" | "Equipment" | "Counter" | "Transaction";
   operationType: string;
   category: string;
 }
@@ -49,6 +50,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [equipment, setEquipment] = useState<any[]>([]);
   const [counterHistory, setCounterHistory] = useState<any[]>([]);
   const [directives, setDirectives] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Selected detail view state
@@ -57,6 +59,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
   const [selectedDirective, setSelectedDirective] = useState<Directive | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<any | null>(null);
   const [selectedCounter, setSelectedCounter] = useState<any | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<any | null>(null);
 
   // Editing state
   const [editingNotification, setEditingNotification] = useState<any | null>(null);
@@ -78,7 +81,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
 
   const fetchHistory = async () => {
     try {
-      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes, counterHistoryRes, directivesRes] = await Promise.all([
+      const [notificationsRes, logsRes, directiveHistoryRes, equipmentRes, counterHistoryRes, directivesRes, transactionsRes] = await Promise.all([
         supabase
           .from("notifications")
           .select("*")
@@ -114,7 +117,14 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
           .from("directives")
           .select("*")
           .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId),
+        supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", userId)
           .eq("aircraft_id", aircraftId)
+          .eq("status", "Posted")
+          .order("transaction_date", { ascending: false })
       ]);
 
       if (notificationsRes.error) throw notificationsRes.error;
@@ -123,6 +133,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       if (equipmentRes.error) throw equipmentRes.error;
       if (counterHistoryRes.error) throw counterHistoryRes.error;
       if (directivesRes.error) throw directivesRes.error;
+      if (transactionsRes.error) throw transactionsRes.error;
       
       setNotifications(notificationsRes.data || []);
       setMaintenanceLogs(logsRes.data || []);
@@ -130,6 +141,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       setEquipment(equipmentRes.data || []);
       setCounterHistory(counterHistoryRes.data || []);
       setDirectives(directivesRes.data || []);
+      setTransactions(transactionsRes.data || []);
     } catch (error: any) {
       toast.error("Failed to load history");
     } finally {
@@ -221,8 +233,20 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       });
     });
 
+    // Transactions - Posted only, use transaction_date
+    transactions.forEach((t) => {
+      items.push({
+        id: `transaction-${t.id}`,
+        date: parseLocalDate(t.transaction_date),
+        name: t.title || "Untitled",
+        recordType: "Transaction",
+        operationType: t.direction || "-",
+        category: t.category || "-",
+      });
+    });
+
     return items;
-  }, [notifications, maintenanceLogs, directiveHistory, equipment, counterHistory]);
+  }, [notifications, maintenanceLogs, directiveHistory, equipment, counterHistory, transactions]);
 
   // Get unique values for filters
   const recordTypes = [...new Set(unifiedHistory.map((item) => item.recordType))];
@@ -336,6 +360,9 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     if (recordType === "Counter") {
       return "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700";
     }
+    if (recordType === "Transaction") {
+      return "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700";
+    }
     return "";
   };
 
@@ -392,6 +419,11 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       case "Counter": {
         const counter = counterHistory.find((c) => c.id === rawId);
         if (counter) setSelectedCounter(counter);
+        break;
+      }
+      case "Transaction": {
+        const tx = transactions.find((t) => t.id === rawId);
+        if (tx) setEditingTransaction(tx);
         break;
       }
     }
@@ -577,6 +609,24 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     );
   }
 
+  if (editingTransaction) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Edit Transaction</h3>
+        <TransactionForm
+          userId={userId}
+          aircraftId={aircraftId}
+          editingTransaction={editingTransaction}
+          onSuccess={() => {
+            setEditingTransaction(null);
+            fetchHistory();
+          }}
+          onCancel={() => setEditingTransaction(null)}
+        />
+      </Card>
+    );
+  }
+
   // Show detail views if selected
   if (selectedNotification) {
     return (
@@ -639,7 +689,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     <Card>
       <CardHeader>
         <CardTitle>History</CardTitle>
-        <CardDescription>All completed notifications, maintenance records, directive history, and equipment</CardDescription>
+        <CardDescription>All completed notifications, maintenance records, directive history, equipment, and posted transactions</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasHistory ? (
