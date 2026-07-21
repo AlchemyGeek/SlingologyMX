@@ -1899,6 +1899,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved_member: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       allocation_method: "Straight-line" | "By Flight Hours" | "Custom"
