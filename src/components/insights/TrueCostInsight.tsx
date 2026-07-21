@@ -42,6 +42,7 @@ import {
   TimeBasedAmortization,
   UsageBasedAmortization,
 } from "@/lib/amortization";
+import { rollupCategory, MAINTENANCE_ROLLUP_LABEL } from "@/lib/insightCategories";
 
 interface TrueCostInsightProps {
   onBack: () => void;
@@ -338,10 +339,14 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
     
     if (regularTransactions) {
       regularTransactions.forEach((tx) => {
-        const isVariable = VARIABLE_CATEGORIES.includes(tx.category) || isCounterBasedMaintenance(tx);
+        const cat = rollupCategory(tx.category);
+        const isVariable =
+          VARIABLE_CATEGORIES.includes(tx.category) ||
+          cat === MAINTENANCE_ROLLUP_LABEL ||
+          isCounterBasedMaintenance(tx);
         const targetMap = isVariable ? variableTotals : fixedTotals;
-        const existing = targetMap.get(tx.category) || 0;
-        targetMap.set(tx.category, existing + (tx.amount || 0));
+        const existing = targetMap.get(cat) || 0;
+        targetMap.set(cat, existing + (tx.amount || 0));
       });
     }
 
@@ -360,10 +365,14 @@ export function TrueCostInsight({ onBack, userId }: TrueCostInsightProps) {
         const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
         
         if (result && result.amortizedCost > 0) {
-          const isVariable = VARIABLE_CATEGORIES.includes(tx.category) || isCounterBasedMaintenance(tx);
+          const cat = rollupCategory(tx.category);
+          const isVariable =
+            VARIABLE_CATEGORIES.includes(tx.category) ||
+            cat === MAINTENANCE_ROLLUP_LABEL ||
+            isCounterBasedMaintenance(tx);
           const targetMap = isVariable ? variableTotals : fixedTotals;
-          const existing = targetMap.get(tx.category) || 0;
-          targetMap.set(tx.category, existing + result.amortizedCost);
+          const existing = targetMap.get(cat) || 0;
+          targetMap.set(cat, existing + result.amortizedCost);
         }
       });
     }

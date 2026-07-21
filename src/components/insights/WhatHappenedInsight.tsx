@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { rollupCategory } from "@/lib/insightCategories";
 
 interface WhatHappenedInsightProps {
   onBack: () => void;
@@ -60,8 +61,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Hangar / Tie-Down": "hsl(180, 70%, 50%)",
   "Insurance": "hsl(160, 70%, 50%)",
   "Avionics": "hsl(140, 70%, 50%)",
-  "Maintenance Labor": "hsl(30, 70%, 50%)",
-  "Maintenance Parts": "hsl(50, 70%, 50%)",
+  "Maintenance": "hsl(30, 70%, 50%)",
   "Training": "hsl(280, 70%, 50%)",
   "Travel": "hsl(300, 70%, 50%)",
   "Tools & Equipment": "hsl(320, 70%, 50%)",
@@ -163,8 +163,9 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     const categoryMap = new Map<string, { amount: number; count: number }>();
 
     transactions.forEach((tx) => {
-      const existing = categoryMap.get(tx.category) || { amount: 0, count: 0 };
-      categoryMap.set(tx.category, {
+      const cat = rollupCategory(tx.category);
+      const existing = categoryMap.get(cat) || { amount: 0, count: 0 };
+      categoryMap.set(cat, {
         amount: existing.amount + (tx.amount || 0),
         count: existing.count + 1,
       });

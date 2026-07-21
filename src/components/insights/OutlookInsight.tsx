@@ -49,6 +49,11 @@ import {
   calculateTimeBasedAmortization,
   TimeBasedAmortization,
 } from "@/lib/amortization";
+import {
+  rollupCategory,
+  MAINTENANCE_ROLLUP_LABEL,
+  MAINTENANCE_SUBCATEGORIES,
+} from "@/lib/insightCategories";
 
 interface OutlookInsightProps {
   onBack: () => void;
@@ -85,8 +90,23 @@ const COUNTER_OPTIONS: { value: CounterType; label: string }[] = [
   { value: "airframe_total_time", label: "Airframe TT" },
 ];
 
-// Variable cost categories (per-hour costs)
-const VARIABLE_CATEGORIES = ["Fuel", "Oil & Consumables", "Travel"] as const;
+// Variable cost categories (per-hour costs) — display labels used in the
+// forecast breakdown. Maintenance subcategories are rolled up into a single
+// "Maintenance" bucket to make cost-composition easier to interpret.
+const VARIABLE_CATEGORIES = [
+  "Fuel",
+  "Oil & Consumables",
+  "Travel",
+  MAINTENANCE_ROLLUP_LABEL,
+] as const;
+
+// Underlying DB category values that feed the variable buckets above.
+const VARIABLE_DB_CATEGORIES = [
+  "Fuel",
+  "Oil & Consumables",
+  "Travel",
+  ...MAINTENANCE_SUBCATEGORIES,
+];
 
 const BREAKDOWN_COLORS = {
   variable: "hsl(220, 70%, 50%)",
@@ -242,7 +262,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
-      .in("category", VARIABLE_CATEGORIES)
+      .in("category", VARIABLE_DB_CATEGORIES as any)
       .gte("transaction_date", ninetyDaysAgo)
       .lte("transaction_date", today);
 
@@ -254,7 +274,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     // Group costs by category
     const costByCategory: Record<string, number> = {};
     transactions.forEach((tx) => {
-      const cat = tx.category as string;
+      const cat = rollupCategory(tx.category as string);
       costByCategory[cat] = (costByCategory[cat] || 0) + (tx.amount || 0);
     });
 
