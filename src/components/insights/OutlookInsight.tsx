@@ -262,7 +262,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
       .eq("direction", "Debit")
-      .in("category", VARIABLE_DB_CATEGORIES)
+      .in("category", VARIABLE_DB_CATEGORIES as any)
       .gte("transaction_date", ninetyDaysAgo)
       .lte("transaction_date", today);
 
