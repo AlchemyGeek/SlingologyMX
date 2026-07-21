@@ -42,6 +42,7 @@ import {
   TimeBasedAmortization,
   UsageBasedAmortization,
 } from "@/lib/amortization";
+import { rollupCategory, MAINTENANCE_ROLLUP_LABEL } from "@/lib/insightCategories";
 
 interface TrueCostInsightProps {
   onBack: () => void;
