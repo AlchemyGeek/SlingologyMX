@@ -48,6 +48,7 @@ import {
   TimeBasedAmortization,
   UsageBasedAmortization,
 } from "@/lib/amortization";
+import { rollupCategory, MAINTENANCE_ROLLUP_LABEL } from "@/lib/insightCategories";
 
 interface CostStructureInsightProps {
   onBack: () => void;
@@ -85,9 +86,7 @@ const VARIABLE_CATEGORIES = [
   "Fuel",
   "Oil & Consumables",
   "Travel",
-  "Maintenance Labor",
-  "Maintenance Parts",
-  "Maintenance (Unspecified)",
+  MAINTENANCE_ROLLUP_LABEL,
 ];
 
 const BREAKDOWN_COLORS = {
@@ -190,7 +189,8 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
     };
     if (regularTransactions) {
       regularTransactions.forEach((tx) => {
-        addToBucket(tx.category, bucketFor(tx.category, tx.include_in_cost_per_hour), tx.amount || 0);
+        const cat = rollupCategory(tx.category);
+        addToBucket(cat, bucketFor(cat, tx.include_in_cost_per_hour), tx.amount || 0);
       });
     }
 
@@ -206,7 +206,8 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
         };
         const result = calculateTimeBasedAmortization(config, startDateStr, endDateStr);
         if (result && result.amortizedCost > 0) {
-          addToBucket(tx.category, bucketFor(tx.category, tx.include_in_cost_per_hour), result.amortizedCost);
+          const cat = rollupCategory(tx.category);
+          addToBucket(cat, bucketFor(cat, tx.include_in_cost_per_hour), result.amortizedCost);
         }
       });
     }
