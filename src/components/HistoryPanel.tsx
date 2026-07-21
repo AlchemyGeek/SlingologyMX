@@ -689,7 +689,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
     <Card>
       <CardHeader>
         <CardTitle>History</CardTitle>
-        <CardDescription>All completed notifications, maintenance records, directive history, and equipment</CardDescription>
+        <CardDescription>All completed notifications, maintenance records, directive history, equipment, and posted transactions</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasHistory ? (
