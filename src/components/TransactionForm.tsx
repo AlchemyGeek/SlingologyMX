@@ -53,7 +53,7 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
     amount: editingTransaction?.amount?.toString() || "",
     currency: editingTransaction?.currency?.trim() || "USD",
     intent: editingTransaction?.intent || "Operation",
-    category: editingTransaction?.category || "Other",
+    category: editingTransaction?.category || "Fuel",
     tags: editingTransaction?.tags || [],
     status: editingTransaction?.status || "Posted",
     source: editingTransaction?.source || "Manual",
