@@ -44,6 +44,7 @@ const Dashboard = () => {
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [activeView, setActiveView] = useState<DashboardView>("calendar");
+  const [notificationsOverdueOnly, setNotificationsOverdueOnly] = useState(false);
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
   const { selectedAircraft } = useAircraft();
   const {
