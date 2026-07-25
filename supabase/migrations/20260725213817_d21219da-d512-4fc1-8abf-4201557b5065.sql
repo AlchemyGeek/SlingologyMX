@@ -1,0 +1,1 @@
+ALTER TABLE public.equipment ADD COLUMN software_version varchar(100);
