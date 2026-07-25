@@ -111,6 +111,12 @@ const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDeta
                   <p className="font-medium">{equipment.vendor}</p>
                 </div>
               )}
+              {equipment.software_version && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Software Version</p>
+                  <p className="font-medium">{equipment.software_version}</p>
+                </div>
+              )}
               {equipment.install_context && (
                 <div>
                   <p className="text-sm text-muted-foreground">Install Context</p>
