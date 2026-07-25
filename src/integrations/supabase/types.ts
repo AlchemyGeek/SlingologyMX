@@ -1014,6 +1014,7 @@ export type Database = {
           notes: string | null
           purchase_date: string | null
           serial_number: string | null
+          software_version: string | null
           tags: string[] | null
           updated_at: string | null
           user_id: string
@@ -1037,6 +1038,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           serial_number?: string | null
+          software_version?: string | null
           tags?: string[] | null
           updated_at?: string | null
           user_id: string
@@ -1060,6 +1062,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           serial_number?: string | null
+          software_version?: string | null
           tags?: string[] | null
           updated_at?: string | null
           user_id?: string
