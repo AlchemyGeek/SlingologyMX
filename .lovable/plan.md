@@ -1,28 +1,36 @@
-## Consolidate maintenance subcategories in Insights
+# Header Reminder Bell
 
-Roll up `Maintenance Labor`, `Maintenance Parts`, and `Maintenance (Unspecified)` into a single **Maintenance** bucket across the insight views. This is display-only — underlying transaction categories are unchanged, so record forms, transaction lists, and exports keep the full breakdown.
+Add a bell icon in the top header (next to Profile/Logout) that surfaces two counts for the currently selected aircraft:
+- Unconfirmed notifications (`notifications.is_completed = false`)
+- Pending transactions (`transactions.status = 'Pending'`)
 
-### Changes
+## Behavior
 
-1. **New shared helper** `src/lib/insightCategories.ts`
-   - Export `MAINTENANCE_SUBCATEGORIES` (the three strings above).
-   - Export `rollupCategory(category: string): string` returning `"Maintenance"` for any of the three, else the original category.
+- Red badge on the bell shows the combined count. Hidden when zero.
+- Click opens a `Popover` dropdown with two rows:
+  - "Unconfirmed notifications — N" → jumps to the Notifications view.
+  - "Pending transactions — N" → jumps to the Transactions view.
+- Rows with count 0 render disabled.
+- Footer button "Snooze for 24 hours" hides the bell entirely until the snooze expires. While snoozed the bell is not rendered even if new items appear.
+- Auto-unsnooze after 24h; next mount re-evaluates.
 
-2. **`src/components/insights/WhatHappenedInsight.tsx`**
-   - Apply `rollupCategory` before aggregating into the category map.
-   - Add a `Maintenance` entry to `CATEGORY_COLORS` (drop or keep the two subcategory colors as unused fallbacks).
+## Scope
 
-3. **`src/components/insights/CostStructureInsight.tsx`**
-   - Apply `rollupCategory` when building the category breakdown.
-   - Replace the three subcategory entries in `VARIABLE_CATEGORIES` with a single `"Maintenance"` entry so the variable/fixed classification (still driven by `include_in_cost_per_hour`) keeps working.
+- Aircraft-scoped: queries filter by `selectedAircraft.id`. When switching aircraft, counts refresh.
+- Refresh on: aircraft change, view change, and a lightweight interval (60s) to catch background changes. No realtime subscription needed.
 
-4. **`src/components/insights/TrueCostInsight.tsx`**
-   - Apply `rollupCategory` wherever transactions are grouped by category for display.
+## Implementation
 
-5. **`src/components/insights/OutlookInsight.tsx`**
-   - Apply `rollupCategory` when aggregating historical categories used for projections.
+- New component `src/components/HeaderReminderBell.tsx`:
+  - Props: `aircraftId`, `userId`, `onNavigate(view: DashboardView)`.
+  - Fetches the two counts via `supabase.from(...).select('id', { count: 'exact', head: true })` filtered by `user_id` + `aircraft_id`.
+  - Snooze state stored in `localStorage` under key `reminderBell.snoozeUntil.<userId>.<aircraftId>` (per-user/per-aircraft) as ISO timestamp.
+  - Uses shadcn `Popover`, `Button`, and existing `Bell` icon from `lucide-react`.
+- Wire into `src/pages/Dashboard.tsx` header (line ~314 button group), before the Profile button. Pass `setActiveView` as `onNavigate` so clicking a row switches to `"notifications"` or `"transactions"`.
+- No schema changes. No changes to Notifications/Transactions panels themselves.
 
-### Out of scope
+## Out of scope
 
-- No DB migration, no changes to transaction/maintenance forms, lists, or exports.
-- No new toggle for expanding subcategories (can be added later; raw data remains available).
+- Sidebar badges, top banners, dashboard cards.
+- Overdue-only filtering (uses "not completed" / "pending" as the definitions confirmed).
+- Cross-aircraft totals.

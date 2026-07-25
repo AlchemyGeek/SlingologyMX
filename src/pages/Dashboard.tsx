@@ -9,6 +9,7 @@ import slingologyIcon from "@/assets/slingology-icon.png";
 import { parseLocalDate } from "@/lib/utils";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar, DashboardView } from "@/components/DashboardSidebar";
+import { HeaderReminderBell } from "@/components/HeaderReminderBell";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
@@ -312,6 +313,13 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {user && selectedAircraft?.id && (
+                <HeaderReminderBell
+                  userId={user.id}
+                  aircraftId={selectedAircraft.id}
+                  onNavigate={setActiveView}
+                />
+              )}
               <Button 
                 variant="ghost" 
                 size="sm" 
