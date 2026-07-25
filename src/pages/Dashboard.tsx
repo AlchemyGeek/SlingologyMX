@@ -222,6 +222,8 @@ const Dashboard = () => {
             currentCounters={currentCounters}
             onNotificationCompleted={fetchActiveNotificationsForAlerts}
             refreshKey={recordsRefreshKey}
+            overdueOnly={notificationsOverdueOnly}
+            onClearOverdueFilter={() => setNotificationsOverdueOnly(false)}
           />
         );
       case "history":
@@ -318,7 +320,11 @@ const Dashboard = () => {
                 <HeaderReminderBell
                   userId={user.id}
                   aircraftId={selectedAircraft.id}
-                  onNavigate={setActiveView}
+                  currentCounters={currentCounters}
+                  onNavigate={(view, opts) => {
+                    setNotificationsOverdueOnly(view === "notifications" && !!opts?.overdueOnly);
+                    setActiveView(view);
+                  }}
                 />
               )}
               <Button 
