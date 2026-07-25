@@ -501,6 +501,21 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {overdueOnly && (
+          <div className="flex items-center gap-2">
+            <Badge variant="destructive" className="gap-1">
+              Showing overdue only
+              <button
+                type="button"
+                aria-label="Clear overdue filter"
+                onClick={() => onClearOverdueFilter?.()}
+                className="ml-1 hover:opacity-80"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          </div>
+        )}
         {showForm ? (
           <NotificationForm
             userId={userId}
