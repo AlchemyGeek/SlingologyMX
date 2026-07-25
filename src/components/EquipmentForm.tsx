@@ -53,6 +53,7 @@ const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipme
       ? parseLocalDate(editingEquipment.warranty_expiration_date)
       : (null as Date | null),
     vendor: editingEquipment?.vendor || "",
+    software_version: editingEquipment?.software_version || "",
     links:
       (editingEquipment?.links as unknown as Array<{ url: string; description: string }> | null) ||
       ([] as Array<{ url: string; description: string }>),
@@ -115,6 +116,7 @@ const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipme
           ? format(formData.warranty_expiration_date, "yyyy-MM-dd")
           : null,
         vendor: formData.vendor || null,
+        software_version: formData.software_version || null,
         links: formData.links as unknown as Json,
       };
 
@@ -358,6 +360,17 @@ const EquipmentForm = ({ userId, aircraftId, onSuccess, onCancel, editingEquipme
             value={formData.vendor}
             onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
             placeholder="e.g., Aircraft Spruce"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="software_version">Software Version</Label>
+          <Input
+            id="software_version"
+            value={formData.software_version}
+            onChange={(e) => setFormData({ ...formData, software_version: e.target.value })}
+            placeholder="e.g., 2.30"
+            maxLength={100}
           />
         </div>
 
