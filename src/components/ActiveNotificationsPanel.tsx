@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CheckCircle, Plus, Pencil, Trash2, AlertCircle, Link } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { addDays, addMonths } from "date-fns";
@@ -26,6 +27,8 @@ interface ActiveNotificationsPanelProps {
   };
   onNotificationCompleted?: () => void;
   refreshKey?: number;
+  overdueOnly?: boolean;
+  onClearOverdueFilter?: () => void;
 }
 
 const counterTypeToFieldMap: Record<string, string> = {
@@ -38,7 +41,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 type AlertStatus = "normal" | "reminder" | "due";
 
-const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotificationCompleted, refreshKey }: ActiveNotificationsPanelProps) => {
+const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotificationCompleted, refreshKey, overdueOnly, onClearOverdueFilter }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -98,8 +101,11 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     if (aircraftId) fetchActiveNotifications();
   }, [userId, aircraftId, refreshKey]);
 
-  const dateNotifications = notifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
-  const counterNotifications = notifications.filter(n => n.notification_basis === "Counter");
+  const visibleNotifications = overdueOnly
+    ? notifications.filter(n => getAlertStatus(n) === "due")
+    : notifications;
+  const dateNotifications = visibleNotifications.filter(n => n.notification_basis === "Date" || !n.notification_basis);
+  const counterNotifications = visibleNotifications.filter(n => n.notification_basis === "Counter");
 
   const hasActiveAlerts = notifications.some(notification => {
     const status = getAlertStatus(notification);
