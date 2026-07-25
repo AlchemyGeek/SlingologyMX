@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.4";
+export const CURRENT_SCHEMA_VERSION = "1.5";
 
 export interface ExportData {
   version: string;
@@ -155,6 +155,22 @@ const MIGRATIONS: Migration[] = [
       tables: {
         ...data.tables,
         reserves: (data.tables as any).reserves ?? []
+      }
+    })
+  },
+  {
+    fromVersion: "1.4",
+    toVersion: "1.5",
+    description: "Add software_version field to equipment records",
+    migrate: (data) => ({
+      ...data,
+      version: "1.5",
+      tables: {
+        ...data.tables,
+        equipment: data.tables.equipment.map(r => ({
+          ...r,
+          software_version: r.software_version ?? null
+        }))
       }
     })
   },
