@@ -503,7 +503,7 @@ export function CostStructureInsight({ onBack, userId }: CostStructureInsightPro
     };
 
     return (
-      <Table>
+      <Table className="min-w-[560px] text-xs sm:text-sm [&_th]:px-2 [&_td]:p-2 sm:[&_th]:px-4 sm:[&_td]:p-4 [&_td.pl-8]:pl-4 sm:[&_td.pl-8]:pl-8">
         <TableHeader>
           <TableRow>
             <TableHead>Item</TableHead>
