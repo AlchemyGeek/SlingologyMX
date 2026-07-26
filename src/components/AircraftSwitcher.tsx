@@ -46,9 +46,6 @@ export function AircraftSwitcher() {
           <SelectItem key={a.id} value={a.id}>
             <div className="flex items-center gap-2">
               <span className="font-medium">{a.registration}</span>
-              {a.model_make && (
-                <span className="text-muted-foreground text-sm">({a.model_make})</span>
-              )}
               {a.is_primary && (
                 <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                   Primary
