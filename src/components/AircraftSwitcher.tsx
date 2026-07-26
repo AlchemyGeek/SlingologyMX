@@ -31,9 +31,6 @@ export function AircraftSwitcher() {
       <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
         <Plane className="h-4 w-4 text-primary" />
         <span className="font-medium">{aircraft[0].registration}</span>
-        {aircraft[0].model_make && (
-          <span className="text-muted-foreground text-sm">({aircraft[0].model_make})</span>
-        )}
       </div>
     );
   }
