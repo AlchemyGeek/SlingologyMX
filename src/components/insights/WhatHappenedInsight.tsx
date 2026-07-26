@@ -249,7 +249,39 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     }
 
     return (
-      <Table className="min-w-[520px] text-xs sm:text-sm [&_th]:px-2 [&_td]:p-2 sm:[&_th]:px-4 sm:[&_td]:p-4">
+      <>
+      {/* Mobile: stacked cards */}
+      <div className="md:hidden space-y-2">
+        {categoryData.map((row) => {
+          const pct = totalCost > 0 ? ((row.amount / totalCost) * 100).toFixed(1) : "0";
+          return (
+            <div key={row.category} className="rounded-lg border bg-card p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{row.category}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {row.count} {row.count === 1 ? "transaction" : "transactions"} · {pct}%
+                  </div>
+                </div>
+                <div className="text-right font-semibold whitespace-nowrap">
+                  {formatCurrency(row.amount, currency)}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div className="rounded-lg border-2 bg-muted/30 p-3 flex items-center justify-between">
+          <div>
+            <div className="font-semibold">Total</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{transactionCount} · 100%</div>
+          </div>
+          <div className="font-bold">{formatCurrency(totalCost, currency)}</div>
+        </div>
+      </div>
+
+      {/* Desktop/tablet: table */}
+      <div className="hidden md:block">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Category</TableHead>
@@ -277,6 +309,8 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
           </TableRow>
         </TableBody>
       </Table>
+      </div>
+      </>
     );
   };
 
