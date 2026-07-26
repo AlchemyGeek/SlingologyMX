@@ -22,14 +22,21 @@ interface TransactionListProps {
   onEdit: (transaction: any) => void;
   onSelect: (transaction: any) => void;
   userCurrency?: string;
+  initialStatusFilter?: string;
+  onClearStatusFilter?: () => void;
 }
 
-const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD" }: TransactionListProps) => {
+const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD", initialStatusFilter, onClearStatusFilter }: TransactionListProps) => {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter || "all");
   const [sortBy, setSortBy] = useState<"date" | "amount" | "title" | "category">("date");
+
+  // Apply externally-driven status filter (e.g. from header bell)
+  useMemo(() => {
+    if (initialStatusFilter) setStatusFilter(initialStatusFilter);
+  }, [initialStatusFilter]);
 
   const filteredTransactions = useMemo(() => {
     return transactions
