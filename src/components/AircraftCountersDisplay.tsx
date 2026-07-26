@@ -69,18 +69,19 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
   return (
     <>
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between gap-2 mb-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Aircraft Counters</h2>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsHistoryOpen(true)}
+            className="shrink-0"
           >
-            <History className="h-4 w-4 mr-1" />
-            History
+            <History className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">History</span>
           </Button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3">
           {counterConfig.map((config) => {
             const modeKey = {
               airframe_total_time: selectedAircraft?.airframe_tt_mode,
@@ -107,10 +108,10 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
                 className={`${config.color} border ${!linked ? "cursor-pointer hover:opacity-80" : ""} transition-opacity`}
                 onClick={() => !linked && setIsBatchEditOpen(true)}
               >
-                <CardContent className="p-4 text-center relative">
+                <CardContent className="p-3 sm:p-4 text-center relative">
                   {!linked && <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />}
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-                  <p className="text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
+                  <p className="text-xl sm:text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
                   {linked && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">Linked to {linkedLabel}</p>
                   )}
