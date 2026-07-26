@@ -306,8 +306,49 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     dateNotifications.length === 0 ? (
       <p className="text-muted-foreground">No active date-based notifications.</p>
     ) : (
-      <div className="rounded-md border overflow-x-auto">
-        <div className="min-w-[500px]">
+      <>
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-2">
+          {dateNotifications.map((notification) => {
+            const alertStatus = getAlertStatus(notification);
+            const showLink = (notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified;
+            const cardClass = cn(
+              "rounded-lg border p-3 bg-card",
+              alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
+              alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+            );
+            return (
+              <div key={notification.id} className={cardClass}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {notification.description}
+                      {showLink && <Link className="inline-block ml-1 h-3.5 w-3.5 text-primary align-middle" />}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {parseLocalDate(notification.initial_date).toLocaleDateString()} · {notification.type}
+                      {(notification.derived_recurrence || notification.recurrence) ? ` · ${notification.derived_recurrence || notification.recurrence}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-1 mt-2">
+                  <Button size="sm" onClick={() => handleMarkCompleted(notification.id)}>
+                    <CheckCircle className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(notification)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(notification.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Desktop table */}
+        <div className="hidden md:block rounded-md border overflow-x-auto">
+          <div className="min-w-[500px]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -378,8 +419,9 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
               })}
             </TableBody>
           </Table>
+          </div>
         </div>
-      </div>
+      </>
     )
   );
 
@@ -387,8 +429,57 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     counterNotifications.length === 0 ? (
       <p className="text-muted-foreground">No active counter-based notifications.</p>
     ) : (
-      <div className="rounded-md border overflow-x-auto">
-        <div className="min-w-[500px]">
+      <>
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-2">
+          {counterNotifications.map((notification) => {
+            const alertStatus = getAlertStatus(notification);
+            const field = counterTypeToFieldMap[notification.counter_type];
+            const currentValue = currentCounters?.[field as keyof typeof currentCounters] || 0;
+            const targetValue = notification.initial_counter_value || 0;
+            const remaining = targetValue - currentValue;
+            const isOverdue = remaining <= 0;
+            const showLink = (notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified;
+            const cardClass = cn(
+              "rounded-lg border p-3 bg-card",
+              alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
+              alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+            );
+            return (
+              <div key={notification.id} className={cardClass}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {notification.description}
+                      {showLink && <Link className="inline-block ml-1 h-3.5 w-3.5 text-primary align-middle" />}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {notification.counter_type} · Due at {targetValue.toFixed(1)}
+                      {notification.counter_step ? ` · Every ${notification.counter_step} hrs` : ""}
+                    </p>
+                    <p className={cn("text-xs mt-0.5", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
+                      {remaining.toFixed(1)} hrs remaining
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-1 mt-2">
+                  <Button size="sm" onClick={() => handleMarkCompleted(notification.id)}>
+                    <CheckCircle className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(notification)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(notification.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Desktop table */}
+        <div className="hidden md:block rounded-md border overflow-x-auto">
+          <div className="min-w-[500px]">
           <Table>
             <TableHeader>
               <TableRow>
