@@ -567,8 +567,9 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
               })}
             </TableBody>
           </Table>
+          </div>
         </div>
-      </div>
+      </>
     )
   );
 
