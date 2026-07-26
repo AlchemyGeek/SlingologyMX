@@ -309,16 +309,16 @@ const Dashboard = () => {
     <SidebarProvider>
       <div className="min-h-screen flex flex-col w-full bg-background">
         <header className="border-b z-10">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="mr-2" />
-              <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8" />
+          <div className="px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <SidebarTrigger className="mr-1 sm:mr-2 shrink-0" />
+              <img src={slingologyIcon} alt="SlingologyMX" className="h-8 w-8 shrink-0" />
               <h1 className="text-2xl font-bold hidden sm:block">SlingologyMX</h1>
-              <div className="ml-4">
+              <div className="ml-1 sm:ml-4 min-w-0">
                 <AircraftSwitcher />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {user && selectedAircraft?.id && (
                 <HeaderReminderBell
                   userId={user.id}
@@ -340,17 +340,18 @@ const Dashboard = () => {
                   }
                   navigate("/profile");
                 }}
-                className="relative"
+                className="relative px-2 sm:px-3"
+                aria-label="Profile"
               >
-                <UserIcon className="h-4 w-4 mr-2" />
-                Profile
+                <UserIcon className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Profile</span>
                 {isAdmin && adminNotifications.newUsers && (
                   <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
                 )}
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 sm:px-3" aria-label="Logout">
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
@@ -365,8 +366,8 @@ const Dashboard = () => {
             onMarkNotificationSeen={isAdmin ? markAsSeen : undefined}
           />
 
-          <main className="flex-1 p-6 space-y-6 overflow-auto min-w-0">
-            <div className="min-w-[600px]">
+          <main className="flex-1 p-3 sm:p-6 space-y-6 overflow-auto min-w-0">
+            <div className="min-w-0">
             <AircraftCountersDisplay
               counters={counters}
               loading={countersLoading}
@@ -377,7 +378,7 @@ const Dashboard = () => {
               onRefetch={refetch}
             />
 
-              <div className="bg-card rounded-lg border p-6">
+              <div className="bg-card rounded-lg border p-3 sm:p-6">
                 {renderContent()}
               </div>
             </div>
