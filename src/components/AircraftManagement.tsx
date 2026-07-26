@@ -346,8 +346,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
           </div>
           {canAddMore && (
             <Button onClick={openAddDialog} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              New Aircraft
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">New Aircraft</span>
             </Button>
           )}
         </div>

@@ -121,8 +121,8 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged, initialStatusF
             <CardDescription>Track income and expenses for your aircraft</CardDescription>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Transaction
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Transaction</span>
           </Button>
         </div>
       </CardHeader>

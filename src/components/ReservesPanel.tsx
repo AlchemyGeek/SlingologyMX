@@ -157,8 +157,8 @@ const ReservesPanel = ({ userId, aircraftId, currentCounters, onRecordChanged }:
             <CardDescription>Track future major expenses like overhauls and replacements</CardDescription>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Reserve
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Reserve</span>
           </Button>
         </div>
       </CardHeader>

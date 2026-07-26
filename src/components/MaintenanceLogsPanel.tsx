@@ -257,8 +257,8 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Maintenance Logs</h2>
         <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Maintenance Log
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">New Maintenance Log</span>
         </Button>
       </div>
       <MaintenanceLogList

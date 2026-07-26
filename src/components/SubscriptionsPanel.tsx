@@ -123,8 +123,8 @@ const SubscriptionsPanel = ({ userId, aircraftId, onNotificationChanged, onRecor
             <CardDescription>Create and manage your aviation commitments</CardDescription>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Commitment
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Commitment</span>
           </Button>
         </div>
       </CardHeader>
