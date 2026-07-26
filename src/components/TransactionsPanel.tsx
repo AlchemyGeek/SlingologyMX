@@ -14,9 +14,11 @@ interface TransactionsPanelProps {
   userId: string;
   aircraftId: string;
   onRecordChanged?: () => void;
+  initialStatusFilter?: string;
+  onClearStatusFilter?: () => void;
 }
 
-const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: TransactionsPanelProps) => {
+const TransactionsPanel = ({ userId, aircraftId, onRecordChanged, initialStatusFilter, onClearStatusFilter }: TransactionsPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -144,6 +146,8 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged }: Transactions
             onEdit={handleEdit}
             onSelect={handleSelect}
             userCurrency={userCurrency}
+            initialStatusFilter={initialStatusFilter}
+            onClearStatusFilter={onClearStatusFilter}
           />
         )}
       </CardContent>
