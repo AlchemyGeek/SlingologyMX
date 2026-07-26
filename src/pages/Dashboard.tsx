@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [activeView, setActiveView] = useState<DashboardView>("calendar");
   const [notificationsOverdueOnly, setNotificationsOverdueOnly] = useState(false);
+  const [transactionsStatusFilter, setTransactionsStatusFilter] = useState<string | undefined>(undefined);
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
   const { selectedAircraft } = useAircraft();
   const {
@@ -243,6 +244,8 @@ const Dashboard = () => {
             userId={user!.id}
             aircraftId={selectedAircraft?.id || ""}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+            initialStatusFilter={transactionsStatusFilter}
+            onClearStatusFilter={() => setTransactionsStatusFilter(undefined)}
           />
         );
       case "reserves":
@@ -323,6 +326,7 @@ const Dashboard = () => {
                   currentCounters={currentCounters}
                   onNavigate={(view, opts) => {
                     setNotificationsOverdueOnly(view === "notifications" && !!opts?.overdueOnly);
+                    setTransactionsStatusFilter(view === "transactions" ? "Pending" : undefined);
                     setActiveView(view);
                   }}
                 />

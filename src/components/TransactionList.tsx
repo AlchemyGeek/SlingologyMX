@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Pencil, Search, X, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseLocalDate } from "@/lib/utils";
@@ -22,14 +23,21 @@ interface TransactionListProps {
   onEdit: (transaction: any) => void;
   onSelect: (transaction: any) => void;
   userCurrency?: string;
+  initialStatusFilter?: string;
+  onClearStatusFilter?: () => void;
 }
 
-const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD" }: TransactionListProps) => {
+const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, userCurrency = "USD", initialStatusFilter, onClearStatusFilter }: TransactionListProps) => {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter || "all");
   const [sortBy, setSortBy] = useState<"date" | "amount" | "title" | "category">("date");
+
+  // Apply externally-driven status filter (e.g. from header bell)
+  useEffect(() => {
+    if (initialStatusFilter) setStatusFilter(initialStatusFilter);
+  }, [initialStatusFilter]);
 
   const filteredTransactions = useMemo(() => {
     return transactions
@@ -154,6 +162,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
     setCategoryFilter("all");
     setStatusFilter("all");
     setSortBy("date");
+    onClearStatusFilter?.();
   };
 
   if (loading) {
@@ -166,6 +175,21 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
 
   return (
     <div className="space-y-4">
+      {initialStatusFilter && statusFilter === initialStatusFilter && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="gap-1">
+            Showing {initialStatusFilter.toLowerCase()} only
+            <button
+              type="button"
+              aria-label="Clear status filter"
+              onClick={() => { setStatusFilter("all"); onClearStatusFilter?.(); }}
+              className="ml-1 hover:opacity-80"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        </div>
+      )}
       {/* Filter Section */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
