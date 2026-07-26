@@ -308,7 +308,7 @@ const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex flex-col w-full bg-background">
-        <header className="border-b z-10">
+        <header className="border-b z-10 safe-top safe-x">
           <div className="px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger className="mr-1 sm:mr-2 shrink-0" />
@@ -366,7 +366,7 @@ const Dashboard = () => {
             onMarkNotificationSeen={isAdmin ? markAsSeen : undefined}
           />
 
-          <main className="flex-1 p-3 sm:p-6 space-y-6 overflow-auto min-w-0">
+          <main className="flex-1 p-3 sm:p-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-6 space-y-6 overflow-auto min-w-0 safe-x">
             <div className="min-w-0">
             <AircraftCountersDisplay
               counters={counters}
