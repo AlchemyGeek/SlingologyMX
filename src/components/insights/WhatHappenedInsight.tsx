@@ -249,7 +249,7 @@ export function WhatHappenedInsight({ onBack, userId }: WhatHappenedInsightProps
     }
 
     return (
-      <Table>
+      <Table className="min-w-[520px] text-xs sm:text-sm [&_th]:px-2 [&_td]:p-2 sm:[&_th]:px-4 sm:[&_td]:p-4">
         <TableHeader>
           <TableRow>
             <TableHead>Category</TableHead>
