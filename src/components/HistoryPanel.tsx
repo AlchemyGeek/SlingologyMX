@@ -786,7 +786,41 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
             {filteredHistory.length === 0 ? (
               <p className="text-muted-foreground">No records match your filters.</p>
             ) : (
-              <div className="rounded-md border overflow-x-auto">
+              <>
+              {/* Mobile card view */}
+              <div className="md:hidden space-y-2">
+                {filteredHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleRowClick(item)}
+                    className="rounded-lg border p-3 bg-card cursor-pointer active:bg-accent transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{item.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {item.date.toLocaleDateString()}
+                          {item.category !== "-" ? ` · ${item.category}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge
+                          variant={getRecordTypeBadgeVariant(item.recordType)}
+                          className={getRecordTypeBadgeClassName(item.recordType)}
+                        >
+                          {item.recordType}
+                        </Badge>
+                        <Badge variant={getOperationBadgeVariant(item.operationType)}>
+                          {item.operationType}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block rounded-md border overflow-x-auto">
                 <div className="min-w-0 md:min-w-[600px]">
                   <Table>
                     <TableHeader>
@@ -849,6 +883,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
                   </Table>
                 </div>
               </div>
+              </>
             )}
           </div>
         )}

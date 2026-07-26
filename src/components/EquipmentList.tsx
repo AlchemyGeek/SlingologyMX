@@ -150,7 +150,50 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
         </Select>
       </div>
 
-      <div className="rounded-md border table-container">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredAndSortedEquipment.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No equipment found</p>
+        ) : (
+          filteredAndSortedEquipment.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => onSelect(item)}
+              className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {item.manufacturer || "—"}
+                    {item.model_or_part_number ? ` · ${item.model_or_part_number}` : ""}
+                    {item.serial_number ? ` · SN ${item.serial_number}` : ""}
+                  </p>
+                  <div className="flex gap-1 flex-wrap mt-2">
+                    <Badge variant="secondary">{item.category}</Badge>
+                    {item.install_context && (
+                      <Badge variant={getContextColor(item.install_context) as any}>
+                        {item.install_context}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(item.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border table-container">
         <Table>
           <TableHeader>
             <TableRow>

@@ -112,7 +112,49 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
         </Select>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredAndSortedLogs.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No maintenance logs found</p>
+        ) : (
+          filteredAndSortedLogs.map((log) => {
+            const hasCompliance = log.has_compliance_item || log.has_linked_compliance;
+            return (
+              <div
+                key={log.id}
+                onClick={() => onViewDetail(log)}
+                className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{log.entry_title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {format(parseLocalDate(log.date_performed), "MMM dd, yyyy")} · {log.category}
+                      {log.subcategory ? ` · ${log.subcategory}` : ""}
+                    </p>
+                    {log.tags && log.tags.length > 0 && (
+                      <div className="flex gap-1 flex-wrap mt-2">
+                        {log.tags.slice(0, 3).map((tag, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
+                        ))}
+                        {log.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">+{log.tags.length - 3}</Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant={hasCompliance ? "default" : "outline"} className="shrink-0">
+                    {hasCompliance ? "Compliance" : "Log"}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <div className="min-w-0 md:min-w-[500px]">
           <Table>
             <TableHeader>

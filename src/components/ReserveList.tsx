@@ -226,8 +226,52 @@ const ReserveList = ({ reserves, loading, onUpdate, onEdit, onSelect, userCurren
         </p>
       )}
 
-      {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredReserves.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No reserves match your filters</p>
+        ) : (
+          filteredReserves.map((reserve) => {
+            const progressData = calculateProgress(reserve, currentCounters);
+            return (
+              <div
+                key={reserve.id}
+                onClick={() => onSelect(reserve)}
+                className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{reserve.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {reserve.reserve_type} · {formatCurrency(reserve.expected_cost || 0, userCurrency)}
+                    </p>
+                    {progressData && (
+                      <div className="mt-2 space-y-1">
+                        <Progress value={progressData.progress} className="h-1.5" />
+                        <p className="text-xs text-muted-foreground">{progressData.remaining} left</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={getStatusBadgeVariant(reserve.status)}>{reserve.status}</Badge>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(reserve)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(reserve.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <div className="min-w-0 md:min-w-[600px]">
           <Table>
             <TableHeader>

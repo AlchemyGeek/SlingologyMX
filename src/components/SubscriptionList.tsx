@@ -142,8 +142,44 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect, 
         </p>
       )}
 
-      {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredSubscriptions.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No commitments match your filters</p>
+        ) : (
+          filteredSubscriptions.map((subscription) => (
+            <div
+              key={subscription.id}
+              onClick={() => onSelect(subscription)}
+              className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{subscription.subscription_name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{subscription.type}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {parseLocalDate(subscription.initial_date).toLocaleDateString()} · {subscription.recurrence}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className="text-sm font-medium">{formatCurrency(subscription.cost || 0, userCurrency)}</span>
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(subscription)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(subscription.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <div className="min-w-0 md:min-w-[500px]">
           <Table>
             <TableHeader>
