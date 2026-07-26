@@ -240,8 +240,8 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
           </Button>
         )}
         <Button variant="outline" size="sm" onClick={handleExportExcel} title="Export to Excel">
-          <Download className="h-4 w-4 mr-2" />
-          Export
+          <Download className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Export</span>
         </Button>
       </div>
 

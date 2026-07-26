@@ -284,25 +284,25 @@ const CommunitySBDetail = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Community SBs
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to Community SBs</span>
         </Button>
         <div className="flex items-center gap-2">
           {isMaintainer && (
             <>
               <Button variant="outline" onClick={() => setIsEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Edit</span>
               </Button>
               <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             </>
           )}
           <Button onClick={() => setShowUseDialog(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Use This SB
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Use This SB</span>
           </Button>
         </div>
       </div>

@@ -17,8 +17,8 @@ const CounterHistoryDetail = ({ counterHistory, onClose }: CounterHistoryDetailP
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to History
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to History</span>
         </Button>
       </div>
 
