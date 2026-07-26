@@ -228,7 +228,7 @@ const ReserveList = ({ reserves, loading, onUpdate, onEdit, onSelect, userCurren
 
       {/* Table */}
       <div className="rounded-md border overflow-x-auto">
-        <div className="min-w-[600px]">
+        <div className="min-w-0 md:min-w-[600px]">
           <Table>
             <TableHeader>
               <TableRow>

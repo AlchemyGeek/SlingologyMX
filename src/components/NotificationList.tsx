@@ -176,6 +176,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
           </TableBody>
         </Table>
       </div>
+      </div>
     </>
   );
 };
