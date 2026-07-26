@@ -76,12 +76,12 @@ export function InsightContainer({
             className="bg-muted rounded-lg p-1"
           >
             <ToggleGroupItem value="chart" aria-label="Chart view" className="px-3">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Chart
+              <BarChart3 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Chart</span>
             </ToggleGroupItem>
             <ToggleGroupItem value="table" aria-label="Table view" className="px-3">
-              <Table className="h-4 w-4 mr-2" />
-              Table
+              <Table className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Table</span>
             </ToggleGroupItem>
           </ToggleGroup>
         )}
