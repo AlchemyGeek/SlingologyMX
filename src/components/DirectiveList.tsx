@@ -166,7 +166,45 @@ const DirectiveList = ({ directives, onViewDetail }: DirectiveListProps) => {
         </Select>
       </div>
 
-      <div className="rounded-md border table-container">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredAndSortedDirectives.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No directives found</p>
+        ) : (
+          filteredAndSortedDirectives.map((directive) => (
+            <button
+              key={directive.id}
+              onClick={() => onViewDetail(directive)}
+              className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono font-medium text-sm">{directive.directive_code}</p>
+                  <p className="text-sm mt-0.5 line-clamp-2">{directive.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {directive.issuing_authority || "—"}
+                    {directive.category ? ` · ${directive.category}` : ""}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge variant={getSeverityColor(directive.severity) as any}>
+                    {directive.severity}
+                  </Badge>
+                  <Badge variant={getStatusColor(directive.directive_status) as any}>
+                    {directive.directive_status}
+                  </Badge>
+                  <Badge variant={getApplicabilityColor(directive.applicability_status) as any}>
+                    {directive.applicability_status || "Unsure"}
+                  </Badge>
+                </div>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border table-container">
         <Table>
           <TableHeader>
             <TableRow>
