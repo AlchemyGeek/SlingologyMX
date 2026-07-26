@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
   const [sortBy, setSortBy] = useState<"date" | "amount" | "title" | "category">("date");
 
   // Apply externally-driven status filter (e.g. from header bell)
-  useMemo(() => {
+  useEffect(() => {
     if (initialStatusFilter) setStatusFilter(initialStatusFilter);
   }, [initialStatusFilter]);
 
