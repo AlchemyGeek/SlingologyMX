@@ -61,8 +61,56 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
   }
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <div className="min-w-[500px]">
+    <>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {notifications.map((notification) => {
+          const alertStatus = getDateAlertStatus(notification);
+          const linked = isLinkedToRecord(notification);
+          const modified = isUserModified(notification);
+          const showLinkIcon = linked && !modified;
+          const cardClass = cn(
+            "w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card",
+            alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
+            alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+          );
+          return (
+            <div key={notification.id} className={cardClass}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">
+                    {notification.description}
+                    {showLinkIcon && (
+                      <Link className="inline-block ml-1 h-3.5 w-3.5 text-primary align-middle" />
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {parseLocalDate(notification.initial_date).toLocaleDateString()} · {notification.type}
+                    {notification.derived_recurrence || notification.recurrence
+                      ? ` · ${notification.derived_recurrence || notification.recurrence}`
+                      : ""}
+                  </p>
+                </div>
+                <Badge variant={notification.is_completed ? "secondary" : "default"} className="shrink-0">
+                  {notification.is_completed ? "Completed" : "Active"}
+                </Badge>
+              </div>
+              <div className="flex justify-end gap-1 mt-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(notification)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(notification.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
+        <div className="min-w-[500px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -128,7 +176,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
           </TableBody>
         </Table>
       </div>
-    </div>
+    </>
   );
 };
 

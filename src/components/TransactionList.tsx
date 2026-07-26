@@ -252,8 +252,50 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
         </p>
       )}
 
-      {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredTransactions.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No transactions match your filters</p>
+        ) : (
+          filteredTransactions.map((transaction) => (
+            <button
+              key={transaction.id}
+              type="button"
+              onClick={() => onSelect(transaction)}
+              className="w-full text-left rounded-lg border bg-card p-3 active:bg-accent transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{transaction.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {parseLocalDate(transaction.transaction_date).toLocaleDateString()} · {transaction.category}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`font-semibold ${getDirectionColor(transaction.direction)}`}>
+                    {transaction.direction === "Credit" ? "+" : "-"}
+                    {formatCurrency(Number(transaction.amount), transaction.currency?.trim() || userCurrency)}
+                  </span>
+                  <Badge variant={getStatusBadgeVariant(transaction.status)} className="text-[10px]">
+                    {transaction.status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(transaction)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(transaction.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <div className="min-w-[600px]">
           <Table>
             <TableHeader>
