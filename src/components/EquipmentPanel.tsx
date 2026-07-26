@@ -133,8 +133,8 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             <CardDescription>Track and manage your aircraft equipment and tools</CardDescription>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Equipment
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Equipment</span>
           </Button>
         </div>
       </CardHeader>

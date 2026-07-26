@@ -270,8 +270,8 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
           </div>
           {activeTab === "my-directives" && (
             <Button onClick={() => setShowForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Directive
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">New Directive</span>
             </Button>
           )}
         </div>

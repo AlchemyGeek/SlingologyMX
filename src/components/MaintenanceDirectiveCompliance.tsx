@@ -256,8 +256,8 @@ const MaintenanceDirectiveCompliance = ({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Directive Compliance</h3>
         <Button type="button" size="sm" variant="outline" onClick={handleAddDirectiveLink}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Directive
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">Add Directive</span>
         </Button>
       </div>
 

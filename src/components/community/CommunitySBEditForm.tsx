@@ -618,8 +618,8 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Source Links</CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={addSourceLink}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Link
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">Add Link</span>
             </Button>
           </div>
         </CardHeader>

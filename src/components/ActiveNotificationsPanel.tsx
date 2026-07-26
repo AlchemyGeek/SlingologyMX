@@ -495,8 +495,8 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
             <CardDescription>Manage and track your maintenance notifications</CardDescription>
           </div>
           <Button onClick={handleNewNotification}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Notification
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Notification</span>
           </Button>
         </div>
       </CardHeader>

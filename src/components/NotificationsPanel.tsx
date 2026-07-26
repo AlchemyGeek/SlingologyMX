@@ -158,8 +158,8 @@ const NotificationsPanel = ({ userId, aircraftId, currentCounters }: Notificatio
             </div>
           </div>
           <Button onClick={handleNewNotification}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Notification
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Notification</span>
           </Button>
         </div>
       </CardHeader>
