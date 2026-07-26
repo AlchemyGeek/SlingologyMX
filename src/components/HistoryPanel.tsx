@@ -787,7 +787,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
               <p className="text-muted-foreground">No records match your filters.</p>
             ) : (
               <div className="rounded-md border overflow-x-auto">
-                <div className="min-w-[600px]">
+                <div className="min-w-0 md:min-w-[600px]">
                   <Table>
                     <TableHeader>
                       <TableRow>

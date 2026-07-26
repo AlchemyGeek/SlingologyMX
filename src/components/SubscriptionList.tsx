@@ -144,7 +144,7 @@ const SubscriptionList = ({ subscriptions, loading, onUpdate, onEdit, onSelect, 
 
       {/* Table */}
       <div className="rounded-md border overflow-x-auto">
-        <div className="min-w-[500px]">
+        <div className="min-w-0 md:min-w-[500px]">
           <Table>
             <TableHeader>
               <TableRow>
