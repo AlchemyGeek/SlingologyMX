@@ -149,8 +149,70 @@ const CommunitySBList = ({ communitySBs, onViewDetail, loading, userId, getItemS
         </Select>
       </div>
 
-      {/* Table */}
-      <div className="rounded-md border table-container">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filteredAndSortedSBs.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">
+            {communitySBs.length === 0
+              ? "No community service bulletins yet. Be the first to share one!"
+              : "No community SBs match your filters"}
+          </p>
+        ) : (
+          filteredAndSortedSBs.map((sb) => {
+            const itemStatus = getItemStatus?.(sb);
+            return (
+              <div
+                key={sb.id}
+                onClick={() => onViewDetail(sb)}
+                className="w-full text-left rounded-lg border p-3 active:bg-accent transition-colors bg-card cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono font-medium text-sm">{sb.directive_code}</span>
+                      {itemStatus === "new" && (
+                        <Badge variant="default" className="text-[10px] px-1.5 py-0">New</Badge>
+                      )}
+                      {itemStatus === "updated" && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Updated</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm mt-0.5 line-clamp-2">{sb.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {sb.issuing_authority || "—"}
+                      {sb.category ? ` · ${sb.category}` : ""}
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                      <User className="h-3 w-3" />
+                      {userId && sb.maintainer_id === userId ? (
+                        <Badge variant="outline" className="text-xs">You</Badge>
+                      ) : (
+                        <span className="truncate">{sb.maintainer_display_name || "Unknown"}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={getSeverityColor(sb.severity) as any}>{sb.severity}</Badge>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="flex items-center gap-0.5 text-primary">
+                        <ThumbsUp className="h-3 w-3" />
+                        {sb.upvotes}
+                      </span>
+                      <span className="flex items-center gap-0.5 text-destructive">
+                        <ThumbsDown className="h-3 w-3" />
+                        {sb.downvotes}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border table-container">
         <Table>
           <TableHeader>
             <TableRow>

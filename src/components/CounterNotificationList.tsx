@@ -78,8 +78,62 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
+    <>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {notifications.map((notification) => {
+          const progress = getCounterProgress(notification);
+          const isOverdue = progress && progress.remaining <= 0;
+          const alertStatus = getCounterAlertStatus(notification);
+          const showLinkIcon = isLinkedToRecord(notification) && !isUserModified(notification);
+          const cardClass = cn(
+            "w-full text-left rounded-lg border p-3 bg-card",
+            alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
+            alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+          );
+          return (
+            <div key={notification.id} className={cardClass}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">
+                    {notification.description}
+                    {showLinkIcon && (
+                      <Link className="inline-block ml-1 h-3.5 w-3.5 text-primary align-middle" />
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {notification.counter_type} · Due at {notification.initial_counter_value?.toFixed(1)}
+                    {notification.counter_step ? ` · Every ${notification.counter_step} hrs` : ""}
+                  </p>
+                  {progress && (
+                    <p className={cn("text-xs mt-0.5", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
+                      {progress.remaining.toFixed(1)} hrs remaining
+                    </p>
+                  )}
+                </div>
+                <Badge
+                  variant={notification.is_completed ? "secondary" : isOverdue ? "destructive" : "default"}
+                  className="shrink-0"
+                >
+                  {notification.is_completed ? "Completed" : isOverdue ? "Due" : "Active"}
+                </Badge>
+              </div>
+              <div className="flex justify-end gap-1 mt-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(notification)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(notification.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Notification</TableHead>
@@ -155,7 +209,8 @@ const CounterNotificationList = ({ notifications, loading, onUpdate, onEdit, cur
           })}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </>
   );
 };
 

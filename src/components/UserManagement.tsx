@@ -216,7 +216,55 @@ const UserManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-2">
+            {users.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6">No users found</p>
+            ) : (
+              users.map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => handleUserClick(user)}
+                  className="rounded-lg border p-3 bg-card cursor-pointer active:bg-accent transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{user.name || "Not set"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email || "N/A"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Since {formatDate(user.created_at)}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {user.isAdmin ? (
+                        <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30">
+                          <Shield className="h-3 w-3 mr-1" />Admin
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary"><User className="h-3 w-3 mr-1" />Member</Badge>
+                      )}
+                      {user.membership_status === "Approved" && (
+                        <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30">
+                          <CheckCircle className="h-3 w-3 mr-1" />Approved
+                        </Badge>
+                      )}
+                      {user.membership_status === "Applied" && (
+                        <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30">
+                          <Clock className="h-3 w-3 mr-1" />Applied
+                        </Badge>
+                      )}
+                      {user.membership_status === "Suspended" && (
+                        <Badge className="bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30">
+                          <Ban className="h-3 w-3 mr-1" />Suspended
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>

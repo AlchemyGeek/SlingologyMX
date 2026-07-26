@@ -134,6 +134,39 @@ const CounterHistoryDialog = ({ open, onOpenChange, userId, aircraftId, onRevert
           ) : history.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No history entries yet</p>
           ) : (
+            <>
+            {/* Mobile card view */}
+            <div className="md:hidden space-y-2">
+              {history.map((entry) => (
+                <div key={entry.id} className="rounded-lg border p-3 bg-card">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{format(new Date(entry.change_date), "PPp")}</p>
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs ${
+                        entry.source === "Dashboard"
+                          ? "bg-blue-500/10 text-blue-600"
+                          : "bg-green-500/10 text-green-600"
+                      }`}>
+                        {entry.source}
+                      </span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRevertEntry(entry)} title="Revert">
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2 text-xs">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Hobbs</span><span>{Number(entry.hobbs).toFixed(1)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Tach</span><span>{Number(entry.tach).toFixed(1)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Airframe</span><span>{Number(entry.airframe_total_time).toFixed(1)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Engine</span><span>{Number(entry.engine_total_time).toFixed(1)}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-muted-foreground">Prop</span><span>{Number(entry.prop_total_time).toFixed(1)}</span></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -179,6 +212,8 @@ const CounterHistoryDialog = ({ open, onOpenChange, userId, aircraftId, onRevert
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
