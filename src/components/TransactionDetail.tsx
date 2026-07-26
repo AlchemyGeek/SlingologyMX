@@ -58,20 +58,20 @@ const TransactionDetail = ({ transaction, onClose, onEdit, onDelete, userCurrenc
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to List
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to List</span>
         </Button>
         <div className="flex gap-2">
           {onEdit && (
             <Button variant="outline" size="sm" onClick={() => onEdit(transaction)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              <Pencil className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Edit</span>
             </Button>
           )}
           {onDelete && (
             <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <Trash2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           )}
         </div>

@@ -80,20 +80,20 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to List
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to List</span>
         </Button>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => onEdit(log)}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
+            <Pencil className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button
             variant="destructive"
             onClick={() => setShowDeleteDialog(true)}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+            <Trash2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>

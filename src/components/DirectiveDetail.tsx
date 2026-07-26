@@ -203,8 +203,8 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onClose}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to List
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Back to List</span>
         </Button>
         <div className="flex gap-2">
           {shareStatus.isShared ? (
@@ -214,17 +214,17 @@ const DirectiveDetail = ({ directive, userId, onClose, onEdit, onDelete, onUpdat
             </Badge>
           ) : (
             <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
-              <Users className="h-4 w-4 mr-2" />
-              Share with Community
+              <Users className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Share with Community</span>
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
+            <Edit className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+            <Trash2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>

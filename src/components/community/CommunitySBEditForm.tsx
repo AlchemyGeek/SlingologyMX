@@ -211,8 +211,8 @@ const CommunitySBEditForm = ({ sb, onClose, onSaved }: CommunitySBEditFormProps)
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button type="button" variant="ghost" onClick={onClose}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Cancel
+          <ArrowLeft className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Cancel</span>
         </Button>
         <Button type="submit" disabled={saving}>
           <Save className="h-4 w-4 mr-2" />

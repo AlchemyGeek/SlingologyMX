@@ -358,8 +358,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
             <Plane className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No aircraft registered yet.</p>
             <Button onClick={openAddDialog} variant="outline" className="mt-4">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Aircraft
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Your First Aircraft</span>
             </Button>
           </div>
         ) : (
