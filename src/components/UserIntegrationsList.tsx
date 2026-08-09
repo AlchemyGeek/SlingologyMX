@@ -13,8 +13,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { Key, Trash2, Plane } from "lucide-react";
+import { Key, Trash2, Plane, Plus, Copy, Check } from "lucide-react";
 
 interface ApiKeyWithAircraft {
   id: string;
@@ -28,10 +45,22 @@ interface ApiKeyWithAircraft {
   } | null;
 }
 
+interface AircraftOption {
+  id: string;
+  registration: string;
+}
+
 export function UserIntegrationsList() {
   const [keys, setKeys] = useState<ApiKeyWithAircraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [revokingKey, setRevokingKey] = useState<ApiKeyWithAircraft | null>(null);
+  const [aircraft, setAircraft] = useState<AircraftOption[]>([]);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [selectedAircraftId, setSelectedAircraftId] = useState<string>("");
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const loadKeys = useCallback(async () => {
     const { data, error } = await supabase
@@ -49,9 +78,71 @@ export function UserIntegrationsList() {
     setLoading(false);
   }, []);
 
+  const loadAircraft = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("aircraft")
+      .select("id, registration")
+      .order("is_primary", { ascending: false });
+
+    if (error) {
+      console.error("Error loading aircraft:", error);
+      return;
+    }
+    setAircraft((data as AircraftOption[]) || []);
+  }, []);
+
   useEffect(() => {
     loadKeys();
-  }, [loadKeys]);
+    loadAircraft();
+  }, [loadKeys, loadAircraft]);
+
+  const openGenerate = () => {
+    setNewLabel("");
+    setGeneratedKey(null);
+    setSelectedAircraftId(aircraft[0]?.id || "");
+    setIsGenerateOpen(true);
+  };
+
+  const generateKey = async () => {
+    if (!selectedAircraftId) {
+      toast.error("Select an aircraft first");
+      return;
+    }
+    const label = newLabel.trim() || "Integration";
+    setGenerating(true);
+
+    try {
+      const plaintext = `mx_${crypto.randomUUID().replace(/-/g, "")}`;
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(plaintext));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const keyHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+      const { error } = await supabase.from("aircraft_api_keys").insert({
+        aircraft_id: selectedAircraftId,
+        key_hash: keyHash,
+        label,
+      });
+
+      if (error) throw error;
+
+      setGeneratedKey(plaintext);
+      setNewLabel("");
+      await loadKeys();
+    } catch (error: any) {
+      console.error("Error generating API key:", error);
+      toast.error("Failed to generate key");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const copyKey = async () => {
+    if (!generatedKey) return;
+    await navigator.clipboard.writeText(generatedKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const revokeKey = async () => {
     if (!revokingKey) return;
@@ -84,13 +175,21 @@ export function UserIntegrationsList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Key className="h-5 w-5" />
-          All Integrations
-        </CardTitle>
-        <CardDescription>
-          API keys across all your aircraft. Generate or revoke keys from each aircraft&apos;s profile.
-        </CardDescription>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              All Integrations
+            </CardTitle>
+            <CardDescription>
+              API keys across all your aircraft. Generate or revoke keys here.
+            </CardDescription>
+          </div>
+          <Button size="sm" onClick={openGenerate} disabled={aircraft.length === 0}>
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Generate Key</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -99,7 +198,7 @@ export function UserIntegrationsList() {
           <div className="text-center py-8 text-muted-foreground">
             <Key className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No integration keys yet.</p>
-            <p className="text-xs mt-1">Go to the Aircraft tab to generate keys for each aircraft.</p>
+            <p className="text-xs mt-1">Generate a key to connect SlingologyRamp or future apps.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -164,6 +263,78 @@ export function UserIntegrationsList() {
             )}
           </div>
         )}
+
+        <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Generate Integration Key</DialogTitle>
+              <DialogDescription>
+                Create a new API key scoped to a single aircraft.
+              </DialogDescription>
+            </DialogHeader>
+
+            {!generatedKey ? (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Aircraft</Label>
+                  <Select value={selectedAircraftId} onValueChange={setSelectedAircraftId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select aircraft" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {aircraft.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.registration}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="key-label">Label</Label>
+                  <Input
+                    id="key-label"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="e.g. Ramp"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground">A name so you remember what this key is for.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Your API key</Label>
+                  <div className="flex gap-2">
+                    <Input readOnly value={generatedKey} className="font-mono text-xs" />
+                    <Button onClick={copyKey} variant="outline" size="icon">
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-destructive font-medium">
+                    Copy this now. MX stores only a hash and cannot show it again.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              {!generatedKey ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsGenerateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={generateKey} disabled={generating || !selectedAircraftId}>
+                    {generating ? "Generating..." : "Generate"}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => { setGeneratedKey(null); setIsGenerateOpen(false); }}>Done</Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <AlertDialog open={!!revokingKey} onOpenChange={(open) => !open && setRevokingKey(null)}>
           <AlertDialogContent>
