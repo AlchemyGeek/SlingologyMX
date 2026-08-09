@@ -409,14 +409,18 @@ const Profile = () => {
           </Tabs>
         ) : (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserIcon className="h-4 w-4" />
-                My Profile
+                <span className="hidden sm:inline">My Profile</span>
               </TabsTrigger>
               <TabsTrigger value="aircraft" className="flex items-center gap-2">
                 <Plane className="h-4 w-4" />
-                Aircraft
+                <span className="hidden sm:inline">Aircraft</span>
+              </TabsTrigger>
+              <TabsTrigger value="integrations" className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                <span className="hidden sm:inline">Integrations</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="profile" className="max-w-2xl">
@@ -429,6 +433,9 @@ const Profile = () => {
             </TabsContent>
             <TabsContent value="aircraft" className="max-w-2xl">
               <AircraftManagement userId={user.id} />
+            </TabsContent>
+            <TabsContent value="integrations" className="max-w-2xl">
+              <UserIntegrationsList />
             </TabsContent>
           </Tabs>
         )}
