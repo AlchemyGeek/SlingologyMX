@@ -44,15 +44,7 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const apiKey = authHeader.replace("Bearer ", "").trim();
+    const apiKey = req.headers.get("X-API-Key")?.trim();
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
