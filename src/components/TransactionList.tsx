@@ -266,7 +266,12 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate">{transaction.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium truncate">{transaction.title}</p>
+                    {transaction.source === "Imported" && transaction.tags?.includes("ramp-import") && (
+                      <Badge variant="outline" className="text-[10px] shrink-0">Ramp</Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {parseLocalDate(transaction.transaction_date).toLocaleDateString()} · {transaction.category}
                   </p>
