@@ -422,6 +422,14 @@ export function AircraftManagement({ userId }: { userId: string }) {
             Maximum of {maxAircraft} aircraft per account reached.
           </p>
         )}
+
+        {aircraft.length > 0 && (
+          <div className="mt-6 pt-6 border-t space-y-6">
+            {aircraft.map((a) => (
+              <AircraftApiKeysCard key={a.id} aircraftId={a.id} registration={a.registration} />
+            ))}
+          </div>
+        )}
       </CardContent>
 
       {/* Add/Edit Dialog */}
