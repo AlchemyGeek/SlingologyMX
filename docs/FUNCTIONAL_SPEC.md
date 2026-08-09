@@ -516,21 +516,53 @@ All tables protected by RLS policies:
 
 ---
 
-## 17. Database Schema
+## 17. External Integrations
 
-### 17.1 Core Tables
+### 17.1 Overview
+SlingologyMX supports ingestion of external transaction data via a secure HTTP endpoint. The first supported integration is SlingologyRamp, which sends fuel and service spend as financial transactions.
+
+### 17.2 Authentication
+- Each aircraft has its own API key.
+- Keys are generated from the Aircraft tab in the user profile.
+- A combined Integrations tab lists all keys across the user's aircraft.
+- Keys are hashed (SHA-256) before storage; only the raw key is shown once at creation.
+- Revoked keys stop working immediately.
+
+### 17.3 Ingest Endpoint
+- Edge function: `integration-ingest`
+- Header: `X-API-Key: <raw-key>`
+- Payload includes: `aircraft_id`, `external_id`, `date`, `location`, `items` (with category, description, quantity, unit, total), and optional `counter`.
+
+### 17.4 Idempotency
+- Ramp supplies a client-provided `external_id` for each payload.
+- Duplicate `external_id` values for the same aircraft are rejected.
+- Existing transactions can be updated by sending the same `external_id` with new data.
+
+### 17.5 Data Mapping
+- Ramp categories are mapped to MX transaction categories and intents.
+- Fuel spend maps to `Fuel` / `Operation`.
+- Tires spend maps to `Maintenance Parts` / `Maintenance`.
+- Imported transactions are tagged with `ramp-import` and display a `Ramp` badge in the transaction list.
+- Imported transactions default to `include_in_cost_per_hour = true`.
+
+---
+
+## 18. Database Schema
+
+### 18.1 Core Tables
 - profiles
 - user_roles
 - aircraft_counters
 - aircraft_counter_history
 
-### 17.2 Record Tables
+### 18.2 Record Tables
 - notifications
 - subscriptions
 - maintenance_logs
 - directives
+- transactions
 
-### 17.3 Supporting Tables
+### 18.3 Supporting Tables
 - aircraft_directive_status
 - directive_history
 - maintenance_directive_compliance
@@ -538,6 +570,7 @@ All tables protected by RLS policies:
 - feature_requests
 - feature_votes
 - app_settings
+- aircraft_api_keys
 
 ---
 
