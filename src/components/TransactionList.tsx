@@ -266,7 +266,12 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate">{transaction.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium truncate">{transaction.title}</p>
+                    {transaction.source === "Imported" && transaction.tags?.includes("ramp-import") && (
+                      <Badge variant="outline" className="text-[10px] shrink-0">Ramp</Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {parseLocalDate(transaction.transaction_date).toLocaleDateString()} · {transaction.category}
                   </p>
@@ -325,7 +330,12 @@ const TransactionList = ({ transactions, loading, onUpdate, onEdit, onSelect, us
                   >
                     <TableCell>{parseLocalDate(transaction.transaction_date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-medium max-w-[200px] truncate" title={transaction.title}>
-                      {transaction.title}
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{transaction.title}</span>
+                        {transaction.source === "Imported" && transaction.tags?.includes("ramp-import") && (
+                          <Badge variant="outline" className="text-[10px] shrink-0">Ramp</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     {!isMobile && (
                       <TableCell className="max-w-[150px] truncate" title={transaction.category}>

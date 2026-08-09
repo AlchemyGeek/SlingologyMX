@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, ArrowLeft, Save, User as UserIcon, Users, Plane } from "lucide-react";
+import { LogOut, ArrowLeft, Save, User as UserIcon, Users, Plane, Key } from "lucide-react";
+import { UserIntegrationsList } from "@/components/UserIntegrationsList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import slingologyIcon from "@/assets/slingology-icon.png";
@@ -370,18 +371,22 @@ const Profile = () => {
       <main className="container mx-auto px-4 py-8">
         {isAdmin ? (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
+            <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserIcon className="h-4 w-4" />
-                My Profile
+                <span className="hidden sm:inline">My Profile</span>
               </TabsTrigger>
               <TabsTrigger value="aircraft" className="flex items-center gap-2">
                 <Plane className="h-4 w-4" />
-                Aircraft
+                <span className="hidden sm:inline">Aircraft</span>
+              </TabsTrigger>
+              <TabsTrigger value="integrations" className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                <span className="hidden sm:inline">Integrations</span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Users
+                <span className="hidden sm:inline">Users</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="profile" className="max-w-2xl">
@@ -394,6 +399,9 @@ const Profile = () => {
             </TabsContent>
             <TabsContent value="aircraft" className="max-w-2xl">
               <AircraftManagement userId={user.id} />
+            </TabsContent>
+            <TabsContent value="integrations" className="max-w-2xl">
+              <UserIntegrationsList />
             </TabsContent>
             <TabsContent value="users" className="max-w-4xl">
               <UserManagement />
@@ -401,14 +409,18 @@ const Profile = () => {
           </Tabs>
         ) : (
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserIcon className="h-4 w-4" />
-                My Profile
+                <span className="hidden sm:inline">My Profile</span>
               </TabsTrigger>
               <TabsTrigger value="aircraft" className="flex items-center gap-2">
                 <Plane className="h-4 w-4" />
-                Aircraft
+                <span className="hidden sm:inline">Aircraft</span>
+              </TabsTrigger>
+              <TabsTrigger value="integrations" className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                <span className="hidden sm:inline">Integrations</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="profile" className="max-w-2xl">
@@ -421,6 +433,9 @@ const Profile = () => {
             </TabsContent>
             <TabsContent value="aircraft" className="max-w-2xl">
               <AircraftManagement userId={user.id} />
+            </TabsContent>
+            <TabsContent value="integrations" className="max-w-2xl">
+              <UserIntegrationsList />
             </TabsContent>
           </Tabs>
         )}
