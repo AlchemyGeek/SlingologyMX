@@ -1,107 +1,121 @@
+# External Integration Ingest — SlingologyRamp v1
 
-# Mobile UI — P0 pass
+Goal: let external Slingology apps (starting with Ramp) push transaction data into MX via an aircraft-scoped API key and a single POST endpoint. Transactions land as Pending for owner review.
 
-Goal: make the app usable on a phone (≤640px) without horizontal scrolling or truncated forms. No functional changes — presentation only.
+## Decisions from open questions
 
-## 1. Remove forced content width (Dashboard shell)
+- Idempotency: Ramp sends a client `external_id`; MX stores it and enforces uniqueness per aircraft.
+- Tires intent: `Maintenance`.
+- `include_in_cost_per_hour`: `true` for all ingested transactions.
+- API key management: per-aircraft on the Aircraft Profile page, plus an "Integrations" tab/summary on the user Profile page showing all keys across aircraft.
 
-`src/pages/Dashboard.tsx`
-- Drop the `min-w-[600px]` wrapper inside `<main>`.
-- Reduce mobile padding: `p-3 sm:p-6`, keep `space-y-6`.
-- Header row: hide the "Profile" and "Logout" text labels under `sm` (icon-only, keep aria-label). Keeps counters + bell + aircraft switcher fitting on a phone.
-- `AircraftSwitcher` wrapper: change `ml-4` to `ml-2 sm:ml-4`.
-- Card wrapper around panels: `p-3 sm:p-6` instead of `p-6`.
+## 1. Database schema
 
-## 2. Responsive Aircraft Counters strip
+### 1.1 `api_keys` table
 
-`src/components/AircraftCountersDisplay.tsx`
-- The loading grid already uses `grid-cols-2 md:grid-cols-5`; apply the same to the real grid (currently a wide row). Result: 2 tiles per row on phone, 5 on desktop.
-- Tighten tile padding on mobile (`p-3 sm:p-4`), reduce number size to `text-xl sm:text-2xl`.
-- Header row (title + History button): wrap; make History button `size="icon"` on mobile.
+Create `public.aircraft_api_keys`:
 
-## 3. Card view for main list panels (under `md`)
+- `aircraft_id` (uuid, FK to aircraft, cascade delete)
+- `key_hash` (text, indexed)
+- `label` (text)
+- `created_at`, `updated_at`, `last_used_at`, `revoked_at` (timestamps)
 
-Convert the `<Table>` in these panels to a stacked card layout on mobile, keep the table on `md+`. Each card shows: primary title, meta line (date / status badge), and a small right-aligned action menu.
+RLS: owners can manage keys for aircraft they own; service_role has full access for the edge function lookup. `revoked_at IS NOT NULL` means invalid.
 
-Files:
-- `src/components/TransactionList.tsx`
-- `src/components/NotificationList.tsx` (and `CounterNotificationList.tsx`)
-- `src/components/HistoryPanel.tsx`
-- `src/components/MaintenanceLogList.tsx`
-- `src/components/DirectiveList.tsx`
-- `src/components/EquipmentList.tsx`
-- `src/components/SubscriptionList.tsx`
-- `src/components/ReserveList.tsx`
+### 1.2 `external_id` on transactions
 
-Pattern for each list:
+Add `external_id text` to `public.transactions`.
+Add partial unique index: `(aircraft_id, external_id) WHERE external_id IS NOT NULL`.
 
-```tsx
-{/* mobile */}
-<div className="md:hidden space-y-2">
-  {rows.map(row => (
-    <button key={row.id} onClick={() => open(row)}
-      className="w-full text-left rounded-lg border bg-card p-3 active:bg-accent">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-medium truncate">{row.title}</p>
-          <p className="text-xs text-muted-foreground">{row.meta}</p>
-        </div>
-        <Badge>{row.status}</Badge>
-      </div>
-    </button>
-  ))}
-</div>
+This powers idempotent duplicate handling without requiring a new reference type.
 
-{/* desktop */}
-<div className="hidden md:block">
-  <Table>…existing table…</Table>
-</div>
-```
+## 2. Edge function: integration-ingest
 
-Filter chips / toolbar above each list: add `flex-wrap gap-2` so they wrap instead of overflowing.
+Create `supabase/functions/integration-ingest/index.ts`:
 
-## 4. Full-screen sheets for heavy forms on mobile
+- Accepts `POST` with bearer API key.
+- Validates CORS and method.
+- Hashes the bearer token and looks up a non-revoked `aircraft_api_keys` row; rejects with `401` on miss/revoke.
+- Updates `last_used_at` on successful lookup.
+- Resolves `user_id` and `aircraft_id` from the key.
+- Validates payload with Zod:
+  - `external_id` (string, required)
+  - `transaction_date` (YYYY-MM-DD)
+  - `amount` (number >= 0)
+  - `title` (string, optional — falls back to derived title)
+  - `category` enum from Ramp mapping
+  - `notes` (string, optional)
+- Maps Ramp category → MX category/intent:
+  - Fuel → Operation / Fuel
+  - Oil → Operation / Oil & Consumables
+  - Tires → Maintenance / Maintenance Parts
+  - Other/misc → Operation / Other
+- Sets defaults:
+  - `currency` = USD
+  - `direction` = Debit
+  - `status` = Pending
+  - `source` = Imported
+  - `include_in_cash_flow` / `include_in_ownership_total` / `include_in_cost_per_hour` = true
+  - `allocate_over_time` = false
+  - `tags` = `["ramp-import"]`
+- Checks for existing transaction by `(aircraft_id, external_id)`:
+  - If found, returns the existing transaction id (200, idempotent no-op).
+  - If not found, inserts the transaction and returns the new id (201).
+- Returns clear 400 errors for malformed payloads.
 
-Wrap the largest edit dialogs in a responsive shell: `Sheet` (bottom, full height) under `md`, keep `Dialog` on desktop. Sticky footer with Save/Cancel.
+Rate limiting: implement a simple per-key sliding window in-memory (e.g. 100 req/min) to blunt brute force. No external rate-limit store in v1.
 
-Files:
-- `src/components/MaintenanceLogForm.tsx`
-- `src/components/TransactionForm.tsx`
-- `src/components/DirectiveForm.tsx`
-- `src/components/EquipmentForm.tsx`
-- `src/components/SubscriptionForm.tsx`
-- `src/components/ReserveForm.tsx`
-- `src/components/NotificationForm.tsx`
-- `src/components/BatchCounterEditDialog.tsx`
+## 3. UI: API key management
 
-Shell pattern (new small helper `src/components/ui/responsive-form-shell.tsx`):
+### 3.1 Aircraft Profile page
 
-```tsx
-// Mobile: <Sheet side="bottom" className="h-[100svh] w-full max-w-none rounded-none p-0 flex flex-col">
-//   <header sticky top>title + close</header>
-//   <div className="flex-1 overflow-y-auto p-4">{children}</div>
-//   <footer sticky bottom border-t p-3 bg-background">{actions}</footer>
-// Desktop: existing <Dialog>
-```
+Add an "Integrations" card to `src/components/AircraftManagement.tsx` (or the per-aircraft profile view):
 
-Each form file:
-- Replace top-level `<Dialog>` with `<ResponsiveFormShell>`.
-- Move existing Save/Cancel buttons into the shell's `actions` slot.
-- No change to form logic, validation, or submit handlers.
+- List active keys: label, created date, last sync.
+- "Generate Key" button: opens a dialog asking for a label (e.g. "Ramp"), then shows the plaintext key once with a Copy button and a "I've copied it" close action.
+- Revoke button per key with confirmation.
 
-## 5. Small mobile-only polish inside forms
+### 3.2 User Profile combined view
 
-Applied while touching each form above:
-- Number inputs: add `inputMode="decimal"` (amounts, counters, hours).
-- Grid columns inside forms: switch `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` where fields become too narrow (<160px).
+Add an "Integrations" tab to `src/pages/Profile.tsx`:
 
-## Out of scope (P1/P2 — will be a separate pass)
+- Show all keys across the user's aircraft.
+- Columns/fields: aircraft registration, label, created, last sync, status.
+- Provide revoke action (same confirmation as aircraft page).
 
-Header overflow menu for Profile/Logout, insights charts, safe-area padding, toaster reposition, 44px tap-target audit, date-picker collision handling, `font-size:16px` on inputs to prevent iOS zoom.
+## 4. UI: transaction list source visibility
+
+In `src/components/TransactionList.tsx`:
+
+- When a transaction has `source = Imported` and `tags` includes `"ramp-import"`, show a small badge or tooltip (e.g. "Ramp").
+- No new filter required in v1; the existing source filter already covers Imported.
+
+## 5. Ramp-side queue (specified, not built in MX)
+
+Document the expected Ramp behavior in `docs/FUNCTIONAL_SPEC.md` or a new integration doc:
+
+- Immediate send on save.
+- On failure, queue in localStorage with retry on app open and network reconnect.
+- Store returned MX transaction id to avoid duplicate sends.
+- Show pending-sync count indicator.
+
+## 6. Documentation & testing
+
+- Update `docs/FUNCTIONAL_SPEC.md` with the integration endpoint path, auth method, payload shape, and field mapping.
+- Add a basic edge-function unit test if the project has a test harness for functions; otherwise verify via curl/Postman after deploy.
+
+## Out of scope (per spec)
+
+- Photo/attachment upload from Ramp.
+- Editing or deleting an MX transaction from Ramp.
+- Two-way sync.
+- Generic field-mapping UI.
+- VOT/XC integrations (this spec establishes the pattern).
 
 ## Verification
 
-After changes, at 375px viewport:
-- No horizontal scrollbar on any dashboard view.
-- Counters render 2-up, main list panels render as cards, opening any of the eight forms fills the screen with a sticky action bar.
-- At `md+` (≥768px), UI is visually identical to today.
+- Generate a key for an aircraft, copy the plaintext, and POST a Ramp-shaped transaction.
+- Confirm the transaction appears in MX as Pending with correct category, intent, tags, and `external_id`.
+- POST the same `external_id` again and confirm the same transaction id is returned with no new row.
+- Revoke the key and confirm the next POST returns 401.
+- Confirm keys are visible both on the Aircraft Profile page and the Profile Integrations tab.
