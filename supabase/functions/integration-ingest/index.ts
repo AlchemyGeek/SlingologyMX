@@ -92,10 +92,13 @@ serve(async (req) => {
       .update({ last_used_at: new Date().toISOString() })
       .eq("id", keyRow.id);
 
+    console.log("[ingest] authenticated", { key_id: keyRow.id, aircraft_id: aircraft.id });
+
     let body: unknown;
     try {
       body = await req.json();
     } catch {
+      console.error("[ingest] malformed JSON", { key_id: keyRow.id });
       return new Response(
         JSON.stringify({ error: "Malformed JSON" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -104,6 +107,11 @@ serve(async (req) => {
 
     const parsed = IngestSchema.safeParse(body);
     if (!parsed.success) {
+      console.error("[ingest] invalid payload", {
+        key_id: keyRow.id,
+        received: body,
+        errors: parsed.error.flatten().fieldErrors,
+      });
       return new Response(
         JSON.stringify({ error: "Invalid payload", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -130,6 +138,10 @@ serve(async (req) => {
     }
 
     if (existingTx) {
+      console.log("[ingest] duplicate external_id, returning existing", {
+        external_id,
+        id: existingTx.id,
+      });
       return new Response(
         JSON.stringify({ id: existingTx.id, status: "existing" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -171,6 +183,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("[ingest] created transaction", { id: newTx.id, external_id });
 
     return new Response(
       JSON.stringify({ id: newTx.id, status: "created" }),
