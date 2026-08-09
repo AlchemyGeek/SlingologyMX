@@ -92,6 +92,8 @@ serve(async (req) => {
       .update({ last_used_at: new Date().toISOString() })
       .eq("id", keyRow.id);
 
+    console.log("[ingest] authenticated", { key_id: keyRow.id, aircraft_id: aircraft.id });
+
     let body: unknown;
     try {
       body = await req.json();
@@ -181,6 +183,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("[ingest] created transaction", { id: newTx.id, external_id });
 
     return new Response(
       JSON.stringify({ id: newTx.id, status: "created" }),
