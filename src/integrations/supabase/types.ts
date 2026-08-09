@@ -140,6 +140,47 @@ export type Database = {
           },
         ]
       }
+      aircraft_api_keys: {
+        Row: {
+          aircraft_id: string
+          created_at: string
+          id: string
+          key_hash: string
+          label: string
+          last_used_at: string | null
+          revoked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          aircraft_id: string
+          created_at?: string
+          id?: string
+          key_hash: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aircraft_id?: string
+          created_at?: string
+          id?: string
+          key_hash?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_api_keys_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aircraft_counter_history: {
         Row: {
           aircraft_id: string
@@ -1755,6 +1796,7 @@ export type Database = {
           created_at: string | null
           currency: string
           direction: Database["public"]["Enums"]["transaction_direction"]
+          external_id: string | null
           generated_for_period: string | null
           id: string
           include_in_cash_flow: boolean
@@ -1795,6 +1837,7 @@ export type Database = {
           created_at?: string | null
           currency?: string
           direction: Database["public"]["Enums"]["transaction_direction"]
+          external_id?: string | null
           generated_for_period?: string | null
           id?: string
           include_in_cash_flow?: boolean
@@ -1835,6 +1878,7 @@ export type Database = {
           created_at?: string | null
           currency?: string
           direction?: Database["public"]["Enums"]["transaction_direction"]
+          external_id?: string | null
           generated_for_period?: string | null
           id?: string
           include_in_cash_flow?: boolean
