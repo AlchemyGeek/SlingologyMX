@@ -533,6 +533,15 @@ SlingologyMX supports ingestion of external transaction data via a secure HTTP e
 - Header: `X-API-Key: <raw-key>`
 - Payload includes: `aircraft_id`, `external_id`, `date`, `location`, `items` (with category, description, quantity, unit, total), and optional `counter`.
 
+### 17.4 Counter Ingest Endpoint
+- Edge function: `integration-counters`
+- Header: `X-API-Key: <raw-key>` (same per-aircraft key as the transaction ingest)
+- Payload: any of `hobbs`, `tach`, `airframe_total_time`, `engine_total_time`, `prop_total_time`, plus optional `change_date` (YYYY-MM-DD).
+- Values that would decrease an existing counter are rejected with `400`.
+- TT counters configured as linked to Hobbs or Tach are derived automatically from the incoming delta and cannot be set directly.
+- Global aircraft counters are updated and a counter history entry is written with source `Integration`.
+- Response: `200` with the resulting counter values.
+
 ### 17.4 Idempotency
 - Ramp supplies a client-provided `external_id` for each payload.
 - Duplicate `external_id` values for the same aircraft are rejected.
