@@ -89,8 +89,8 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create admin client to update user password
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    // Update the target user's password
+
 
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password: password,
