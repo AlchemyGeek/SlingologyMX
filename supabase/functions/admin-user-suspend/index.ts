@@ -64,8 +64,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create admin client
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Update membership_status in profiles
     const newStatus = suspend ? "Suspended" : "Approved";
