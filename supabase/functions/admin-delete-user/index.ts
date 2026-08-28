@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.86.0";
 
 const corsHeaders = {
@@ -10,7 +9,7 @@ interface DeleteUserRequest {
   userId: string;
 }
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,13 +26,12 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create client with user's token to verify they're an admin
-    const supabaseUser = createClient(supabaseUrl, supabaseServiceKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Service-role client (bypasses RLS / function grants)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Verify the caller's token
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !user) {
       console.error("Auth error:", userError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -42,19 +40,22 @@ serve(async (req: Request) => {
       });
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabaseUser.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin'
-    });
+    // Check if caller is admin
+    const { data: adminRow } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
 
-    if (!isAdmin) {
+    if (!adminRow) {
       console.error("Non-admin user attempted to delete user");
       return new Response(JSON.stringify({ error: "Admin access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const { userId }: DeleteUserRequest = await req.json();
 
@@ -67,8 +68,6 @@ serve(async (req: Request) => {
 
     console.log(`Admin ${user.id} deleting user ${userId}`);
 
-    // Create admin client
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Step 1: Anonymize bug reports (set user_id to null instead of deleting)
     const { error: bugAnonymizeError } = await supabaseAdmin
