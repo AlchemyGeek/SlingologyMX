@@ -96,9 +96,9 @@ Deno.serve(async (req: Request) => {
     });
 
     if (updateError) {
-      console.error("Error updating password:", updateError);
+      console.error("Error updating password for", userId, ":", updateError.message, updateError);
       return new Response(JSON.stringify({ error: updateError.message }), {
-        status: 500,
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

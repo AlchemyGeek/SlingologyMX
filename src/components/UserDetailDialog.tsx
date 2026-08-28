@@ -246,7 +246,18 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
       });
 
       if (response.error) {
-        throw new Error(response.error.message);
+        // Try to read the actual error message returned by the edge function
+        let message = response.error.message;
+        const ctx = (response.error as any).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            if (body?.error) message = body.error;
+          } catch {
+            // ignore parse failures, keep generic message
+          }
+        }
+        throw new Error(message);
       }
 
       toast.success("Password updated successfully");
