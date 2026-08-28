@@ -252,7 +252,7 @@ const UserDetailDialog = ({ user, open, onOpenChange, onUserUpdated }: UserDetai
       toast.success("Password updated successfully");
     } catch (error) {
       console.error("Error setting password:", error);
-      toast.error("Failed to set password");
+      toast.error(error instanceof Error ? `Failed to set password: ${error.message}` : "Failed to set password");
     } finally {
       setSettingPassword(false);
     }
