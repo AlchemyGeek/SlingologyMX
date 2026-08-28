@@ -28,13 +28,12 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create client with user's token to verify they're an admin
-    const supabaseUser = createClient(supabaseUrl, supabaseServiceKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Service-role client (bypasses RLS / function grants)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Verify the caller's token
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -42,18 +41,21 @@ serve(async (req: Request) => {
       });
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabaseUser.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin'
-    });
+    // Check if caller is admin
+    const { data: adminRow } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
 
-    if (!isAdmin) {
+    if (!adminRow) {
       return new Response(JSON.stringify({ error: "Admin access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const { userId, suspend }: SuspendUserRequest = await req.json();
 
