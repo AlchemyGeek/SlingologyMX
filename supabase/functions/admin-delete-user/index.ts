@@ -69,8 +69,6 @@ serve(async (req: Request) => {
 
     console.log(`Admin ${user.id} deleting user ${userId}`);
 
-    // Create admin client
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Step 1: Anonymize bug reports (set user_id to null instead of deleting)
     const { error: bugAnonymizeError } = await supabaseAdmin
