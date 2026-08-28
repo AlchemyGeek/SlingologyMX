@@ -34,14 +34,22 @@ const WORDS = [
   "bird", "fish", "bear", "wolf", "fox", "deer", "hawk", "owl", "frog", "bee",
   "apple", "orange", "lemon", "grape", "peach", "rose", "lily", "daisy", "tulip", "mint"
 ];
-const SYMBOLS = ["!", "@", "#", "$", "%", "&", "*"];
+// Only symbols accepted by the backend password policy
+const SYMBOLS = ["!", "@", "#", "$", "%", "*", "?"];
+
+const capitalize = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
 
 const generatePassword = (): string => {
-  const word1 = WORDS[Math.floor(Math.random() * WORDS.length)];
+  const word1 = capitalize(WORDS[Math.floor(Math.random() * WORDS.length)]);
   const word2 = WORDS[Math.floor(Math.random() * WORDS.length)];
-  const number = Math.floor(Math.random() * 100);
+  const number = 10 + Math.floor(Math.random() * 90); // always 2 digits
   const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-  return `${word1}-${word2}${number}${symbol}`;
+  let password = `${word1}-${word2}${number}${symbol}`;
+  // Guarantee the 12 character minimum
+  while (password.length < 12) {
+    password = `${word1}-${capitalize(word2)}-${WORDS[Math.floor(Math.random() * WORDS.length)]}${number}${symbol}`;
+  }
+  return password;
 };
 
 interface UserProfile {
