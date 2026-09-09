@@ -261,29 +261,36 @@ export function TimelineAxis({
           )}
 
           {/* markers */}
-          {lanes.map((lane, i) => {
-            const cy = HEADER_H + i * LANE_H + LANE_H / 2;
-            return (
-              <g key={lane.key}>
-                {lane.clusters.map((cluster) => (
+          {groups.map((group) => (
+            <g key={group.key}>
+              {group.clusters.map((cluster) => {
+                const idx = group.laneIndex ?? dominantLane(cluster);
+                const lane = LANES[idx];
+                return (
                   <Marker
                     key={cluster.id}
                     cluster={cluster}
-                    cy={cy}
+                    cy={markerY(idx)}
                     color={lane.color}
                     selected={active?.cluster.id === cluster.id}
                     onSelect={(c) =>
                       selectCluster(
                         active?.cluster.id === c.id
                           ? null
-                          : { cluster: c, laneIndex: i, color: lane.color, laneLabel: lane.label }
+                          : {
+                              cluster: c,
+                              laneIndex: idx,
+                              color: lane.color,
+                              laneLabel: separated ? lane.label : "All activity",
+                            }
                       )
                     }
                   />
-                ))}
-              </g>
-            );
-          })}
+                );
+              })}
+            </g>
+          ))}
+
         </svg>
 
         {active && popup && (
