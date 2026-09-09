@@ -100,6 +100,15 @@ export function TimelinePanel({
   const [center, setCenter] = useState<Date>(() => new Date());
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
+  const [hidden, setHidden] = useState<TimelineCategory[]>([]);
+  const toggleCategory = (key: TimelineCategory) =>
+    setHidden((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+
+  const shownEvents = useMemo(
+    () => events.filter((e) => !hidden.includes(e.category)),
+    [events, hidden]
+  );
+
   const counts = useMemo(() => countByCategory(events), [events]);
   const visibleCounts = useMemo(() => {
     const half = spanDays / 2;
