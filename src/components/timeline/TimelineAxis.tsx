@@ -40,6 +40,8 @@ interface TimelineAxisProps {
   onSelect?: (cluster: TimelineCluster | null) => void;
   /** Event id to visually highlight (e.g. hovered row in the detail list). */
   highlightEventId?: string | null;
+  /** Opens the underlying record in its own section. */
+  onOpenRecord?: (event: TimelineEvent) => void;
 }
 
 export function TimelineAxis({
