@@ -100,14 +100,7 @@ export function TimelinePanel({
   const [center, setCenter] = useState<Date>(() => new Date());
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
-  const [hidden, setHidden] = useState<TimelineCategory[]>([]);
-  const toggleCategory = (key: TimelineCategory) =>
-    setHidden((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
-
-  const shownEvents = useMemo(
-    () => events.filter((e) => !hidden.includes(e.category)),
-    [events, hidden]
-  );
+  const shownEvents = useMemo(() => events, [events]);
 
   const counts = useMemo(() => countByCategory(events), [events]);
   const visibleCounts = useMemo(() => {
@@ -164,45 +157,32 @@ export function TimelinePanel({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {(Object.keys(CATEGORY_LABELS) as TimelineCategory[]).map((key) => {
-          const off = hidden.includes(key);
-          return (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={!off}
-              onClick={() => toggleCategory(key)}
-              className={`rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/40 ${
-                off ? "opacity-45" : ""
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor: off ? "hsl(var(--muted-foreground))" : CATEGORY_COLORS[key],
-                  }}
-                />
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {CATEGORY_LABELS[key]}
-                </p>
-              </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-2xl font-semibold tabular-nums">
-                  {loading ? "—" : visibleCounts[key]}
-                </span>
-                {!loading && (
-                  <span className="text-sm text-muted-foreground tabular-nums">
-                    / {counts[key]}
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {loading ? "\u00A0" : off ? "hidden — tap to show" : "in view / total"}
+        {(Object.keys(CATEGORY_LABELS) as TimelineCategory[]).map((key) => (
+          <div key={key} className="rounded-xl border bg-card p-4 text-left">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: CATEGORY_COLORS[key] }}
+              />
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {CATEGORY_LABELS[key]}
               </p>
-            </button>
-          );
-        })}
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold tabular-nums">
+                {loading ? "—" : visibleCounts[key]}
+              </span>
+              {!loading && (
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  / {counts[key]}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {loading ? "\u00A0" : "in view / total"}
+            </p>
+          </div>
+        ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
