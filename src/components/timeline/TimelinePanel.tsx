@@ -42,7 +42,6 @@ function TimelineRedirectCard({ onGoToCalendar }: { onGoToCalendar: () => void }
           <CalendarIcon className="mr-2 h-4 w-4" />
           Go to Calendar view
         </Button>
-        <p className="mt-3 font-mono text-xs text-muted-foreground">min width 900px</p>
       </div>
     </div>
   );
