@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_feedback_maintainer_scope() FROM PUBLIC, anon, authenticated;
