@@ -69,27 +69,20 @@ export function TimelineAxis({
   );
   const ticks = useMemo(() => (width > 0 ? buildTicks(scale) : []), [scale, width]);
 
-  // 0 = one merged band (zoomed out), 1 = fully separated lanes (zoomed in)
-  const laneT = Math.min(Math.max((300 - spanDays) / 170, 0), 1);
-  const separated = laneT > 0.5;
-  const mergedY = HEADER_H + (LANES.length * LANE_H) / 2;
+  // Always render the four category lanes.
   const laneCenter = (i: number) => HEADER_H + i * LANE_H + LANE_H / 2;
-  const markerY = (i: number) => mergedY + (laneCenter(i) - mergedY) * laneT;
 
   const groups = useMemo(() => {
-    if (width === 0) return [] as { key: string; laneIndex: number | null; clusters: TimelineCluster[] }[];
-    if (separated) {
-      return LANES.map((lane, i) => ({
-        key: lane.key,
-        laneIndex: i as number | null,
-        clusters: clusterEvents(
-          events.filter((e) => e.category === lane.key),
-          scale
-        ),
-      }));
-    }
-    return [{ key: "merged", laneIndex: null, clusters: clusterEvents(events, scale) }];
-  }, [events, scale, separated, width]);
+    if (width === 0) return [] as { key: string; laneIndex: number; clusters: TimelineCluster[] }[];
+    return LANES.map((lane, i) => ({
+      key: lane.key,
+      laneIndex: i,
+      clusters: clusterEvents(
+        events.filter((e) => e.category === lane.key),
+        scale
+      ),
+    }));
+  }, [events, scale, width]);
 
   const todayX = scale.x(new Date());
 
@@ -149,11 +142,11 @@ export function TimelineAxis({
     const x = scale.x(active.cluster.date);
     if (x < -40 || x > width + 40) return null;
     const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
-    const y = markerY(active.laneIndex);
-    const below = y < HEADER_H + (LANES.length * LANE_H) / 2;
+    const y = laneCenter(active.laneIndex);
+    const below = active.laneIndex < 2;
     return { left, x, laneCenter: y, below };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, scale, width, laneT]);
+  }, [active, scale, width]);
 
 
 
