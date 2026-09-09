@@ -144,7 +144,14 @@ export function TimelineAxis({
     const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
     const y = laneCenter(active.laneIndex);
     const below = active.laneIndex < 2;
-    return { left, x, laneCenter: y, below };
+    // Clamp vertically so the popup stays fully inside the plot area.
+    const EST_H = 250;
+    const maxTop = Math.max(totalHeight - 8 - EST_H, 4);
+    const top = below
+      ? Math.min(y + 16, maxTop)
+      : Math.max(Math.min(y - 16 - EST_H, maxTop), 4);
+    const maxHeight = Math.max(totalHeight - 8 - top, 140);
+    return { left, x, top, below, maxHeight };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, scale, width]);
 
