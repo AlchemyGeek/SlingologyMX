@@ -12,7 +12,7 @@ import type { TimelineEvent } from "@/lib/timelineEvents";
 
 export const MIN_SPAN_DAYS = 7;
 export const MAX_SPAN_DAYS = 2200;
-export const DEFAULT_SPAN_DAYS = 365;
+export const DEFAULT_SPAN_DAYS = 183;
 /** Minimum horizontal gap between two markers before they merge into a cluster. */
 export const CLUSTER_GAP_PX = 26;
 
