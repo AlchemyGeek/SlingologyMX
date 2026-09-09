@@ -147,6 +147,7 @@ export function TimelinePanel({
           <Button
             variant="outline"
             size="icon"
+            className="h-11 w-11"
             aria-label="Zoom in"
             onClick={() => setSpanDays((s) => clampSpan(s / 1.6))}
           >
@@ -155,12 +156,19 @@ export function TimelinePanel({
           <Button
             variant="outline"
             size="icon"
+            className="h-11 w-11"
             aria-label="Zoom out"
             onClick={() => setSpanDays((s) => clampSpan(s * 1.6))}
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" aria-label="Back to today" onClick={resetToToday}>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-11 w-11"
+            aria-label="Back to today"
+            onClick={resetToToday}
+          >
             <Crosshair className="h-4 w-4" />
           </Button>
         </div>
