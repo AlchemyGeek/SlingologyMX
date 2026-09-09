@@ -88,6 +88,7 @@ export type Database = {
           registration: string
           updated_at: string | null
           user_id: string
+          utilization_hours_per_month: number | null
         }
         Insert: {
           airframe_tt_mode?: string
@@ -105,6 +106,7 @@ export type Database = {
           registration: string
           updated_at?: string | null
           user_id: string
+          utilization_hours_per_month?: number | null
         }
         Update: {
           airframe_tt_mode?: string
@@ -122,6 +124,7 @@ export type Database = {
           registration?: string
           updated_at?: string | null
           user_id?: string
+          utilization_hours_per_month?: number | null
         }
         Relationships: [
           {
