@@ -59,7 +59,10 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
 
 export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePanelProps) {
   const isNarrow = useIsNarrow(TIMELINE_MIN_WIDTH);
-  const { events, loading, error, hasCounterHistory } = useTimelineEvents(userId, aircraftId);
+  const { events, loading, error, hasCounterHistory, utilization } = useTimelineEvents(
+    userId,
+    aircraftId
+  );
 
   const counts = useMemo(() => countByCategory(events), [events]);
   const range = useMemo(() => {

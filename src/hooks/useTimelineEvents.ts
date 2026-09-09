@@ -42,5 +42,5 @@ export function useTimelineEvents(userId: string, aircraftId: string, refreshKey
     load();
   }, [load, refreshKey]);
 
-  return { events, hasCounterHistory, loading, error, refetch: load };
+  return { events, utilization, hasCounterHistory, loading, error, refetch: load };
 }
