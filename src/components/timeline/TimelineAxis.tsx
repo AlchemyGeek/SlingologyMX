@@ -324,26 +324,26 @@ function ClusterPopup({
   active,
   left,
   anchorX,
-  laneCenter,
+  top,
+  maxHeight,
   below,
   onClose,
 }: {
   active: ActiveCluster;
   left: number;
   anchorX: number;
-  laneCenter: number;
+  top: number;
+  maxHeight: number;
   below: boolean;
   onClose: () => void;
 }) {
   const { cluster, color, laneLabel } = active;
-  const style: React.CSSProperties = below
-    ? { left, top: laneCenter + 16, width: POPUP_W }
-    : { left, top: Math.max(laneCenter - 16 - 200, 4), width: POPUP_W };
+  const style: React.CSSProperties = { left, top, width: POPUP_W, maxHeight };
 
 
   return (
     <div
-      className="absolute z-20 rounded-lg border bg-popover p-3 shadow-lg"
+      className="absolute z-20 overflow-y-auto rounded-lg border bg-popover p-3 shadow-lg"
       style={style}
 
       onPointerDown={(e) => e.stopPropagation()}
