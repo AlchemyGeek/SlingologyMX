@@ -535,6 +535,8 @@ function Marker({
   return (
     <g className="cursor-pointer" onClick={handleClick} onPointerDown={(e) => e.stopPropagation()}>
       <title>{tooltip}</title>
+      {/* invisible 44px tap target for touch devices */}
+      <circle cx={cluster.x} cy={cy} r={22} fill="transparent" />
       {highlighted && !selected && (
         <circle
           cx={cluster.x}
