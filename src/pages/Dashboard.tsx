@@ -44,7 +44,7 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
-  const [activeView, setActiveView] = useState<DashboardView>("calendar");
+  const [activeView, setActiveView] = useState<DashboardView>("timeline");
   const [notificationsOverdueOnly, setNotificationsOverdueOnly] = useState(false);
   const [transactionsStatusFilter, setTransactionsStatusFilter] = useState<string | undefined>(undefined);
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);

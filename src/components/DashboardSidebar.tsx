@@ -60,8 +60,8 @@ interface DashboardSidebarProps {
 }
 
 const eventsItems = [
-  { id: "calendar" as const, title: "Calendar", icon: Calendar },
   { id: "timeline" as const, title: "Timeline", icon: GanttChartSquare },
+  { id: "calendar" as const, title: "Calendar", icon: Calendar },
   { id: "counters" as const, title: "Counters", icon: Gauge },
   { id: "notifications" as const, title: "Notifications", icon: Bell },
   { id: "history" as const, title: "History", icon: History },
