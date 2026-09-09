@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useTimelineEvents } from "@/hooks/useTimelineEvents";
 import { countByCategory, TimelineCategory } from "@/lib/timelineEvents";
 import { TimelineAxis } from "./TimelineAxis";
+import { TimelineDetailList } from "./TimelineDetailList";
 import {
   clampSpan,
   describeSpan,

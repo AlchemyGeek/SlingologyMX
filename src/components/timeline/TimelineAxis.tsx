@@ -38,6 +38,8 @@ interface TimelineAxisProps {
   onCenterChange: (date: Date) => void;
   onSpanChange: (days: number) => void;
   onSelect?: (cluster: TimelineCluster | null) => void;
+  /** Event id to visually highlight (e.g. hovered row in the detail list). */
+  highlightEventId?: string | null;
 }
 
 export function TimelineAxis({
