@@ -58,6 +58,8 @@ export function TimelineAxis({
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<ActiveCluster | null>(null);
   const dragRef = useRef<{ x: number; center: Date; moved: boolean } | null>(null);
+  const pointersRef = useRef<Map<number, number>>(new Map());
+  const pinchRef = useRef<{ distance: number; spanDays: number; center: Date } | null>(null);
 
 
   useEffect(() => {
