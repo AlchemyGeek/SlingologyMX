@@ -1,0 +1,58 @@
+<svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+<style>
+text{font-family:var(--font-sans);fill:hsl(var(--muted-foreground));font-size:12px}
+.lbl{fill:hsl(var(--foreground));font-size:14px;font-weight:480}
+.mono{font-family:var(--font-mono);font-size:11px}
+.bx{fill:none;stroke:hsl(var(--muted-foreground));stroke-width:1}
+.rail{stroke:hsl(var(--border));stroke-width:1}
+</style>
+
+<text class="lbl" x="8" y="16">Zoomed out — one merged line</text>
+<rect class="bx" x="8" y="28" width="290" height="92" rx="8"/>
+<line class="rail" x1="20" y1="80" x2="286" y2="80"/>
+<line x1="150" y1="38" x2="150" y2="112" stroke="hsl(var(--foreground))" stroke-width="2"/>
+<text class="mono" x="150" y="34" text-anchor="middle" style="fill:hsl(var(--foreground))">TODAY</text>
+<circle cx="50" cy="80" r="6" fill="hsl(var(--muted-foreground))"/>
+<rect x="76" y="71" width="30" height="18" rx="9" fill="hsl(var(--muted-foreground))"/>
+<text class="mono" x="91" y="84" text-anchor="middle" style="fill:hsl(var(--background))">7</text>
+<circle cx="128" cy="80" r="6" fill="hsl(var(--muted-foreground))"/>
+<rect x="182" y="71" width="30" height="18" rx="9" fill="hsl(var(--muted-foreground))"/>
+<text class="mono" x="197" y="84" text-anchor="middle" style="fill:hsl(var(--background))">4</text>
+<circle cx="240" cy="80" r="6" fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="2" stroke-dasharray="3 2"/>
+<text x="20" y="110">clusters counted</text>
+
+<path d="M310 74 L332 74" stroke="hsl(var(--muted-foreground))" stroke-width="1" marker-end="url(#a)"/>
+<defs><marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="hsl(var(--muted-foreground))"/></marker></defs>
+<text x="303" y="94" text-anchor="middle">zoom in</text>
+
+<text class="lbl" x="344" y="16">Zoomed in — four lanes</text>
+<rect class="bx" x="344" y="28" width="288" height="92" rx="8"/>
+<rect x="345" y="29" width="286" height="22" fill="hsl(var(--muted))"/>
+<rect x="345" y="73" width="286" height="22" fill="hsl(var(--muted))"/>
+<line x1="470" y1="29" x2="470" y2="119" stroke="hsl(var(--foreground))" stroke-width="2"/>
+<text x="352" y="44">maintenance</text><circle cx="600" cy="40" r="6" fill="hsl(var(--accent))"/><circle cx="420" cy="40" r="6" fill="hsl(var(--muted-foreground))"/>
+<text x="352" y="66">directives</text><circle cx="520" cy="62" r="6" fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="2" stroke-dasharray="3 2"/>
+<text x="352" y="88">financial</text><circle cx="440" cy="84" r="6" fill="hsl(var(--muted-foreground))"/>
+<text x="352" y="110">counters</text><circle cx="560" cy="106" r="6" fill="hsl(var(--muted-foreground))"/>
+
+<rect class="bx" x="8" y="140" width="290" height="60" rx="8" stroke-dasharray="4 3"/>
+<text x="20" y="164">detail list locked</text>
+<text x="20" y="182" class="mono">zoom in for details</text>
+
+<rect class="bx" x="344" y="140" width="288" height="60" rx="8"/>
+<rect x="356" y="152" width="16" height="16" rx="4" fill="hsl(var(--muted))"/>
+<rect x="380" y="156" width="120" height="8" rx="4" fill="hsl(var(--border))"/>
+<rect x="356" y="176" width="16" height="16" rx="4" fill="hsl(var(--muted))"/>
+<rect x="380" y="180" width="180" height="8" rx="4" fill="hsl(var(--border))"/>
+<text x="576" y="164" class="mono">list</text>
+
+<circle cx="20" cy="232" r="9" fill="hsl(var(--accent))"/>
+<text x="18" y="236" style="fill:hsl(var(--accent-foreground));font-size:11px" text-anchor="middle">1</text>
+<text x="38" y="236">Solid dot = confirmed · dashed hollow dot = projected from your flying rate.</text>
+<circle cx="20" cy="258" r="9" fill="hsl(var(--accent))"/>
+<text x="18" y="262" style="fill:hsl(var(--accent-foreground));font-size:11px" text-anchor="middle">2</text>
+<text x="38" y="262">Lanes appear gradually between 300 and 130 days of visible span — no snapping.</text>
+<circle cx="20" cy="284" r="9" fill="hsl(var(--accent))"/>
+<text x="18" y="288" style="fill:hsl(var(--accent-foreground));font-size:11px" text-anchor="middle">3</text>
+<text x="38" y="288">Clicking any dot opens a read-only card with a link to the full record.</text>
+</svg>
