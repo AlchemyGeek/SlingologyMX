@@ -123,21 +123,46 @@ export function TimelineAxis({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
+    pointersRef.current.set(e.pointerId, e.clientX);
+    if (pointersRef.current.size === 2) {
+      // second finger down: start a pinch and stop panning
+      const [a, b] = [...pointersRef.current.values()];
+      pinchRef.current = { distance: Math.abs(a - b) || 1, spanDays, center };
+      dragRef.current = null;
+      return;
+    }
     dragRef.current = { x: e.clientX, center, moved: false };
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (width === 0) return;
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, e.clientX);
+    }
+
+    const pinch = pinchRef.current;
+    if (pinch && pointersRef.current.size >= 2) {
+      const [a, b] = [...pointersRef.current.values()];
+      const distance = Math.abs(a - b) || 1;
+      const next = clampSpan(pinch.spanDays * (pinch.distance / distance));
+      onSpanChange(next);
+      onCenterChange(pinch.center);
+      return;
+    }
+
     const drag = dragRef.current;
-    if (!drag || width === 0) return;
+    if (!drag) return;
     if (Math.abs(e.clientX - drag.x) > 3) drag.moved = true;
     const dxDays = ((drag.x - e.clientX) / width) * spanDays;
     onCenterChange(addDays(drag.center, dxDays));
   };
 
-  const endDrag = () => {
+  const endDrag = (e?: React.PointerEvent) => {
+    if (e) pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
     const drag = dragRef.current;
     dragRef.current = null;
-    if (drag && !drag.moved) selectCluster(null);
+    if (drag && !drag.moved && !pinchRef.current) selectCluster(null);
   };
 
   const totalHeight = HEADER_H + LANES.length * LANE_H;
