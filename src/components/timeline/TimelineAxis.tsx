@@ -20,14 +20,22 @@ const HEADER_H = 30;
 const LANE_H = 56;
 const LABEL_W = 132;
 
+const POPUP_W = 290;
+
+interface ActiveCluster {
+  cluster: TimelineCluster;
+  laneIndex: number;
+  color: string;
+  laneLabel: string;
+}
+
 interface TimelineAxisProps {
   events: TimelineEvent[];
   center: Date;
   spanDays: number;
   onCenterChange: (date: Date) => void;
   onSpanChange: (days: number) => void;
-  onSelect: (cluster: TimelineCluster) => void;
-  selectedId?: string | null;
+  onSelect?: (cluster: TimelineCluster | null) => void;
 }
 
 export function TimelineAxis({
@@ -37,11 +45,12 @@ export function TimelineAxis({
   onCenterChange,
   onSpanChange,
   onSelect,
-  selectedId,
 }: TimelineAxisProps) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const dragRef = useRef<{ x: number; center: Date } | null>(null);
+  const [active, setActive] = useState<ActiveCluster | null>(null);
+  const dragRef = useRef<{ x: number; center: Date; moved: boolean } | null>(null);
+
 
   useEffect(() => {
     const el = plotRef.current;
