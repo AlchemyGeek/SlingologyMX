@@ -78,15 +78,20 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
     aircraftId
   );
 
+  const [spanDays, setSpanDays] = useState(DEFAULT_SPAN_DAYS);
+  const [center, setCenter] = useState<Date>(() => new Date());
+  const [selected, setSelected] = useState<TimelineCluster | null>(null);
+
   const counts = useMemo(() => countByCategory(events), [events]);
   const projectedCount = useMemo(
     () => events.filter((e) => e.confidence === "projected").length,
     [events]
   );
-  const range = useMemo(() => {
-    if (events.length === 0) return null;
-    return { first: events[0].date, last: events[events.length - 1].date };
-  }, [events]);
+
+  const resetToToday = () => {
+    setCenter(new Date());
+    setSpanDays(DEFAULT_SPAN_DAYS);
+  };
 
   if (isNarrow) {
     return <TimelineRedirectCard onGoToCalendar={onGoToCalendar} />;
@@ -94,12 +99,34 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Timeline</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Every dated event on one axis, with today as the pivot. Read only.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="mr-1 text-xs text-muted-foreground">{describeSpan(spanDays)}</span>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Zoom in"
+            onClick={() => setSpanDays((s) => clampSpan(s / 1.6))}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Zoom out"
+            onClick={() => setSpanDays((s) => clampSpan(s * 1.6))}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" aria-label="Back to today" onClick={resetToToday}>
+            <Crosshair className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -117,38 +144,74 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
       </div>
 
       <div className="rounded-xl border bg-card">
-        <div className="flex h-[290px] flex-col items-center justify-center gap-2 px-6 text-center">
-          {loading ? (
+        {loading ? (
+          <div className="flex h-[290px] items-center justify-center">
             <p className="text-sm text-muted-foreground">Gathering your events…</p>
-          ) : error ? (
+          </div>
+        ) : error ? (
+          <div className="flex h-[290px] items-center justify-center">
             <p className="text-sm text-destructive">{error}</p>
-          ) : (
-            <>
-              <p className="text-sm text-muted-foreground">
-                The timeline axis will appear here.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {events.length} event{events.length === 1 ? "" : "s"} gathered
-                {range
-                  ? ` from ${format(range.first, "d MMM yyyy")} to ${format(range.last, "d MMM yyyy")}`
-                  : ""}
-                .
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {utilization.hoursPerMonth
-                  ? `${projectedCount} future item${projectedCount === 1 ? "" : "s"} estimated from flying about ${utilization.hoursPerMonth.toFixed(1)} hours a month${
-                      utilization.source === "override" ? " (your figure)" : ""
-                    }.`
-                  : hasCounterHistory
-                    ? "Counter readings do not yet show a usable flying rate, so hour-based items are not estimated."
-                    : "Not enough counter readings yet to estimate future hour-based due dates."}
-              </p>
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="py-4">
+            <TimelineAxis
+              events={events}
+              center={center}
+              spanDays={spanDays}
+              onCenterChange={setCenter}
+              onSpanChange={setSpanDays}
+              onSelect={setSelected}
+              selectedId={selected?.id ?? null}
+            />
+            <p className="mt-3 px-4 text-xs text-muted-foreground">
+              Drag to move through time, scroll to zoom. Solid dots are recorded, outlined dots are
+              scheduled, dashed dots are estimated.
+            </p>
+          </div>
+        )}
       </div>
+
+      {selected && (
+        <div className="rounded-xl border bg-card p-4">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-sm font-semibold">
+              {format(selected.date, "d MMM yyyy")} · {selected.events.length} item
+              {selected.events.length === 1 ? "" : "s"}
+            </h3>
+            <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>
+              Close
+            </Button>
+          </div>
+          <ul className="mt-3 space-y-2">
+            {selected.events.map((event) => (
+              <li key={event.id} className="rounded-lg border bg-background/40 px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{event.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(event.date, "d MMM yyyy")}
+                  </span>
+                </div>
+                {event.subtitle && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">{event.subtitle}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        {utilization.hoursPerMonth
+          ? `${projectedCount} future item${projectedCount === 1 ? "" : "s"} estimated from flying about ${utilization.hoursPerMonth.toFixed(1)} hours a month${
+              utilization.source === "override" ? " (your figure)" : ""
+            }.`
+          : hasCounterHistory
+            ? "Counter readings do not yet show a usable flying rate, so hour-based items are not estimated."
+            : "Not enough counter readings yet to estimate future hour-based due dates."}
+      </p>
     </div>
   );
 }
+
 
 export default TimelinePanel;
