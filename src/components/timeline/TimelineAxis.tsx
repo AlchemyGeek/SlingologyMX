@@ -210,32 +210,55 @@ export function TimelineAxis({
             </g>
           ))}
 
-          {/* lane baselines */}
-          {LANES.map((lane, i) => {
-            const y = HEADER_H + i * LANE_H;
-            return (
-              <g key={lane.key}>
-                <line
-                  x1={0}
-                  x2="100%"
-                  y1={y}
-                  y2={y}
-                  stroke="hsl(var(--border))"
-                  strokeWidth={1}
-                  opacity={0.6}
-                />
-                <line
-                  x1={0}
-                  x2="100%"
-                  y1={y + LANE_H / 2}
-                  y2={y + LANE_H / 2}
-                  stroke="hsl(var(--border))"
-                  strokeDasharray="2 6"
-                  opacity={0.5}
-                />
-              </g>
-            );
-          })}
+          {/* merged baseline (visible when zoomed out) */}
+          {laneT < 1 && (
+            <line
+              x1={0}
+              x2="100%"
+              y1={mergedY}
+              y2={mergedY}
+              stroke="hsl(var(--border))"
+              strokeWidth={1}
+              opacity={0.8 * (1 - laneT)}
+            />
+          )}
+
+          {/* lane tints and baselines, fading in as lanes separate */}
+          {laneT > 0 &&
+            LANES.map((lane, i) => {
+              const y = HEADER_H + i * LANE_H;
+              return (
+                <g key={lane.key}>
+                  <rect
+                    x={0}
+                    y={y}
+                    width="100%"
+                    height={LANE_H}
+                    fill={lane.color}
+                    opacity={0.06 * laneT}
+                  />
+                  <line
+                    x1={0}
+                    x2="100%"
+                    y1={y}
+                    y2={y}
+                    stroke="hsl(var(--border))"
+                    strokeWidth={1}
+                    opacity={0.6 * laneT}
+                  />
+                  <line
+                    x1={0}
+                    x2="100%"
+                    y1={y + LANE_H / 2}
+                    y2={y + LANE_H / 2}
+                    stroke="hsl(var(--border))"
+                    strokeDasharray="2 6"
+                    opacity={0.5 * laneT}
+                  />
+                </g>
+              );
+            })}
+
 
           {/* today pivot */}
           {todayX >= 0 && todayX <= width && (
