@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { GanttChartSquare, Calendar as CalendarIcon } from "lucide-react";
+import {
+  GanttChartSquare,
+  Calendar as CalendarIcon,
+  ZoomIn,
+  ZoomOut,
+  Crosshair,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimelineEvents } from "@/hooks/useTimelineEvents";
 import { countByCategory, TimelineCategory } from "@/lib/timelineEvents";
+import { TimelineAxis } from "./TimelineAxis";
+import {
+  clampSpan,
+  describeSpan,
+  DEFAULT_SPAN_DAYS,
+  type TimelineCluster,
+} from "./timelineScale";
+
 
 export const TIMELINE_MIN_WIDTH = 900;
 
