@@ -26,6 +26,7 @@ interface TimelinePanelProps {
   userId: string;
   aircraftId: string;
   onGoToCalendar: () => void;
+  onOpenRecord?: (event: TimelineEventType) => void;
 }
 
 function useIsNarrow(minWidth: number) {
