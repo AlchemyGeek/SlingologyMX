@@ -322,6 +322,7 @@ export function TimelineAxis({
             top={popup.top}
             maxHeight={popup.maxHeight}
             below={popup.below}
+            onOpenRecord={onOpenRecord}
             onClose={() => selectCluster(null)}
           />
         )}
@@ -345,6 +346,7 @@ function ClusterPopup({
   top: number;
   maxHeight: number;
   below: boolean;
+  onOpenRecord?: (event: TimelineEvent) => void;
   onClose: () => void;
 }) {
   const { cluster, color, laneLabel } = active;
