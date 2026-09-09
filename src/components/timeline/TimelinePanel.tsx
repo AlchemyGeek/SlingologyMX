@@ -91,6 +91,12 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
   const [selected, setSelected] = useState<TimelineCluster | null>(null);
 
   const counts = useMemo(() => countByCategory(events), [events]);
+  const visibleCounts = useMemo(() => {
+    const half = spanDays / 2;
+    const start = addDays(center, -half);
+    const end = addDays(center, half);
+    return countByCategory(eventsInRange(events, start, end));
+  }, [events, center, spanDays]);
   const projectedCount = useMemo(
     () => events.filter((e) => e.confidence === "projected").length,
     [events]
