@@ -287,6 +287,10 @@ export function TimelineAxis({
                     cy={laneCenter(idx)}
                     color={lane.color}
                     selected={active?.cluster.id === cluster.id}
+                    highlighted={
+                      highlightEventId != null &&
+                      cluster.events.some((e) => e.id === highlightEventId)
+                    }
                     onSelect={(c) =>
                       selectCluster(
                         active?.cluster.id === c.id
