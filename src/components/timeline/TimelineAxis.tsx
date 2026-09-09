@@ -309,7 +309,8 @@ function ClusterPopup({
   const { cluster, color, laneLabel } = active;
   const style: React.CSSProperties = below
     ? { left, top: laneCenter + 16, width: POPUP_W }
-    : { left, top: undefined, bottom: undefined, width: POPUP_W };
+    : { left, top: Math.max(laneCenter - 16 - 200, 4), width: POPUP_W };
+
 
   return (
     <div
