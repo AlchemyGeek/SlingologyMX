@@ -144,7 +144,14 @@ export function TimelineAxis({
     const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
     const y = laneCenter(active.laneIndex);
     const below = active.laneIndex < 2;
-    return { left, x, laneCenter: y, below };
+    // Clamp vertically so the popup stays fully inside the plot area.
+    const EST_H = 250;
+    const maxTop = Math.max(totalHeight - 8 - EST_H, 4);
+    const top = below
+      ? Math.min(y + 16, maxTop)
+      : Math.max(Math.min(y - 16 - EST_H, maxTop), 4);
+    const maxHeight = Math.max(totalHeight - 8 - top, 140);
+    return { left, x, top, below, maxHeight };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, scale, width]);
 
@@ -302,7 +309,8 @@ export function TimelineAxis({
             active={active}
             left={popup.left}
             anchorX={popup.x}
-            laneCenter={popup.laneCenter}
+            top={popup.top}
+            maxHeight={popup.maxHeight}
             below={popup.below}
             onClose={() => selectCluster(null)}
           />
@@ -316,26 +324,26 @@ function ClusterPopup({
   active,
   left,
   anchorX,
-  laneCenter,
+  top,
+  maxHeight,
   below,
   onClose,
 }: {
   active: ActiveCluster;
   left: number;
   anchorX: number;
-  laneCenter: number;
+  top: number;
+  maxHeight: number;
   below: boolean;
   onClose: () => void;
 }) {
   const { cluster, color, laneLabel } = active;
-  const style: React.CSSProperties = below
-    ? { left, top: laneCenter + 16, width: POPUP_W }
-    : { left, top: Math.max(laneCenter - 16 - 200, 4), width: POPUP_W };
+  const style: React.CSSProperties = { left, top, width: POPUP_W, maxHeight };
 
 
   return (
     <div
-      className="absolute z-20 rounded-lg border bg-popover p-3 shadow-lg"
+      className="absolute z-20 overflow-y-auto rounded-lg border bg-popover p-3 shadow-lg"
       style={style}
 
       onPointerDown={(e) => e.stopPropagation()}
@@ -361,7 +369,7 @@ function ClusterPopup({
         </button>
       </div>
 
-      <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto pr-1">
+      <ul className="mt-2 space-y-1.5 pr-1">
         {cluster.events.map((event) => (
           <li key={event.id} className="rounded-md border bg-background/60 px-2 py-1.5">
             <div className="flex items-baseline justify-between gap-2">
