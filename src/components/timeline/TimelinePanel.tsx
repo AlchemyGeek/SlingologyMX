@@ -65,6 +65,10 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
   );
 
   const counts = useMemo(() => countByCategory(events), [events]);
+  const projectedCount = useMemo(
+    () => events.filter((e) => e.confidence === "projected").length,
+    [events]
+  );
   const range = useMemo(() => {
     if (events.length === 0) return null;
     return { first: events[0].date, last: events[events.length - 1].date };
@@ -116,11 +120,15 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
                   : ""}
                 .
               </p>
-              {!hasCounterHistory && (
-                <p className="text-xs text-muted-foreground">
-                  Not enough counter readings yet to estimate future hour-based due dates.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                {utilization.hoursPerMonth
+                  ? `${projectedCount} estimated from flying about ${utilization.hoursPerMonth.toFixed(1)} hours a month${
+                      utilization.source === "override" ? " (your figure)" : ""
+                    }.`
+                  : hasCounterHistory
+                    ? "Counter readings do not yet show a usable flying rate, so hour-based items are not estimated."
+                    : "Not enough counter readings yet to estimate future hour-based due dates."}
+              </p>
             </>
           )}
         </div>
