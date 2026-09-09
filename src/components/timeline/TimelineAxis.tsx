@@ -507,3 +507,20 @@ function Marker({
 }
 
 export default TimelineAxis;
+
+function dominantLane(cluster: TimelineCluster): number {
+  const counts = new Map<TimelineCategory, number>();
+  for (const event of cluster.events) {
+    counts.set(event.category, (counts.get(event.category) ?? 0) + 1);
+  }
+  let best = LANES[0].key;
+  let bestCount = -1;
+  for (const lane of LANES) {
+    const c = counts.get(lane.key) ?? 0;
+    if (c > bestCount) {
+      best = lane.key;
+      bestCount = c;
+    }
+  }
+  return LANES.findIndex((l) => l.key === best);
+}
