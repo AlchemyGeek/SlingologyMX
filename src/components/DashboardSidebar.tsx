@@ -17,6 +17,7 @@ import {
   ArrowLeftRight,
   PiggyBank,
   Sparkles,
+  GanttChartSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -32,6 +33,7 @@ import {
 
 type DashboardView =
   | "calendar"
+  | "timeline"
   | "counters"
   | "notifications"
   | "history"
@@ -59,6 +61,7 @@ interface DashboardSidebarProps {
 
 const eventsItems = [
   { id: "calendar" as const, title: "Calendar", icon: Calendar },
+  { id: "timeline" as const, title: "Timeline", icon: GanttChartSquare },
   { id: "counters" as const, title: "Counters", icon: Gauge },
   { id: "notifications" as const, title: "Notifications", icon: Bell },
   { id: "history" as const, title: "History", icon: History },
