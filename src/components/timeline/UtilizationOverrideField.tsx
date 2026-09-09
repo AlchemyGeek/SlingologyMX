@@ -53,13 +53,7 @@ export function UtilizationOverrideField({
     };
   }, [aircraftId]);
 
-  const save = async () => {
-    const trimmed = value.trim();
-    const parsed = trimmed === "" ? null : Number(trimmed);
-    if (parsed !== null && (!Number.isFinite(parsed) || parsed <= 0)) {
-      toast.error("Enter a positive number of hours, or leave it blank.");
-      return;
-    }
+  const persist = async (parsed: number | null) => {
     setSaving(true);
     const { error } = await supabase
       .from("aircraft")
@@ -74,6 +68,24 @@ export function UtilizationOverrideField({
     toast.success(parsed === null ? "Using the automatic rate again" : "Flying rate saved");
     onSaved?.();
   };
+
+  const save = async () => {
+    const trimmed = value.trim();
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed <= 0)) {
+      toast.error("Enter a positive number of hours, or leave it blank.");
+      return;
+    }
+    persist(parsed);
+  };
+
+  const useAutomatic = async () => {
+    setValue("");
+    await persist(null);
+  };
+
+  // A manual override is active when the field holds a number.
+  const hasOverride = value.trim() !== "" && Number.isFinite(Number(value.trim()));
 
   return (
     <div className="space-y-2 border-t pt-3">
