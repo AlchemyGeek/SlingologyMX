@@ -309,7 +309,8 @@ export function TimelineAxis({
             active={active}
             left={popup.left}
             anchorX={popup.x}
-            laneCenter={popup.laneCenter}
+            top={popup.top}
+            maxHeight={popup.maxHeight}
             below={popup.below}
             onClose={() => selectCluster(null)}
           />
