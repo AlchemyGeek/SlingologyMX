@@ -48,6 +48,7 @@ const Dashboard = () => {
   const [notificationsOverdueOnly, setNotificationsOverdueOnly] = useState(false);
   const [transactionsStatusFilter, setTransactionsStatusFilter] = useState<string | undefined>(undefined);
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
+  const [focusRecord, setFocusRecord] = useState<{ view: DashboardView; id: string } | null>(null);
   const { selectedAircraft } = useAircraft();
   const {
     counters,
@@ -223,7 +224,13 @@ const Dashboard = () => {
                 counter_history: "counters",
               };
               const view = target[event.source];
-              if (view) setActiveView(view);
+              if (!view) return;
+              const recordId =
+                event.source === "directive_compliance"
+                  ? ((event.meta?.directiveId as string | undefined) ?? event.recordId)
+                  : event.recordId;
+              setFocusRecord({ view, id: recordId });
+              setActiveView(view);
             }}
           />
         );
@@ -245,6 +252,8 @@ const Dashboard = () => {
             refreshKey={recordsRefreshKey}
             overdueOnly={notificationsOverdueOnly}
             onClearOverdueFilter={() => setNotificationsOverdueOnly(false)}
+            focusRecordId={focusRecord?.view === "notifications" ? focusRecord.id : undefined}
+            onFocusHandled={() => setFocusRecord(null)}
           />
         );
       case "history":
@@ -266,6 +275,8 @@ const Dashboard = () => {
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
             initialStatusFilter={transactionsStatusFilter}
             onClearStatusFilter={() => setTransactionsStatusFilter(undefined)}
+            focusRecordId={focusRecord?.view === "transactions" ? focusRecord.id : undefined}
+            onFocusHandled={() => setFocusRecord(null)}
           />
         );
       case "reserves":
@@ -298,6 +309,8 @@ const Dashboard = () => {
               refetch();
             }}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+            focusRecordId={focusRecord?.view === "maintenance" ? focusRecord.id : undefined}
+            onFocusHandled={() => setFocusRecord(null)}
           />
         );
       case "directives":
@@ -306,6 +319,8 @@ const Dashboard = () => {
             userId={user!.id}
             aircraftId={selectedAircraft?.id || ""}
             onRecordChanged={() => setRecordsRefreshKey((k) => k + 1)}
+            focusRecordId={focusRecord?.view === "directives" ? focusRecord.id : undefined}
+            onFocusHandled={() => setFocusRecord(null)}
           />
         );
       default:

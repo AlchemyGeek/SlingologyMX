@@ -29,6 +29,8 @@ interface ActiveNotificationsPanelProps {
   refreshKey?: number;
   overdueOnly?: boolean;
   onClearOverdueFilter?: () => void;
+  focusRecordId?: string;
+  onFocusHandled?: () => void;
 }
 
 const counterTypeToFieldMap: Record<string, string> = {
@@ -41,12 +43,13 @@ const counterTypeToFieldMap: Record<string, string> = {
 
 type AlertStatus = "normal" | "reminder" | "due";
 
-const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotificationCompleted, refreshKey, overdueOnly, onClearOverdueFilter }: ActiveNotificationsPanelProps) => {
+const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotificationCompleted, refreshKey, overdueOnly, onClearOverdueFilter, focusRecordId, onFocusHandled }: ActiveNotificationsPanelProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingNotification, setEditingNotification] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"date" | "counter">("date");
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const fetchActiveNotifications = async () => {
@@ -293,6 +296,28 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     onNotificationCompleted?.();
   };
 
+  useEffect(() => {
+    if (!focusRecordId) return;
+    const inDate = dateNotifications.some((n) => n.id === focusRecordId);
+    const inCounter = counterNotifications.some((n) => n.id === focusRecordId);
+    if (!inDate && !inCounter) return;
+    setActiveTab(inCounter ? "counter" : "date");
+    setShowForm(false);
+    setHighlightId(focusRecordId);
+    onFocusHandled?.();
+    const timer = window.setTimeout(() => {
+      const el =
+        document.getElementById(`notification-row-${focusRecordId}`) ||
+        document.getElementById(`notification-${focusRecordId}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+    const clear = window.setTimeout(() => setHighlightId(null), 6000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(clear);
+    };
+  }, [focusRecordId, dateNotifications, counterNotifications]);
+
   const handleNewNotification = () => {
     setEditingNotification(null);
     setShowForm(true);
@@ -315,10 +340,11 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
             const cardClass = cn(
               "rounded-lg border p-3 bg-card",
               alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
-              alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+              alertStatus === "due" && "bg-destructive/10 border-destructive/30",
+              highlightId === notification.id && "ring-2 ring-primary"
             );
             return (
-              <div key={notification.id} className={cardClass}>
+              <div key={notification.id} id={`notification-${notification.id}`} className={cardClass}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">
@@ -364,11 +390,12 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
                 const alertStatus = getAlertStatus(notification);
                 const rowClassName = cn(
                   alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
-                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20",
+                  highlightId === notification.id && "ring-2 ring-inset ring-primary"
                 );
                 
                 return (
-                  <TableRow key={notification.id} className={rowClassName}>
+                  <TableRow key={notification.id} id={`notification-row-${notification.id}`} className={rowClassName}>
                     <TableCell className="font-medium">
                       {notification.description}
                       {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
@@ -443,10 +470,11 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
             const cardClass = cn(
               "rounded-lg border p-3 bg-card",
               alertStatus === "reminder" && "bg-orange-500/10 border-orange-500/30",
-              alertStatus === "due" && "bg-destructive/10 border-destructive/30"
+              alertStatus === "due" && "bg-destructive/10 border-destructive/30",
+              highlightId === notification.id && "ring-2 ring-primary"
             );
             return (
-              <div key={notification.id} className={cardClass}>
+              <div key={notification.id} id={`notification-${notification.id}`} className={cardClass}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">
@@ -497,7 +525,8 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
                 const alertStatus = getAlertStatus(notification);
                 const rowClassName = cn(
                   alertStatus === "reminder" && "bg-orange-500/10 hover:bg-orange-500/20",
-                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20"
+                  alertStatus === "due" && "bg-destructive/10 hover:bg-destructive/20",
+                  highlightId === notification.id && "ring-2 ring-inset ring-primary"
                 );
                 
                 const field = counterTypeToFieldMap[notification.counter_type];
@@ -506,7 +535,7 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
                 const remaining = targetValue - currentValue;
                 
                 return (
-                  <TableRow key={notification.id} className={rowClassName}>
+                  <TableRow key={notification.id} id={`notification-row-${notification.id}`} className={rowClassName}>
                     <TableCell className="font-medium">
                       {notification.description}
                       {(notification.maintenance_log_id || notification.directive_id || notification.subscription_id) && !notification.user_modified && (
