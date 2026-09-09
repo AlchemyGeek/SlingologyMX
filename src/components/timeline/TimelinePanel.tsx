@@ -9,7 +9,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimelineEvents } from "@/hooks/useTimelineEvents";
-import { countByCategory, TimelineCategory } from "@/lib/timelineEvents";
+import {
+  countByCategory,
+  TimelineCategory,
+  type TimelineEvent as TimelineEventType,
+} from "@/lib/timelineEvents";
 import { TimelineAxis } from "./TimelineAxis";
 import { TimelineDetailList } from "./TimelineDetailList";
 import {
@@ -80,7 +84,12 @@ const CATEGORY_COLORS: Record<TimelineCategory, string> = {
   counters: "hsl(var(--timeline-counters))",
 };
 
-export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePanelProps) {
+export function TimelinePanel({
+  userId,
+  aircraftId,
+  onGoToCalendar,
+  onOpenRecord,
+}: TimelinePanelProps) {
   const isNarrow = useIsNarrow(TIMELINE_MIN_WIDTH);
   const { events, loading, error, hasCounterHistory, utilization } = useTimelineEvents(
     userId,
