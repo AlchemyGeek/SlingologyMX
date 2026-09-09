@@ -69,20 +69,27 @@ export function TimelineAxis({
   );
   const ticks = useMemo(() => (width > 0 ? buildTicks(scale) : []), [scale, width]);
 
-  const lanes = useMemo(
-    () =>
-      LANES.map((lane) => ({
-        ...lane,
-        clusters:
-          width > 0
-            ? clusterEvents(
-                events.filter((e) => e.category === lane.key),
-                scale
-              )
-            : [],
-      })),
-    [events, scale, width]
-  );
+  // 0 = one merged band (zoomed out), 1 = fully separated lanes (zoomed in)
+  const laneT = Math.min(Math.max((300 - spanDays) / 170, 0), 1);
+  const separated = laneT > 0.5;
+  const mergedY = HEADER_H + (LANES.length * LANE_H) / 2;
+  const laneCenter = (i: number) => HEADER_H + i * LANE_H + LANE_H / 2;
+  const markerY = (i: number) => mergedY + (laneCenter(i) - mergedY) * laneT;
+
+  const groups = useMemo(() => {
+    if (width === 0) return [] as { key: string; laneIndex: number | null; clusters: TimelineCluster[] }[];
+    if (separated) {
+      return LANES.map((lane, i) => ({
+        key: lane.key,
+        laneIndex: i as number | null,
+        clusters: clusterEvents(
+          events.filter((e) => e.category === lane.key),
+          scale
+        ),
+      }));
+    }
+    return [{ key: "merged", laneIndex: null, clusters: clusterEvents(events, scale) }];
+  }, [events, scale, separated, width]);
 
   const todayX = scale.x(new Date());
 
@@ -93,6 +100,7 @@ export function TimelineAxis({
     },
     [onSelect]
   );
+
 
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
