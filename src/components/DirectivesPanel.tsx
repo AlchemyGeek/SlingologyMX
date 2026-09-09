@@ -64,9 +64,11 @@ interface DirectivesPanelProps {
   userId: string;
   aircraftId: string;
   onRecordChanged?: () => void;
+  focusRecordId?: string;
+  onFocusHandled?: () => void;
 }
 
-const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPanelProps) => {
+const DirectivesPanel = ({ userId, aircraftId, onRecordChanged, focusRecordId, onFocusHandled }: DirectivesPanelProps) => {
   const [directives, setDirectives] = useState<Directive[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -108,6 +110,17 @@ const DirectivesPanel = ({ userId, aircraftId, onRecordChanged }: DirectivesPane
   useEffect(() => {
     if (aircraftId) fetchDirectives();
   }, [userId, aircraftId]);
+
+  useEffect(() => {
+    if (!focusRecordId) return;
+    const match = directives.find((d) => d.id === focusRecordId);
+    if (!match) return;
+    setActiveTab("my-directives");
+    setShowForm(false);
+    setSelectedCommunitySB(null);
+    setSelectedDirective(match);
+    onFocusHandled?.();
+  }, [focusRecordId, directives]);
 
   const handleDirectiveCreated = () => {
     setShowForm(false);

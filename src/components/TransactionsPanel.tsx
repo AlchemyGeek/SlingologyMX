@@ -16,9 +16,11 @@ interface TransactionsPanelProps {
   onRecordChanged?: () => void;
   initialStatusFilter?: string;
   onClearStatusFilter?: () => void;
+  focusRecordId?: string;
+  onFocusHandled?: () => void;
 }
 
-const TransactionsPanel = ({ userId, aircraftId, onRecordChanged, initialStatusFilter, onClearStatusFilter }: TransactionsPanelProps) => {
+const TransactionsPanel = ({ userId, aircraftId, onRecordChanged, initialStatusFilter, onClearStatusFilter, focusRecordId, onFocusHandled }: TransactionsPanelProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -49,6 +51,15 @@ const TransactionsPanel = ({ userId, aircraftId, onRecordChanged, initialStatusF
   useEffect(() => {
     fetchTransactions();
   }, [userId, aircraftId]);
+
+  useEffect(() => {
+    if (!focusRecordId) return;
+    const match = transactions.find((t) => t.id === focusRecordId);
+    if (!match) return;
+    setShowForm(false);
+    setSelectedTransaction(match);
+    onFocusHandled?.();
+  }, [focusRecordId, transactions]);
 
   const handleTransactionCreated = () => {
     setShowForm(false);

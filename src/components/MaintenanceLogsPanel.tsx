@@ -59,9 +59,11 @@ interface MaintenanceLogsPanelProps {
   counters: AircraftCounters;
   onUpdateGlobalCounters?: (updates: CounterUpdates, changeDate?: Date, allCounterValues?: CounterUpdates) => Promise<void>;
   onRecordChanged?: () => void;
+  focusRecordId?: string;
+  onFocusHandled?: () => void;
 }
 
-const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCounters, onRecordChanged }: MaintenanceLogsPanelProps) => {
+const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCounters, onRecordChanged, focusRecordId, onFocusHandled }: MaintenanceLogsPanelProps) => {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
@@ -113,6 +115,15 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
   useEffect(() => {
     if (aircraftId) fetchLogs();
   }, [userId, aircraftId]);
+
+  useEffect(() => {
+    if (!focusRecordId) return;
+    const match = logs.find((l) => l.id === focusRecordId);
+    if (!match) return;
+    setShowForm(false);
+    setSelectedLog(match);
+    onFocusHandled?.();
+  }, [focusRecordId, logs]);
 
   const handleLogCreated = () => {
     setShowForm(false);
