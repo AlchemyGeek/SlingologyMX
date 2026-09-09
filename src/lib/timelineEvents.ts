@@ -243,7 +243,7 @@ export async function fetchTimelineEvents(
         recordId: row.id,
         category: "counters",
         confidence: "actual",
-        title: "Counter reading",
+        title: "Aircraft counters updated",
         dateISO: d,
         subtitle: readings.length ? readings.join(" · ") : (row.source ?? undefined),
         meta: {

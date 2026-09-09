@@ -75,7 +75,7 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   maintenance: "Maintenance",
   directives: "Directives & bulletins",
   financial: "Financial",
-  counters: "Counters",
+  counters: "Aircraft Counters",
 };
 
 const CATEGORY_COLORS: Record<TimelineCategory, string> = {
