@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format } from "date-fns";
+import { X } from "lucide-react";
+
 import type { TimelineCategory, TimelineEvent } from "@/lib/timelineEvents";
 import {
   buildTicks,
@@ -20,14 +22,22 @@ const HEADER_H = 30;
 const LANE_H = 56;
 const LABEL_W = 132;
 
+const POPUP_W = 290;
+
+interface ActiveCluster {
+  cluster: TimelineCluster;
+  laneIndex: number;
+  color: string;
+  laneLabel: string;
+}
+
 interface TimelineAxisProps {
   events: TimelineEvent[];
   center: Date;
   spanDays: number;
   onCenterChange: (date: Date) => void;
   onSpanChange: (days: number) => void;
-  onSelect: (cluster: TimelineCluster) => void;
-  selectedId?: string | null;
+  onSelect?: (cluster: TimelineCluster | null) => void;
 }
 
 export function TimelineAxis({
@@ -37,11 +47,12 @@ export function TimelineAxis({
   onCenterChange,
   onSpanChange,
   onSelect,
-  selectedId,
 }: TimelineAxisProps) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const dragRef = useRef<{ x: number; center: Date } | null>(null);
+  const [active, setActive] = useState<ActiveCluster | null>(null);
+  const dragRef = useRef<{ x: number; center: Date; moved: boolean } | null>(null);
+
 
   useEffect(() => {
     const el = plotRef.current;
@@ -75,6 +86,14 @@ export function TimelineAxis({
 
   const todayX = scale.x(new Date());
 
+  const selectCluster = useCallback(
+    (next: ActiveCluster | null) => {
+      setActive(next);
+      onSelect?.(next?.cluster ?? null);
+    },
+    [onSelect]
+  );
+
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
@@ -97,21 +116,36 @@ export function TimelineAxis({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    dragRef.current = { x: e.clientX, center };
+    dragRef.current = { x: e.clientX, center, moved: false };
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const drag = dragRef.current;
     if (!drag || width === 0) return;
+    if (Math.abs(e.clientX - drag.x) > 3) drag.moved = true;
     const dxDays = ((drag.x - e.clientX) / width) * spanDays;
     onCenterChange(addDays(drag.center, dxDays));
   };
 
   const endDrag = () => {
+    const drag = dragRef.current;
     dragRef.current = null;
+    if (drag && !drag.moved) selectCluster(null);
   };
 
   const totalHeight = HEADER_H + LANES.length * LANE_H;
+
+  // Re-anchor the popup to the live scale as the user pans or zooms.
+  const popup = useMemo(() => {
+    if (!active || width === 0) return null;
+    const x = scale.x(active.cluster.date);
+    if (x < -40 || x > width + 40) return null;
+    const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
+    const laneCenter = HEADER_H + active.laneIndex * LANE_H + LANE_H / 2;
+    const below = active.laneIndex < 2;
+    return { left, x, laneCenter, below };
+  }, [active, scale, width]);
+
 
   return (
     <div className="flex select-none">
@@ -227,18 +261,124 @@ export function TimelineAxis({
                     cluster={cluster}
                     cy={cy}
                     color={lane.color}
-                    selected={selectedId === cluster.id}
-                    onSelect={onSelect}
+                    selected={active?.cluster.id === cluster.id}
+                    onSelect={(c) =>
+                      selectCluster(
+                        active?.cluster.id === c.id
+                          ? null
+                          : { cluster: c, laneIndex: i, color: lane.color, laneLabel: lane.label }
+                      )
+                    }
                   />
                 ))}
               </g>
             );
           })}
         </svg>
+
+        {active && popup && (
+          <ClusterPopup
+            active={active}
+            left={popup.left}
+            anchorX={popup.x}
+            laneCenter={popup.laneCenter}
+            below={popup.below}
+            onClose={() => selectCluster(null)}
+          />
+        )}
       </div>
     </div>
   );
 }
+
+function ClusterPopup({
+  active,
+  left,
+  anchorX,
+  laneCenter,
+  below,
+  onClose,
+}: {
+  active: ActiveCluster;
+  left: number;
+  anchorX: number;
+  laneCenter: number;
+  below: boolean;
+  onClose: () => void;
+}) {
+  const { cluster, color, laneLabel } = active;
+  const style: React.CSSProperties = below
+    ? { left, top: laneCenter + 16, width: POPUP_W }
+    : { left, top: Math.max(laneCenter - 16 - 200, 4), width: POPUP_W };
+
+
+  return (
+    <div
+      className="absolute z-20 rounded-lg border bg-popover p-3 shadow-lg"
+      style={style}
+
+      onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+          <div>
+            <p className="text-xs font-semibold">{format(cluster.date, "d MMM yyyy")}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {laneLabel} · {cluster.events.length} item{cluster.events.length === 1 ? "" : "s"}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          aria-label="Close"
+          className="rounded p-0.5 text-muted-foreground hover:text-foreground"
+          onClick={onClose}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto pr-1">
+        {cluster.events.map((event) => (
+          <li key={event.id} className="rounded-md border bg-background/60 px-2 py-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-xs font-medium leading-snug">{event.title}</span>
+              <span className="shrink-0 text-[10px] text-muted-foreground">
+                {format(event.date, "d MMM")}
+              </span>
+            </div>
+            {event.subtitle && (
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{event.subtitle}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* pointer nub */}
+      <span
+        className="absolute h-2 w-2 rotate-45 border bg-popover"
+        style={
+          below
+            ? {
+                top: -5,
+                left: Math.min(Math.max(anchorX - left - 4, 10), POPUP_W - 18),
+                borderRight: "none",
+                borderBottom: "none",
+              }
+            : {
+                bottom: -5,
+                left: Math.min(Math.max(anchorX - left - 4, 10), POPUP_W - 18),
+                borderLeft: "none",
+                borderTop: "none",
+              }
+        }
+      />
+    </div>
+  );
+}
+
 
 function Marker({
   cluster,
