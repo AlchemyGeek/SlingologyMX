@@ -315,11 +315,8 @@ function ClusterPopup({
   return (
     <div
       className="absolute z-20 rounded-lg border bg-popover p-3 shadow-lg"
-      style={
-        below
-          ? style
-          : { left, width: POPUP_W, top: Math.max(laneCenter - 16 - 200, 4), maxHeight: 220 }
-      }
+      style={style}
+
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
