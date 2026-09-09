@@ -394,6 +394,16 @@ function ClusterPopup({
             {event.subtitle && (
               <p className="mt-0.5 text-[11px] text-muted-foreground">{event.subtitle}</p>
             )}
+            {onOpenRecord && (
+              <button
+                type="button"
+                className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                onClick={() => onOpenRecord(event)}
+              >
+                Open full record
+                <ArrowUpRight className="h-3 w-3" />
+              </button>
+            )}
           </li>
         ))}
       </ul>
