@@ -17,7 +17,6 @@ import {
   describeSpan,
   eventsInRange,
   DEFAULT_SPAN_DAYS,
-  type TimelineCluster,
 } from "./timelineScale";
 
 
