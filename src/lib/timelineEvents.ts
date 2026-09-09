@@ -76,47 +76,75 @@ export interface TimelineEventsResult {
   events: TimelineEvent[];
   /** True when the aircraft has at least two counter history rows (needed for projection). */
   hasCounterHistory: boolean;
+  /** Flying rate used to place hour-based due items on the axis. */
+  utilization: UtilizationRate;
+  counterReadings: CounterReading[];
 }
 
 /**
- * Gathers every dated record for one aircraft into a single, sorted event list.
+ * Gathers every dated record for one aircraft into a single, sorted event list,
+ * then places hour-based due items using the flying rate.
  * Read-only: no writes, no derived records.
  */
 export async function fetchTimelineEvents(
   userId: string,
   aircraftId: string
 ): Promise<TimelineEventsResult> {
-  const [logs, notifications, compliance, transactions, counters] = await Promise.all([
-    supabase
-      .from("maintenance_logs")
-      .select("id, entry_title, category, subcategory, date_performed, total_cost")
-      .eq("user_id", userId)
-      .eq("aircraft_id", aircraftId),
-    supabase
-      .from("notifications")
-      .select("id, description, type, initial_date, notification_basis, counter_type, is_completed")
-      .eq("user_id", userId)
-      .eq("aircraft_id", aircraftId)
-      .eq("is_completed", false),
-    supabase
-      .from("maintenance_directive_compliance")
-      .select("id, directive_id, compliance_status, compliance_date, directives(directive_code, title)")
-      .eq("user_id", userId)
-      .eq("aircraft_id", aircraftId),
-    supabase
-      .from("transactions")
-      .select("id, title, transaction_date, amount, currency, direction, category, status")
-      .eq("user_id", userId)
-      .eq("aircraft_id", aircraftId),
-    supabase
-      .from("aircraft_counter_history")
-      .select("id, change_date, hobbs, tach, airframe_total_time, engine_total_time, prop_total_time, source")
-      .eq("user_id", userId)
-      .eq("aircraft_id", aircraftId),
-  ]);
+  const [logs, notifications, compliance, transactions, counters, directiveStatus, currentCountersRes, aircraftRes] =
+    await Promise.all([
+      supabase
+        .from("maintenance_logs")
+        .select(
+          "id, entry_title, category, subcategory, date_performed, total_cost, is_recurring_task, next_due_hours, next_due_date, recurrence_counter_type"
+        )
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId),
+      supabase
+        .from("notifications")
+        .select(
+          "id, description, type, initial_date, notification_basis, counter_type, initial_counter_value, is_completed"
+        )
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
+        .eq("is_completed", false),
+      supabase
+        .from("maintenance_directive_compliance")
+        .select("id, directive_id, compliance_status, compliance_date, directives(directive_code, title)")
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId),
+      supabase
+        .from("transactions")
+        .select("id, title, transaction_date, amount, currency, direction, category, status")
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId),
+      supabase
+        .from("aircraft_counter_history")
+        .select("id, change_date, hobbs, tach, airframe_total_time, engine_total_time, prop_total_time, source")
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId),
+      supabase
+        .from("aircraft_directive_status")
+        .select(
+          "id, directive_id, compliance_status, next_due_date, next_due_tach, next_due_counter_type, archived, directives(directive_code, title)"
+        )
+        .eq("user_id", userId)
+        .eq("aircraft_id", aircraftId)
+        .eq("archived", false),
+      supabase
+        .from("aircraft_counters")
+        .select("hobbs, tach, airframe_total_time, engine_total_time, prop_total_time")
+        .eq("aircraft_id", aircraftId)
+        .maybeSingle(),
+      supabase.from("aircraft").select("*").eq("id", aircraftId).maybeSingle(),
+    ]);
 
   const firstError =
-    logs.error || notifications.error || compliance.error || transactions.error || counters.error;
+    logs.error ||
+    notifications.error ||
+    compliance.error ||
+    transactions.error ||
+    counters.error ||
+    directiveStatus.error;
   if (firstError) throw firstError;
 
   const events: TimelineEvent[] = [];
