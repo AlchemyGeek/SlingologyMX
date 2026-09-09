@@ -145,6 +145,11 @@ All colors MUST be HSL.
     --chart-3: 215 20% 65%;
     --chart-4: 215 16% 46%;
     --chart-5: 215 19% 34%;
+    /* Distinct per-category timeline colors */
+    --timeline-maintenance: 36 95% 58%;
+    --timeline-directives: 280 75% 68%;
+    --timeline-financial: 160 65% 52%;
+    --timeline-counters: 199 92% 62%;
     --sidebar: 217 32% 17%;
     --radius: 0rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
