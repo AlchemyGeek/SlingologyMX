@@ -52,6 +52,7 @@ export function TimelineAxis({
   onSpanChange,
   onSelect,
   highlightEventId = null,
+  onOpenRecord,
 }: TimelineAxisProps) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
