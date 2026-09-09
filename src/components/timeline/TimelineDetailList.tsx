@@ -70,7 +70,7 @@ export function TimelineDetailList({
               key={event.id}
               role={onOpenRecord ? "button" : undefined}
               tabIndex={onOpenRecord ? 0 : undefined}
-              className={`flex items-center gap-3 px-4 py-2 transition-colors ${
+              className={`flex min-h-11 items-center gap-3 px-4 py-2 transition-colors ${
                 hoveredId === event.id ? "bg-muted/70" : "hover:bg-muted/40"
               } ${onOpenRecord ? "cursor-pointer" : ""}`}
               onMouseEnter={() => onHoverEvent(event.id)}
