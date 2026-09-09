@@ -156,8 +156,18 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
                 {CATEGORY_LABELS[key]}
               </p>
             </div>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">
-              {loading ? "—" : counts[key]}
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold tabular-nums">
+                {loading ? "—" : visibleCounts[key]}
+              </span>
+              {!loading && (
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  / {counts[key]}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {loading ? "\u00A0" : "in view / total"}
             </p>
           </div>
         ))}
