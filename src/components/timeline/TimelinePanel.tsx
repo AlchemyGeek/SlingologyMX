@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   GanttChartSquare,
   Calendar as CalendarIcon,
@@ -14,6 +14,7 @@ import { TimelineAxis } from "./TimelineAxis";
 import {
   clampSpan,
   describeSpan,
+  eventsInRange,
   DEFAULT_SPAN_DAYS,
   type TimelineCluster,
 } from "./timelineScale";
