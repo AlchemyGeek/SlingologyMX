@@ -75,8 +75,6 @@ export function UtilizationOverrideField({
     onSaved?.();
   };
 
-  if (!available) return null;
-
   return (
     <div className="space-y-2 border-t pt-3">
       <Label htmlFor="utilization-override" className="text-xs text-muted-foreground">
@@ -86,6 +84,7 @@ export function UtilizationOverrideField({
         <Input
           id="utilization-override"
           inputMode="decimal"
+          disabled={!available}
           placeholder={
             automaticHoursPerMonth ? `${automaticHoursPerMonth.toFixed(1)} (automatic)` : "Automatic"
           }
@@ -93,12 +92,14 @@ export function UtilizationOverrideField({
           onChange={(e) => setValue(e.target.value)}
           className="h-9 max-w-[140px]"
         />
-        <Button size="sm" variant="outline" onClick={save} disabled={saving}>
+        <Button size="sm" variant="outline" onClick={save} disabled={saving || !available}>
           {saving ? "Saving…" : "Save"}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Leave blank to use the average of the last six months of counter readings.
+        {available
+          ? "Leave blank to use the average of the last six months of counter readings."
+          : "Saving this rate becomes available once you accept these changes; until then the automatic six-month average is used."}
       </p>
     </div>
   );
