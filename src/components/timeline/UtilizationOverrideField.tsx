@@ -107,6 +107,17 @@ export function UtilizationOverrideField({
         <Button size="sm" variant="outline" onClick={save} disabled={saving || !available}>
           {saving ? "Saving…" : "Save"}
         </Button>
+        {hasOverride && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={useAutomatic}
+            disabled={saving || !available}
+            title="Clear the override and use the automatic six-month average"
+          >
+            Use automatic
+          </Button>
+        )}
       </div>
       <p className="text-xs text-muted-foreground">
         {available
