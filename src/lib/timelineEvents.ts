@@ -1,5 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { parseLocalDate } from "@/lib/utils";
+import {
+  computeUtilizationRate,
+  projectDueEvents,
+  type CounterReading,
+  type HourDueCandidate,
+  type UtilizationRate,
+} from "@/lib/timelineProjection";
 
 export type TimelineCategory = "maintenance" | "directives" | "financial" | "counters";
 
@@ -251,9 +258,97 @@ export async function fetchTimelineEvents(
     );
   });
 
+  // ---- Hour-based due items, placed by projection ----
+  const readings: CounterReading[] = counterRows
+    .map((row: any) => ({
+      dateISO: dateOnly(row.change_date) ?? "",
+      values: {
+        hobbs: row.hobbs !== null ? Number(row.hobbs) : null,
+        tach: row.tach !== null ? Number(row.tach) : null,
+        airframe_total_time:
+          row.airframe_total_time !== null ? Number(row.airframe_total_time) : null,
+        engine_total_time: row.engine_total_time !== null ? Number(row.engine_total_time) : null,
+        prop_total_time: row.prop_total_time !== null ? Number(row.prop_total_time) : null,
+      },
+    }))
+    .filter((r) => r.dateISO);
+
+  const aircraftRow: any = aircraftRes.data ?? null;
+  const override =
+    aircraftRow && typeof aircraftRow.utilization_hours_per_month === "number"
+      ? Number(aircraftRow.utilization_hours_per_month)
+      : null;
+
+  const current: any = currentCountersRes.data ?? {};
+  const currentCounters = {
+    hobbs: current.hobbs !== null && current.hobbs !== undefined ? Number(current.hobbs) : null,
+    tach: current.tach !== null && current.tach !== undefined ? Number(current.tach) : null,
+    airframe_total_time:
+      current.airframe_total_time != null ? Number(current.airframe_total_time) : null,
+    engine_total_time: current.engine_total_time != null ? Number(current.engine_total_time) : null,
+    prop_total_time: current.prop_total_time != null ? Number(current.prop_total_time) : null,
+  };
+
+  const utilization = computeUtilizationRate(readings, "tach", override);
+
+  const candidates: HourDueCandidate[] = [];
+
+  (notifications.data ?? []).forEach((row: any) => {
+    if (row.notification_basis !== "Counter" && !row.counter_type) return;
+    candidates.push({
+      recordId: row.id,
+      source: "notification",
+      category: notificationCategory(row.type),
+      title: row.description,
+      counterLabel: row.counter_type ?? null,
+      targetValue: row.initial_counter_value !== null ? Number(row.initial_counter_value) : null,
+      dueDateISO: null,
+    });
+  });
+
+  (logs.data ?? []).forEach((row: any) => {
+    if (!row.is_recurring_task) return;
+    if (row.next_due_hours === null && !row.next_due_date) return;
+    candidates.push({
+      recordId: `${row.id}:next`,
+      source: "maintenance_log",
+      category: "maintenance",
+      title: `${row.entry_title} — next due`,
+      counterLabel: row.recurrence_counter_type ?? "Tach",
+      targetValue: row.next_due_hours !== null ? Number(row.next_due_hours) : null,
+      dueDateISO: dateOnly(row.next_due_date),
+      subtitle: "Recurring maintenance",
+      meta: { maintenanceLogId: row.id },
+    });
+  });
+
+  (directiveStatus.data ?? []).forEach((row: any) => {
+    if (row.next_due_tach === null && !row.next_due_date) return;
+    const directive = row.directives;
+    const code = directive?.directive_code ? `${directive.directive_code} — ` : "";
+    candidates.push({
+      recordId: `${row.id}:next`,
+      source: "directive_compliance",
+      category: "directives",
+      title: `${code}${directive?.title ?? "Directive"} — next due`,
+      counterLabel: row.next_due_counter_type ?? "Tach",
+      targetValue: row.next_due_tach !== null ? Number(row.next_due_tach) : null,
+      dueDateISO: dateOnly(row.next_due_date),
+      subtitle: row.compliance_status ?? undefined,
+      meta: { directiveId: row.directive_id },
+    });
+  });
+
+  events.push(...projectDueEvents(candidates, readings, currentCounters, utilization));
+
   events.sort((a, b) => a.date.getTime() - b.date.getTime() || a.id.localeCompare(b.id));
 
-  return { events, hasCounterHistory: counterRows.length >= 2 };
+  return {
+    events,
+    hasCounterHistory: counterRows.length >= 2,
+    utilization,
+    counterReadings: readings,
+  };
 }
 
 export function countByCategory(events: TimelineEvent[]): Record<TimelineCategory, number> {
