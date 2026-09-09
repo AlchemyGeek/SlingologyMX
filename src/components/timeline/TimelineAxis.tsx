@@ -149,10 +149,12 @@ export function TimelineAxis({
     const x = scale.x(active.cluster.date);
     if (x < -40 || x > width + 40) return null;
     const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
-    const laneCenter = HEADER_H + active.laneIndex * LANE_H + LANE_H / 2;
-    const below = active.laneIndex < 2;
-    return { left, x, laneCenter, below };
-  }, [active, scale, width]);
+    const y = markerY(active.laneIndex);
+    const below = y < HEADER_H + (LANES.length * LANE_H) / 2;
+    return { left, x, laneCenter: y, below };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, scale, width, laneT]);
+
 
 
   return (
