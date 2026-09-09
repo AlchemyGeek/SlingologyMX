@@ -369,7 +369,7 @@ function ClusterPopup({
         </button>
       </div>
 
-      <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto pr-1">
+      <ul className="mt-2 space-y-1.5 pr-1">
         {cluster.events.map((event) => (
           <li key={event.id} className="rounded-md border bg-background/60 px-2 py-1.5">
             <div className="flex items-baseline justify-between gap-2">
