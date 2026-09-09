@@ -30,6 +30,7 @@ interface TimelineDetailListProps {
   onHoverEvent: (id: string | null) => void;
   start: Date;
   end: Date;
+  onOpenRecord?: (event: TimelineEvent) => void;
 }
 
 export function TimelineDetailList({
@@ -38,6 +39,7 @@ export function TimelineDetailList({
   onHoverEvent,
   start,
   end,
+  onOpenRecord,
 }: TimelineDetailListProps) {
   const visible = events
     .filter((e) => e.date >= start && e.date <= end)
@@ -66,11 +68,20 @@ export function TimelineDetailList({
           {visible.map((event) => (
             <li
               key={event.id}
+              role={onOpenRecord ? "button" : undefined}
+              tabIndex={onOpenRecord ? 0 : undefined}
               className={`flex items-center gap-3 px-4 py-2 transition-colors ${
                 hoveredId === event.id ? "bg-muted/70" : "hover:bg-muted/40"
-              }`}
+              } ${onOpenRecord ? "cursor-pointer" : ""}`}
               onMouseEnter={() => onHoverEvent(event.id)}
               onMouseLeave={() => onHoverEvent(null)}
+              onClick={() => onOpenRecord?.(event)}
+              onKeyDown={(e) => {
+                if (onOpenRecord && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  onOpenRecord(event);
+                }
+              }}
             >
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
