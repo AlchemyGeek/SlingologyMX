@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format } from "date-fns";
-import { X } from "lucide-react";
+import { ArrowUpRight, X } from "lucide-react";
 
 import type { TimelineCategory, TimelineEvent } from "@/lib/timelineEvents";
 import {
@@ -40,6 +40,8 @@ interface TimelineAxisProps {
   onSelect?: (cluster: TimelineCluster | null) => void;
   /** Event id to visually highlight (e.g. hovered row in the detail list). */
   highlightEventId?: string | null;
+  /** Opens the underlying record in its own section. */
+  onOpenRecord?: (event: TimelineEvent) => void;
 }
 
 export function TimelineAxis({
@@ -50,6 +52,7 @@ export function TimelineAxis({
   onSpanChange,
   onSelect,
   highlightEventId = null,
+  onOpenRecord,
 }: TimelineAxisProps) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -319,6 +322,7 @@ export function TimelineAxis({
             top={popup.top}
             maxHeight={popup.maxHeight}
             below={popup.below}
+            onOpenRecord={onOpenRecord}
             onClose={() => selectCluster(null)}
           />
         )}
@@ -334,6 +338,7 @@ function ClusterPopup({
   top,
   maxHeight,
   below,
+  onOpenRecord,
   onClose,
 }: {
   active: ActiveCluster;
@@ -342,6 +347,7 @@ function ClusterPopup({
   top: number;
   maxHeight: number;
   below: boolean;
+  onOpenRecord?: (event: TimelineEvent) => void;
   onClose: () => void;
 }) {
   const { cluster, color, laneLabel } = active;
@@ -387,6 +393,16 @@ function ClusterPopup({
             </div>
             {event.subtitle && (
               <p className="mt-0.5 text-[11px] text-muted-foreground">{event.subtitle}</p>
+            )}
+            {onOpenRecord && (
+              <button
+                type="button"
+                className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                onClick={() => onOpenRecord(event)}
+              >
+                Open full record
+                <ArrowUpRight className="h-3 w-3" />
+              </button>
             )}
           </li>
         ))}
