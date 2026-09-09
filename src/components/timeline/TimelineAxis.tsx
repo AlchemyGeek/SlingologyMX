@@ -84,6 +84,14 @@ export function TimelineAxis({
 
   const todayX = scale.x(new Date());
 
+  const selectCluster = useCallback(
+    (next: ActiveCluster | null) => {
+      setActive(next);
+      onSelect?.(next?.cluster ?? null);
+    },
+    [onSelect]
+  );
+
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
@@ -106,21 +114,36 @@ export function TimelineAxis({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    dragRef.current = { x: e.clientX, center };
+    dragRef.current = { x: e.clientX, center, moved: false };
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const drag = dragRef.current;
     if (!drag || width === 0) return;
+    if (Math.abs(e.clientX - drag.x) > 3) drag.moved = true;
     const dxDays = ((drag.x - e.clientX) / width) * spanDays;
     onCenterChange(addDays(drag.center, dxDays));
   };
 
   const endDrag = () => {
+    const drag = dragRef.current;
     dragRef.current = null;
+    if (drag && !drag.moved) selectCluster(null);
   };
 
   const totalHeight = HEADER_H + LANES.length * LANE_H;
+
+  // Re-anchor the popup to the live scale as the user pans or zooms.
+  const popup = useMemo(() => {
+    if (!active || width === 0) return null;
+    const x = scale.x(active.cluster.date);
+    if (x < -40 || x > width + 40) return null;
+    const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
+    const laneCenter = HEADER_H + active.laneIndex * LANE_H + LANE_H / 2;
+    const below = active.laneIndex < 2;
+    return { left, x, laneCenter, below };
+  }, [active, scale, width]);
+
 
   return (
     <div className="flex select-none">
