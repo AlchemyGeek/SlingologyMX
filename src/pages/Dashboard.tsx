@@ -13,6 +13,7 @@ import { HeaderReminderBell } from "@/components/HeaderReminderBell";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
+import { TimelinePanel } from "@/components/timeline/TimelinePanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import EquipmentPanel from "@/components/EquipmentPanel";
@@ -205,6 +206,14 @@ const Dashboard = () => {
             aircraftId={selectedAircraft?.id || ""}
             refreshKey={recordsRefreshKey}
             currentCounters={currentCounters}
+          />
+        );
+      case "timeline":
+        return (
+          <TimelinePanel
+            userId={user!.id}
+            aircraftId={selectedAircraft?.id || ""}
+            onGoToCalendar={() => setActiveView("calendar")}
           />
         );
       case "counters":
