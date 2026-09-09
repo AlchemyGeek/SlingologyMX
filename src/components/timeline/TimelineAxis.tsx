@@ -417,12 +417,14 @@ function Marker({
   cy,
   color,
   selected,
+  highlighted,
   onSelect,
 }: {
   cluster: TimelineCluster;
   cy: number;
   color: string;
   selected: boolean;
+  highlighted: boolean;
   onSelect: (cluster: TimelineCluster) => void;
 }) {
   const count = cluster.events.length;
@@ -456,7 +458,7 @@ function Marker({
           rx={10}
           fill={color}
           opacity={confidence === "projected" ? 0.45 : 0.9}
-          stroke={selected ? "hsl(var(--foreground))" : "transparent"}
+          stroke={selected || highlighted ? "hsl(var(--foreground))" : "transparent"}
           strokeWidth={1.5}
         />
         <text
@@ -476,10 +478,21 @@ function Marker({
   return (
     <g className="cursor-pointer" onClick={handleClick} onPointerDown={(e) => e.stopPropagation()}>
       <title>{tooltip}</title>
+      {highlighted && !selected && (
+        <circle
+          cx={cluster.x}
+          cy={cy}
+          r={11}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          opacity={0.55}
+        />
+      )}
       <circle
         cx={cluster.x}
         cy={cy}
-        r={selected ? 8 : 6}
+        r={selected ? 8 : highlighted ? 7 : 6}
         fill={confidence === "actual" ? color : "hsl(var(--card))"}
         stroke={color}
         strokeWidth={2}
