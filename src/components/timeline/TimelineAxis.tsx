@@ -213,10 +213,12 @@ export function TimelineAxis({
       <div
         ref={plotRef}
         className="relative flex-1 cursor-grab overflow-hidden active:cursor-grabbing"
+        style={{ touchAction: "none" }}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
+        onPointerCancel={endDrag}
         onPointerLeave={endDrag}
       >
         <svg width="100%" height={totalHeight} role="img" aria-label="Timeline axis">
