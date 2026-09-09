@@ -89,7 +89,6 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
 
   const [spanDays, setSpanDays] = useState(DEFAULT_SPAN_DAYS);
   const [center, setCenter] = useState<Date>(() => new Date());
-  const [selected, setSelected] = useState<TimelineCluster | null>(null);
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
   const counts = useMemo(() => countByCategory(events), [events]);
@@ -192,7 +191,6 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
               spanDays={spanDays}
               onCenterChange={setCenter}
               onSpanChange={setSpanDays}
-              onSelect={setSelected}
               highlightEventId={hoveredEventId}
             />
             <p className="mt-3 px-4 text-xs text-muted-foreground">
