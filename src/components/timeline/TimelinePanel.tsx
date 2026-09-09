@@ -251,6 +251,7 @@ export function TimelinePanel({
           onHoverEvent={setHoveredEventId}
           start={addDays(center, -spanDays / 2)}
           end={addDays(center, spanDays / 2)}
+          onOpenRecord={handleOpenRecord}
         />
       )}
 
