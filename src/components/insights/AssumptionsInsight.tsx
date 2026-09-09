@@ -8,6 +8,7 @@ import { useAircraft } from "@/contexts/AircraftContext";
 import { fetchCounterLog, calculateUsageRate, getOwnerHours, CounterType, CounterEntry } from "@/lib/counterInterpolation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UtilizationOverrideField } from "@/components/timeline/UtilizationOverrideField";
 import {
   LineChart,
   Line,
@@ -481,6 +482,15 @@ export function AssumptionsInsight({ onBack, userId }: AssumptionsInsightProps) 
                 value={assumptions.usage.hasOverride ? "Yes" : "No"}
                 status="neutral"
               />
+
+              {selectedAircraft?.id && (
+                <UtilizationOverrideField
+                  aircraftId={selectedAircraft.id}
+                  automaticHoursPerMonth={assumptions.usage.forecastedHoursPerMonth}
+                  onSaved={fetchAssumptions}
+                />
+              )}
+              
               
               {/* Usage Chart */}
               {assumptions.usage.chartData.length >= 2 && (
