@@ -10,10 +10,10 @@ import {
 } from "./timelineScale";
 
 const LANES: { key: TimelineCategory; label: string; color: string }[] = [
-  { key: "maintenance", label: "Maintenance", color: "hsl(var(--chart-1))" },
-  { key: "directives", label: "Directives", color: "hsl(var(--chart-2))" },
-  { key: "financial", label: "Financial", color: "hsl(var(--chart-4))" },
-  { key: "counters", label: "Counters", color: "hsl(var(--chart-5))" },
+  { key: "maintenance", label: "Maintenance", color: "hsl(var(--timeline-maintenance))" },
+  { key: "directives", label: "Directives", color: "hsl(var(--timeline-directives))" },
+  { key: "financial", label: "Financial", color: "hsl(var(--timeline-financial))" },
+  { key: "counters", label: "Counters", color: "hsl(var(--timeline-counters))" },
 ];
 
 const HEADER_H = 30;
