@@ -191,44 +191,16 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
               onCenterChange={setCenter}
               onSpanChange={setSpanDays}
               onSelect={setSelected}
-              selectedId={selected?.id ?? null}
             />
             <p className="mt-3 px-4 text-xs text-muted-foreground">
-              Drag to move through time, scroll to zoom. Solid dots are recorded, outlined dots are
-              scheduled, dashed dots are estimated.
+              Drag to move through time, scroll to zoom, click a dot for details. Solid dots are
+              recorded, outlined dots are scheduled, dashed dots are estimated.
             </p>
           </div>
         )}
       </div>
 
-      {selected && (
-        <div className="rounded-xl border bg-card p-4">
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="text-sm font-semibold">
-              {format(selected.date, "d MMM yyyy")} · {selected.events.length} item
-              {selected.events.length === 1 ? "" : "s"}
-            </h3>
-            <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>
-              Close
-            </Button>
-          </div>
-          <ul className="mt-3 space-y-2">
-            {selected.events.map((event) => (
-              <li key={event.id} className="rounded-lg border bg-background/40 px-3 py-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium">{event.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {format(event.date, "d MMM yyyy")}
-                  </span>
-                </div>
-                {event.subtitle && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{event.subtitle}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
 
       <p className="text-xs text-muted-foreground">
         {utilization.hoursPerMonth
