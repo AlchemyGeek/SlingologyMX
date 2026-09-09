@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
 import { GanttChartSquare, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTimelineEvents } from "@/hooks/useTimelineEvents";
+import { countByCategory, TimelineCategory } from "@/lib/timelineEvents";
 
 export const TIMELINE_MIN_WIDTH = 900;
 
@@ -47,8 +50,22 @@ function TimelineRedirectCard({ onGoToCalendar }: { onGoToCalendar: () => void }
   );
 }
 
+const CATEGORY_LABELS: Record<TimelineCategory, string> = {
+  maintenance: "Maintenance",
+  directives: "Directives & bulletins",
+  financial: "Financial",
+  counters: "Counters",
+};
+
 export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePanelProps) {
   const isNarrow = useIsNarrow(TIMELINE_MIN_WIDTH);
+  const { events, loading, error, hasCounterHistory } = useTimelineEvents(userId, aircraftId);
+
+  const counts = useMemo(() => countByCategory(events), [events]);
+  const range = useMemo(() => {
+    if (events.length === 0) return null;
+    return { first: events[0].date, last: events[events.length - 1].date };
+  }, [events]);
 
   if (isNarrow) {
     return <TimelineRedirectCard onGoToCalendar={onGoToCalendar} />;
@@ -65,11 +82,44 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
         </div>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {(Object.keys(CATEGORY_LABELS) as TimelineCategory[]).map((key) => (
+          <div key={key} className="rounded-xl border bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {CATEGORY_LABELS[key]}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">
+              {loading ? "—" : counts[key]}
+            </p>
+          </div>
+        ))}
+      </div>
+
       <div className="rounded-xl border bg-card">
-        <div className="flex h-[290px] items-center justify-center px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            The timeline axis will appear here.
-          </p>
+        <div className="flex h-[290px] flex-col items-center justify-center gap-2 px-6 text-center">
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Gathering your events…</p>
+          ) : error ? (
+            <p className="text-sm text-destructive">{error}</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                The timeline axis will appear here.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {events.length} event{events.length === 1 ? "" : "s"} gathered
+                {range
+                  ? ` from ${format(range.first, "d MMM yyyy")} to ${format(range.last, "d MMM yyyy")}`
+                  : ""}
+                .
+              </p>
+              {!hasCounterHistory && (
+                <p className="text-xs text-muted-foreground">
+                  Not enough counter readings yet to estimate future hour-based due dates.
+                </p>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
