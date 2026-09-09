@@ -71,6 +71,13 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   counters: "Counters",
 };
 
+const CATEGORY_COLORS: Record<TimelineCategory, string> = {
+  maintenance: "hsl(var(--timeline-maintenance))",
+  directives: "hsl(var(--timeline-directives))",
+  financial: "hsl(var(--timeline-financial))",
+  counters: "hsl(var(--timeline-counters))",
+};
+
 export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePanelProps) {
   const isNarrow = useIsNarrow(TIMELINE_MIN_WIDTH);
   const { events, loading, error, hasCounterHistory, utilization } = useTimelineEvents(
