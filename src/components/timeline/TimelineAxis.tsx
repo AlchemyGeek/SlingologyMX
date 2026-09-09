@@ -159,13 +159,13 @@ export function TimelineAxis({
 
   return (
     <div className="flex select-none">
-      <div className="shrink-0" style={{ width: LABEL_W }}>
+      <div className="relative shrink-0" style={{ width: LABEL_W }}>
         <div style={{ height: HEADER_H }} />
         {LANES.map((lane) => (
           <div
             key={lane.key}
             className="flex items-center gap-2 border-t border-border/60 pl-4 text-sm text-muted-foreground"
-            style={{ height: LANE_H }}
+            style={{ height: LANE_H, opacity: laneT, borderTopColor: undefined }}
           >
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -174,7 +174,16 @@ export function TimelineAxis({
             {lane.label}
           </div>
         ))}
+        {laneT < 1 && (
+          <div
+            className="pointer-events-none absolute left-4 -translate-y-1/2 text-sm text-muted-foreground"
+            style={{ top: mergedY, opacity: 1 - laneT }}
+          >
+            All activity
+          </div>
+        )}
       </div>
+
 
       <div
         ref={plotRef}
