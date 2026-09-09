@@ -122,7 +122,7 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
               </p>
               <p className="text-xs text-muted-foreground">
                 {utilization.hoursPerMonth
-                  ? `${projectedCount} estimated from flying about ${utilization.hoursPerMonth.toFixed(1)} hours a month${
+                  ? `${projectedCount} future item${projectedCount === 1 ? "" : "s"} estimated from flying about ${utilization.hoursPerMonth.toFixed(1)} hours a month${
                       utilization.source === "override" ? " (your figure)" : ""
                     }.`
                   : hasCounterHistory
