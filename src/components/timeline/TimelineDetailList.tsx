@@ -30,6 +30,7 @@ interface TimelineDetailListProps {
   onHoverEvent: (id: string | null) => void;
   start: Date;
   end: Date;
+  onOpenRecord?: (event: TimelineEvent) => void;
 }
 
 export function TimelineDetailList({
@@ -38,6 +39,7 @@ export function TimelineDetailList({
   onHoverEvent,
   start,
   end,
+  onOpenRecord,
 }: TimelineDetailListProps) {
   const visible = events
     .filter((e) => e.date >= start && e.date <= end)
