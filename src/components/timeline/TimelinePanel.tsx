@@ -14,6 +14,7 @@ import {
   TimelineCategory,
   type TimelineEvent as TimelineEventType,
 } from "@/lib/timelineEvents";
+import CounterHistoryDialog from "@/components/CounterHistoryDialog";
 import { TimelineAxis } from "./TimelineAxis";
 import { TimelineDetailList } from "./TimelineDetailList";
 import {
@@ -99,6 +100,15 @@ export function TimelinePanel({
   const [spanDays, setSpanDays] = useState(DEFAULT_SPAN_DAYS);
   const [center, setCenter] = useState<Date>(() => new Date());
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
+  const [showCounterHistory, setShowCounterHistory] = useState(false);
+
+  const handleOpenRecord = (event: TimelineEventType) => {
+    if (event.category === "counters" || event.source === "counter_history") {
+      setShowCounterHistory(true);
+      return;
+    }
+    onOpenRecord?.(event);
+  };
 
   const shownEvents = useMemo(() => events, [events]);
 
@@ -216,7 +226,7 @@ export function TimelinePanel({
               onCenterChange={setCenter}
               onSpanChange={setSpanDays}
               highlightEventId={hoveredEventId}
-              onOpenRecord={onOpenRecord}
+              onOpenRecord={handleOpenRecord}
             />
             <p className="mt-3 px-4 text-xs text-muted-foreground">
               Drag to move through time, scroll to zoom, click a dot for details. Solid dots are
@@ -225,6 +235,14 @@ export function TimelinePanel({
           </div>
         )}
       </div>
+
+      <CounterHistoryDialog
+        open={showCounterHistory}
+        onOpenChange={setShowCounterHistory}
+        userId={userId}
+        aircraftId={aircraftId}
+        onRevert={() => setShowCounterHistory(false)}
+      />
 
       {!loading && !error && (
         <TimelineDetailList
