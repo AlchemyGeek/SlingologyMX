@@ -69,20 +69,27 @@ export function TimelineAxis({
   );
   const ticks = useMemo(() => (width > 0 ? buildTicks(scale) : []), [scale, width]);
 
-  const lanes = useMemo(
-    () =>
-      LANES.map((lane) => ({
-        ...lane,
-        clusters:
-          width > 0
-            ? clusterEvents(
-                events.filter((e) => e.category === lane.key),
-                scale
-              )
-            : [],
-      })),
-    [events, scale, width]
-  );
+  // 0 = one merged band (zoomed out), 1 = fully separated lanes (zoomed in)
+  const laneT = Math.min(Math.max((300 - spanDays) / 170, 0), 1);
+  const separated = laneT > 0.5;
+  const mergedY = HEADER_H + (LANES.length * LANE_H) / 2;
+  const laneCenter = (i: number) => HEADER_H + i * LANE_H + LANE_H / 2;
+  const markerY = (i: number) => mergedY + (laneCenter(i) - mergedY) * laneT;
+
+  const groups = useMemo(() => {
+    if (width === 0) return [] as { key: string; laneIndex: number | null; clusters: TimelineCluster[] }[];
+    if (separated) {
+      return LANES.map((lane, i) => ({
+        key: lane.key,
+        laneIndex: i as number | null,
+        clusters: clusterEvents(
+          events.filter((e) => e.category === lane.key),
+          scale
+        ),
+      }));
+    }
+    return [{ key: "merged", laneIndex: null, clusters: clusterEvents(events, scale) }];
+  }, [events, scale, separated, width]);
 
   const todayX = scale.x(new Date());
 
@@ -93,6 +100,7 @@ export function TimelineAxis({
     },
     [onSelect]
   );
+
 
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
@@ -141,21 +149,23 @@ export function TimelineAxis({
     const x = scale.x(active.cluster.date);
     if (x < -40 || x > width + 40) return null;
     const left = Math.min(Math.max(x - POPUP_W / 2, 8), Math.max(width - POPUP_W - 8, 8));
-    const laneCenter = HEADER_H + active.laneIndex * LANE_H + LANE_H / 2;
-    const below = active.laneIndex < 2;
-    return { left, x, laneCenter, below };
-  }, [active, scale, width]);
+    const y = markerY(active.laneIndex);
+    const below = y < HEADER_H + (LANES.length * LANE_H) / 2;
+    return { left, x, laneCenter: y, below };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, scale, width, laneT]);
+
 
 
   return (
     <div className="flex select-none">
-      <div className="shrink-0" style={{ width: LABEL_W }}>
+      <div className="relative shrink-0" style={{ width: LABEL_W }}>
         <div style={{ height: HEADER_H }} />
         {LANES.map((lane) => (
           <div
             key={lane.key}
             className="flex items-center gap-2 border-t border-border/60 pl-4 text-sm text-muted-foreground"
-            style={{ height: LANE_H }}
+            style={{ height: LANE_H, opacity: laneT, borderTopColor: undefined }}
           >
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -164,7 +174,16 @@ export function TimelineAxis({
             {lane.label}
           </div>
         ))}
+        {laneT < 1 && (
+          <div
+            className="pointer-events-none absolute left-4 -translate-y-1/2 text-sm text-muted-foreground"
+            style={{ top: mergedY, opacity: 1 - laneT }}
+          >
+            All activity
+          </div>
+        )}
       </div>
+
 
       <div
         ref={plotRef}
@@ -200,32 +219,55 @@ export function TimelineAxis({
             </g>
           ))}
 
-          {/* lane baselines */}
-          {LANES.map((lane, i) => {
-            const y = HEADER_H + i * LANE_H;
-            return (
-              <g key={lane.key}>
-                <line
-                  x1={0}
-                  x2="100%"
-                  y1={y}
-                  y2={y}
-                  stroke="hsl(var(--border))"
-                  strokeWidth={1}
-                  opacity={0.6}
-                />
-                <line
-                  x1={0}
-                  x2="100%"
-                  y1={y + LANE_H / 2}
-                  y2={y + LANE_H / 2}
-                  stroke="hsl(var(--border))"
-                  strokeDasharray="2 6"
-                  opacity={0.5}
-                />
-              </g>
-            );
-          })}
+          {/* merged baseline (visible when zoomed out) */}
+          {laneT < 1 && (
+            <line
+              x1={0}
+              x2="100%"
+              y1={mergedY}
+              y2={mergedY}
+              stroke="hsl(var(--border))"
+              strokeWidth={1}
+              opacity={0.8 * (1 - laneT)}
+            />
+          )}
+
+          {/* lane tints and baselines, fading in as lanes separate */}
+          {laneT > 0 &&
+            LANES.map((lane, i) => {
+              const y = HEADER_H + i * LANE_H;
+              return (
+                <g key={lane.key}>
+                  <rect
+                    x={0}
+                    y={y}
+                    width="100%"
+                    height={LANE_H}
+                    fill={lane.color}
+                    opacity={0.06 * laneT}
+                  />
+                  <line
+                    x1={0}
+                    x2="100%"
+                    y1={y}
+                    y2={y}
+                    stroke="hsl(var(--border))"
+                    strokeWidth={1}
+                    opacity={0.6 * laneT}
+                  />
+                  <line
+                    x1={0}
+                    x2="100%"
+                    y1={y + LANE_H / 2}
+                    y2={y + LANE_H / 2}
+                    stroke="hsl(var(--border))"
+                    strokeDasharray="2 6"
+                    opacity={0.5 * laneT}
+                  />
+                </g>
+              );
+            })}
+
 
           {/* today pivot */}
           {todayX >= 0 && todayX <= width && (
@@ -251,29 +293,36 @@ export function TimelineAxis({
           )}
 
           {/* markers */}
-          {lanes.map((lane, i) => {
-            const cy = HEADER_H + i * LANE_H + LANE_H / 2;
-            return (
-              <g key={lane.key}>
-                {lane.clusters.map((cluster) => (
+          {groups.map((group) => (
+            <g key={group.key}>
+              {group.clusters.map((cluster) => {
+                const idx = group.laneIndex ?? dominantLane(cluster);
+                const lane = LANES[idx];
+                return (
                   <Marker
                     key={cluster.id}
                     cluster={cluster}
-                    cy={cy}
+                    cy={markerY(idx)}
                     color={lane.color}
                     selected={active?.cluster.id === cluster.id}
                     onSelect={(c) =>
                       selectCluster(
                         active?.cluster.id === c.id
                           ? null
-                          : { cluster: c, laneIndex: i, color: lane.color, laneLabel: lane.label }
+                          : {
+                              cluster: c,
+                              laneIndex: idx,
+                              color: lane.color,
+                              laneLabel: separated ? lane.label : "All activity",
+                            }
                       )
                     }
                   />
-                ))}
-              </g>
-            );
-          })}
+                );
+              })}
+            </g>
+          ))}
+
         </svg>
 
         {active && popup && (
@@ -458,3 +507,20 @@ function Marker({
 }
 
 export default TimelineAxis;
+
+function dominantLane(cluster: TimelineCluster): number {
+  const counts = new Map<TimelineCategory, number>();
+  for (const event of cluster.events) {
+    counts.set(event.category, (counts.get(event.category) ?? 0) + 1);
+  }
+  let best = LANES[0].key;
+  let bestCount = -1;
+  for (const lane of LANES) {
+    const c = counts.get(lane.key) ?? 0;
+    if (c > bestCount) {
+      best = lane.key;
+      bestCount = c;
+    }
+  }
+  return LANES.findIndex((l) => l.key === best);
+}
