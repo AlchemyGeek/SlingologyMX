@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format } from "date-fns";
+import { X } from "lucide-react";
+
 import type { TimelineCategory, TimelineEvent } from "@/lib/timelineEvents";
 import {
   buildTicks,
