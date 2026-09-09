@@ -71,6 +71,13 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   counters: "Counters",
 };
 
+const CATEGORY_COLORS: Record<TimelineCategory, string> = {
+  maintenance: "hsl(var(--timeline-maintenance))",
+  directives: "hsl(var(--timeline-directives))",
+  financial: "hsl(var(--timeline-financial))",
+  counters: "hsl(var(--timeline-counters))",
+};
+
 export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePanelProps) {
   const isNarrow = useIsNarrow(TIMELINE_MIN_WIDTH);
   const { events, loading, error, hasCounterHistory, utilization } = useTimelineEvents(
@@ -133,9 +140,15 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {(Object.keys(CATEGORY_LABELS) as TimelineCategory[]).map((key) => (
           <div key={key} className="rounded-xl border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              {CATEGORY_LABELS[key]}
-            </p>
+            <div className="flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: CATEGORY_COLORS[key] }}
+              />
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {CATEGORY_LABELS[key]}
+              </p>
+            </div>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {loading ? "—" : counts[key]}
             </p>
