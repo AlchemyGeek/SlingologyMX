@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   GanttChartSquare,
   Calendar as CalendarIcon,
@@ -14,6 +14,7 @@ import { TimelineAxis } from "./TimelineAxis";
 import {
   clampSpan,
   describeSpan,
+  eventsInRange,
   DEFAULT_SPAN_DAYS,
   type TimelineCluster,
 } from "./timelineScale";
@@ -90,6 +91,12 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
   const [selected, setSelected] = useState<TimelineCluster | null>(null);
 
   const counts = useMemo(() => countByCategory(events), [events]);
+  const visibleCounts = useMemo(() => {
+    const half = spanDays / 2;
+    const start = addDays(center, -half);
+    const end = addDays(center, half);
+    return countByCategory(eventsInRange(events, start, end));
+  }, [events, center, spanDays]);
   const projectedCount = useMemo(
     () => events.filter((e) => e.confidence === "projected").length,
     [events]
@@ -149,8 +156,18 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
                 {CATEGORY_LABELS[key]}
               </p>
             </div>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">
-              {loading ? "—" : counts[key]}
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold tabular-nums">
+                {loading ? "—" : visibleCounts[key]}
+              </span>
+              {!loading && (
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  / {counts[key]}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {loading ? "\u00A0" : "in view / total"}
             </p>
           </div>
         ))}
