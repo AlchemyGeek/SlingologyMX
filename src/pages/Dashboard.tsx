@@ -214,6 +214,17 @@ const Dashboard = () => {
             userId={user!.id}
             aircraftId={selectedAircraft?.id || ""}
             onGoToCalendar={() => setActiveView("calendar")}
+            onOpenRecord={(event) => {
+              const target: Record<string, DashboardView> = {
+                maintenance_log: "maintenance",
+                notification: "notifications",
+                directive_compliance: "directives",
+                transaction: "transactions",
+                counter_history: "counters",
+              };
+              const view = target[event.source];
+              if (view) setActiveView(view);
+            }}
           />
         );
       case "counters":
