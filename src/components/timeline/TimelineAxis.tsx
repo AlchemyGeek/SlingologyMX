@@ -338,6 +338,7 @@ function ClusterPopup({
   top,
   maxHeight,
   below,
+  onOpenRecord,
   onClose,
 }: {
   active: ActiveCluster;
