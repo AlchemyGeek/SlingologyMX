@@ -230,12 +230,13 @@ export function TimelinePanel({
         ) : (
           <div className="py-4">
             <TimelineAxis
-              events={events}
+              events={shownEvents}
               center={center}
               spanDays={spanDays}
               onCenterChange={setCenter}
               onSpanChange={setSpanDays}
               highlightEventId={hoveredEventId}
+              onOpenRecord={onOpenRecord}
             />
             <p className="mt-3 px-4 text-xs text-muted-foreground">
               Drag to move through time, scroll to zoom, click a dot for details. Solid dots are
@@ -247,7 +248,7 @@ export function TimelinePanel({
 
       {!loading && !error && (
         <TimelineDetailList
-          events={events}
+          events={shownEvents}
           hoveredId={hoveredEventId}
           onHoverEvent={setHoveredEventId}
           start={addDays(center, -spanDays / 2)}
