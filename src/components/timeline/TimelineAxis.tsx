@@ -38,6 +38,8 @@ interface TimelineAxisProps {
   onCenterChange: (date: Date) => void;
   onSpanChange: (days: number) => void;
   onSelect?: (cluster: TimelineCluster | null) => void;
+  /** Event id to visually highlight (e.g. hovered row in the detail list). */
+  highlightEventId?: string | null;
 }
 
 export function TimelineAxis({
@@ -47,6 +49,7 @@ export function TimelineAxis({
   onCenterChange,
   onSpanChange,
   onSelect,
+  highlightEventId = null,
 }: TimelineAxisProps) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -284,6 +287,10 @@ export function TimelineAxis({
                     cy={laneCenter(idx)}
                     color={lane.color}
                     selected={active?.cluster.id === cluster.id}
+                    highlighted={
+                      highlightEventId != null &&
+                      cluster.events.some((e) => e.id === highlightEventId)
+                    }
                     onSelect={(c) =>
                       selectCluster(
                         active?.cluster.id === c.id
@@ -414,12 +421,14 @@ function Marker({
   cy,
   color,
   selected,
+  highlighted,
   onSelect,
 }: {
   cluster: TimelineCluster;
   cy: number;
   color: string;
   selected: boolean;
+  highlighted: boolean;
   onSelect: (cluster: TimelineCluster) => void;
 }) {
   const count = cluster.events.length;
@@ -453,7 +462,7 @@ function Marker({
           rx={10}
           fill={color}
           opacity={confidence === "projected" ? 0.45 : 0.9}
-          stroke={selected ? "hsl(var(--foreground))" : "transparent"}
+          stroke={selected || highlighted ? "hsl(var(--foreground))" : "transparent"}
           strokeWidth={1.5}
         />
         <text
@@ -473,10 +482,21 @@ function Marker({
   return (
     <g className="cursor-pointer" onClick={handleClick} onPointerDown={(e) => e.stopPropagation()}>
       <title>{tooltip}</title>
+      {highlighted && !selected && (
+        <circle
+          cx={cluster.x}
+          cy={cy}
+          r={11}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          opacity={0.55}
+        />
+      )}
       <circle
         cx={cluster.x}
         cy={cy}
-        r={selected ? 8 : 6}
+        r={selected ? 8 : highlighted ? 7 : 6}
         fill={confidence === "actual" ? color : "hsl(var(--card))"}
         stroke={color}
         strokeWidth={2}

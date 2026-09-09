@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { useTimelineEvents } from "@/hooks/useTimelineEvents";
 import { countByCategory, TimelineCategory } from "@/lib/timelineEvents";
 import { TimelineAxis } from "./TimelineAxis";
+import { TimelineDetailList } from "./TimelineDetailList";
 import {
   clampSpan,
   describeSpan,
   eventsInRange,
   DEFAULT_SPAN_DAYS,
-  type TimelineCluster,
 } from "./timelineScale";
 
 
@@ -88,7 +88,7 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
 
   const [spanDays, setSpanDays] = useState(DEFAULT_SPAN_DAYS);
   const [center, setCenter] = useState<Date>(() => new Date());
-  const [selected, setSelected] = useState<TimelineCluster | null>(null);
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
   const counts = useMemo(() => countByCategory(events), [events]);
   const visibleCounts = useMemo(() => {
@@ -190,7 +190,7 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
               spanDays={spanDays}
               onCenterChange={setCenter}
               onSpanChange={setSpanDays}
-              onSelect={setSelected}
+              highlightEventId={hoveredEventId}
             />
             <p className="mt-3 px-4 text-xs text-muted-foreground">
               Drag to move through time, scroll to zoom, click a dot for details. Solid dots are
@@ -200,7 +200,15 @@ export function TimelinePanel({ userId, aircraftId, onGoToCalendar }: TimelinePa
         )}
       </div>
 
-
+      {!loading && !error && (
+        <TimelineDetailList
+          events={events}
+          hoveredId={hoveredEventId}
+          onHoverEvent={setHoveredEventId}
+          start={addDays(center, -spanDays / 2)}
+          end={addDays(center, spanDays / 2)}
+        />
+      )}
 
       <p className="text-xs text-muted-foreground">
         {utilization.hoursPerMonth
