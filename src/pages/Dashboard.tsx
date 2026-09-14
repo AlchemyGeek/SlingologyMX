@@ -13,7 +13,7 @@ import { HeaderReminderBell } from "@/components/HeaderReminderBell";
 import ActiveNotificationsPanel from "@/components/ActiveNotificationsPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import CalendarPanel from "@/components/CalendarPanel";
-import { TimelinePanel } from "@/components/timeline/TimelinePanel";
+import { TimelinePanel, TIMELINE_MIN_WIDTH } from "@/components/timeline/TimelinePanel";
 import MaintenanceLogsPanel from "@/components/MaintenanceLogsPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import EquipmentPanel from "@/components/EquipmentPanel";
@@ -44,7 +44,11 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeNotifications, setActiveNotifications] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
-  const [activeView, setActiveView] = useState<DashboardView>("timeline");
+  const [activeView, setActiveView] = useState<DashboardView>(() =>
+    typeof window !== "undefined" && window.innerWidth < TIMELINE_MIN_WIDTH
+      ? "calendar"
+      : "timeline"
+  );
   const [notificationsOverdueOnly, setNotificationsOverdueOnly] = useState(false);
   const [transactionsStatusFilter, setTransactionsStatusFilter] = useState<string | undefined>(undefined);
   const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
