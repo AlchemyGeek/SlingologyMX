@@ -915,15 +915,29 @@ const DataManagement = () => {
         const record = transactionsData[i];
         updateProgress("transactions", i, transactionsData.length, 10);
         
-        // Check for duplicate based on title and transaction_date within same aircraft
-        const { data: existing } = await supabase
-          .from("transactions")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("aircraft_id", selectedAircraftId)
-          .eq("title", record.title)
-          .eq("transaction_date", record.transaction_date)
-          .maybeSingle();
+        // Check for duplicate: externally-imported records match on external_id
+        // (unique per aircraft), others on title + transaction_date
+        let existing: { id: string } | null = null;
+        if (record.external_id) {
+          const { data } = await supabase
+            .from("transactions")
+            .select("id")
+            .eq("aircraft_id", selectedAircraftId)
+            .eq("external_id", record.external_id)
+            .maybeSingle();
+          existing = data ?? null;
+        }
+        if (!existing) {
+          const { data } = await supabase
+            .from("transactions")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("aircraft_id", selectedAircraftId)
+            .eq("title", record.title)
+            .eq("transaction_date", record.transaction_date)
+            .maybeSingle();
+          existing = data ?? null;
+        }
 
         if (existing) {
           idMap[record.id] = existing.id;

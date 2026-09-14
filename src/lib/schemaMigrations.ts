@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.5";
+export const CURRENT_SCHEMA_VERSION = "1.6";
 
 export interface ExportData {
   version: string;
@@ -170,6 +170,27 @@ const MIGRATIONS: Migration[] = [
         equipment: data.tables.equipment.map(r => ({
           ...r,
           software_version: r.software_version ?? null
+        }))
+      }
+    })
+  },
+  {
+    fromVersion: "1.5",
+    toVersion: "1.6",
+    description: "Add external_id to transactions and software/database version fields to directives",
+    migrate: (data) => ({
+      ...data,
+      version: "1.6",
+      tables: {
+        ...data.tables,
+        transactions: data.tables.transactions.map(r => ({
+          ...r,
+          external_id: r.external_id ?? null
+        })),
+        directives: data.tables.directives.map(r => ({
+          ...r,
+          software_version: r.software_version ?? null,
+          database_version: r.database_version ?? null
         }))
       }
     })
