@@ -699,12 +699,12 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 </p>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">
-                    To confirm, type "<span className="font-semibold">{MODE_CHANGE_PHRASE}</span>" below:
+                    To confirm, type "<span className="font-semibold">{RESET_PHRASE}</span>" below:
                   </p>
                   <Input
                     value={initialChangeConfirmText}
                     onChange={(e) => setInitialChangeConfirmText(e.target.value.toUpperCase())}
-                    placeholder={MODE_CHANGE_PHRASE}
+                    placeholder={RESET_PHRASE}
                   />
                 </div>
               </div>
@@ -718,7 +718,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 setInitialChangeConfirmText("");
                 handleSave(true, true);
               }}
-              disabled={initialChangeConfirmText !== MODE_CHANGE_PHRASE}
+              disabled={initialChangeConfirmText !== RESET_PHRASE}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm Reset
