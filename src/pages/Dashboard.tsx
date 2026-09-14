@@ -232,7 +232,10 @@ const Dashboard = () => {
               const recordId =
                 event.source === "directive_compliance"
                   ? ((event.meta?.directiveId as string | undefined) ?? event.recordId)
-                  : event.recordId;
+                  : event.source === "maintenance_log"
+                    ? ((event.meta?.maintenanceLogId as string | undefined) ??
+                       event.recordId.split(":")[0])
+                    : event.recordId;
               setFocusRecord({ view, id: recordId });
               setActiveView(view);
             }}
