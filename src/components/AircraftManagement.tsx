@@ -73,7 +73,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
   const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
   const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
@@ -91,7 +91,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+    setFormData({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
     setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
@@ -101,6 +101,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
     setFormData({
       registration: a.registration,
       model_make: a.model_make || "",
+      serial_number: a.serial_number || "",
       airframe_tt_mode: a.airframe_tt_mode,
       engine_tt_mode: a.engine_tt_mode,
       prop_tt_mode: a.prop_tt_mode,
@@ -183,6 +184,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
           .update({
             registration: formData.registration.trim().toUpperCase(),
             model_make: formData.model_make.trim() || null,
+            serial_number: formData.serial_number.trim() || null,
             airframe_tt_mode: formData.airframe_tt_mode,
             engine_tt_mode: formData.engine_tt_mode,
             prop_tt_mode: formData.prop_tt_mode,
@@ -224,6 +226,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
           user_id: userId,
           registration: formData.registration.trim().toUpperCase(),
           model_make: formData.model_make.trim() || null,
+          serial_number: formData.serial_number.trim() || null,
           is_primary: isPrimary,
         });
 
@@ -385,6 +388,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
                       )}
                     </div>
                     {a.model_make && <p className="text-sm text-muted-foreground">{a.model_make}</p>}
+                    {a.serial_number && <p className="text-xs text-muted-foreground">S/N: {a.serial_number}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -457,6 +461,16 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 onChange={(e) => setFormData({ ...formData, model_make: e.target.value })}
                 placeholder="e.g., Sling TSi"
                 maxLength={100}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="serial_number">Serial Number</Label>
+              <Input
+                id="serial_number"
+                value={formData.serial_number}
+                onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+                placeholder="e.g., 234SK"
+                maxLength={50}
               />
             </div>
 
