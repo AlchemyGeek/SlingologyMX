@@ -86,6 +86,7 @@ export type Database = {
           model_make: string | null
           prop_tt_mode: string
           registration: string
+          serial_number: string | null
           updated_at: string | null
           user_id: string
           utilization_hours_per_month: number | null
@@ -104,6 +105,7 @@ export type Database = {
           model_make?: string | null
           prop_tt_mode?: string
           registration: string
+          serial_number?: string | null
           updated_at?: string | null
           user_id: string
           utilization_hours_per_month?: number | null
@@ -122,6 +124,7 @@ export type Database = {
           model_make?: string | null
           prop_tt_mode?: string
           registration?: string
+          serial_number?: string | null
           updated_at?: string | null
           user_id?: string
           utilization_hours_per_month?: number | null

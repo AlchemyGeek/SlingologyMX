@@ -38,6 +38,7 @@ import type { TtTrackingMode } from "@/contexts/AircraftContext";
 interface AircraftFormData {
   registration: string;
   model_make: string;
+  serial_number: string;
   airframe_tt_mode: TtTrackingMode;
   engine_tt_mode: TtTrackingMode;
   prop_tt_mode: TtTrackingMode;

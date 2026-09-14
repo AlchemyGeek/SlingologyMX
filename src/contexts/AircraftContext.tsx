@@ -9,6 +9,7 @@ export interface Aircraft {
   user_id: string;
   registration: string;
   model_make: string | null;
+  serial_number: string | null;
   is_primary: boolean;
   airframe_tt_mode: TtTrackingMode;
   engine_tt_mode: TtTrackingMode;
