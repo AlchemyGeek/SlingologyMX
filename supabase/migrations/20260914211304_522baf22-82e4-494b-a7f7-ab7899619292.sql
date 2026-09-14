@@ -1,0 +1,1 @@
+ALTER TABLE public.aircraft ADD COLUMN IF NOT EXISTS serial_number character varying;
