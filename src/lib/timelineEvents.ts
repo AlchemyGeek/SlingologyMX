@@ -34,6 +34,11 @@ export interface TimelineEvent {
   dateISO: string;
   subtitle?: string;
   amount?: number | null;
+  /** Optional span end for duration events (e.g. maintenance shop time). */
+  endDate?: Date | null;
+  endDateISO?: string | null;
+  /** True when the span has no recorded end yet (still in the shop). */
+  openEnded?: boolean;
   meta?: Record<string, unknown>;
 }
 
@@ -49,6 +54,8 @@ function toEvent(params: {
   confidence: TimelineConfidence;
   title: string;
   dateISO: string;
+  endDateISO?: string | null;
+  openEnded?: boolean;
   subtitle?: string;
   amount?: number | null;
   meta?: Record<string, unknown>;
@@ -62,6 +69,9 @@ function toEvent(params: {
     title: params.title,
     date: parseLocalDate(params.dateISO),
     dateISO: params.dateISO,
+    endDate: params.endDateISO ? parseLocalDate(params.endDateISO) : null,
+    endDateISO: params.endDateISO ?? null,
+    openEnded: params.openEnded ?? false,
     subtitle: params.subtitle,
     amount: params.amount ?? null,
     meta: params.meta,
