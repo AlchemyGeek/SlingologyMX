@@ -149,7 +149,7 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
 
   const getMaintenanceLogsForDate = (date: Date) => {
     return maintenanceLogs.filter((log) => {
-      const performedDate = parseLocalDate(log.date_performed);
+      const performedDate = parseLocalDate(log.date_completed || log.date_started);
       return isSameDay(performedDate, date);
     });
   };
@@ -236,7 +236,7 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
     });
 
     maintenanceLogs.forEach((log) => {
-      maintenance.push(parseLocalDate(log.date_performed));
+      maintenance.push(parseLocalDate(log.date_completed || log.date_started));
     });
 
     directiveHistory.forEach((entry) => {
