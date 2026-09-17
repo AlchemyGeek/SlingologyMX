@@ -24,6 +24,7 @@ import DirectiveForm from "./DirectiveForm";
 import TransactionForm from "./TransactionForm";
 import type { Directive } from "./DirectivesPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+import { getMaintenanceStatus } from "@/lib/maintenanceStatus";
 
 interface HistoryPanelProps {
   userId: string;
