@@ -166,10 +166,17 @@ Airplane (default), Airframe, Engine, Propeller, Avionics, Electrical, Interior,
 Inspection, Repair, Replacement, Modification, Software Update, Compliance, Troubleshooting, Scheduled Maintenance, Other.
 
 ### 7.3 Required Fields
-Entry title, category/subcategory, date performed, performed-by type (Owner, A&P, LSRM, Repairman, Shop, Other), performed-by name, and all time & usage counters.
+Entry title, category/subcategory, **Date Started**, performed-by type (Owner, A&P, LSRM, Repairman, Shop, Other) and performed-by name. Time & usage counters are required only once a **Date Completed** is set.
 
 ### 7.4 Optional Fields
-Tags, organization, vendor, invoice number, cost breakdown (parts, labor, other → auto total), internal notes, attachment URLs with descriptions.
+**Date Completed** (empty while the work is scheduled or in progress), tags, organization, vendor, invoice number, cost breakdown (parts, labor, other → auto total), internal notes, attachment URLs with descriptions.
+
+### 7.4.1 Shop Time & Status
+- `date_started` (required) and `date_completed` (optional) define the period the aircraft is out of service.
+- Derived status: **Scheduled** (future start, no completion), **In Progress** (started, no completion), **Completed**.
+- Shop time in days is shown on the record, and the Timeline renders the period as a duration bar (striped while open-ended).
+- A future start date creates a linked date reminder ("Scheduled maintenance: …") so the visit appears in Calendar and Timeline; it is removed once the record is completed or the start moves to the past.
+- Costs, counter history, next-due calculations and transactions all use the effective date (completion when set, otherwise start).
 
 ### 7.5 Recurring Maintenance
 | Type | Description |
@@ -188,7 +195,7 @@ Recurring records auto-generate the next-due notification; the next due date can
 ### 7.7 Directive Linking
 - A maintenance record can link to multiple directives via a junction table.
 - Each link carries a compliance status (Not Complied / Complied).
-- Marking "Complied" creates a compliance event whose date is inherited from **Date Performed**.
+- Marking "Complied" creates a compliance event whose date is inherited from the effective date (Date Completed when set, otherwise Date Started).
 
 ---
 
@@ -320,7 +327,7 @@ Transactions tied to recurring maintenance are excluded from generic historical 
 - Unified calendar of notifications, maintenance records and directive events with color coding (notifications blue, maintenance secondary, directives purple).
 - Alert status colors: normal blue, reminder orange, due/overdue red.
 - Only **date-based** notifications appear (counter-based are excluded).
-- Maintenance is shown on `date_performed` only, never on projected due dates.
+- Maintenance is shown on its effective date (`date_completed` when set, otherwise `date_started`), never on projected due dates.
 - Multiple record types on one date render as a diagonal gradient; clicking a date lists all records.
 
 ---

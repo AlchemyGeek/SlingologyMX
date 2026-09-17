@@ -24,6 +24,7 @@ import DirectiveForm from "./DirectiveForm";
 import TransactionForm from "./TransactionForm";
 import type { Directive } from "./DirectivesPanel";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
+import { getMaintenanceStatus } from "@/lib/maintenanceStatus";
 
 interface HistoryPanelProps {
   userId: string;
@@ -94,7 +95,7 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
           .select("*")
           .eq("user_id", userId)
           .eq("aircraft_id", aircraftId)
-          .order("date_performed", { ascending: false }),
+          .order("date_started", { ascending: false }),
         supabase
           .from("directive_history")
           .select("*")
@@ -170,14 +171,18 @@ const HistoryPanel = ({ userId, aircraftId, refreshKey }: HistoryPanelProps) => 
       });
     });
 
-    // Maintenance logs - use date_performed
+    // Maintenance logs - completed events use the completion date, in-progress ones the start date.
+    // Scheduled (future) events are not history yet.
     maintenanceLogs.forEach((m) => {
+      const status = getMaintenanceStatus(m.date_started, m.date_completed);
+      if (status === "Scheduled") return;
       items.push({
         id: `maintenance-${m.id}`,
-        date: parseLocalDate(m.date_performed),
+        date: parseLocalDate(m.date_completed || m.date_started),
         name: m.entry_title || "Untitled",
         recordType: "Maintenance",
-        operationType: m.subcategory || "Created",
+        operationType:
+          status === "In Progress" ? "In Progress" : (m.subcategory || "Created"),
         category: m.category || "-",
       });
     });

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { parseLocalDate } from "@/lib/utils";
+import { getMaintenanceStatus } from "@/lib/maintenanceStatus";
 import {
   computeUtilizationRate,
   projectDueEvents,
@@ -34,6 +35,11 @@ export interface TimelineEvent {
   dateISO: string;
   subtitle?: string;
   amount?: number | null;
+  /** Optional span end for duration events (e.g. maintenance shop time). */
+  endDate?: Date | null;
+  endDateISO?: string | null;
+  /** True when the span has no recorded end yet (still in the shop). */
+  openEnded?: boolean;
   meta?: Record<string, unknown>;
 }
 
@@ -49,6 +55,8 @@ function toEvent(params: {
   confidence: TimelineConfidence;
   title: string;
   dateISO: string;
+  endDateISO?: string | null;
+  openEnded?: boolean;
   subtitle?: string;
   amount?: number | null;
   meta?: Record<string, unknown>;
@@ -62,6 +70,9 @@ function toEvent(params: {
     title: params.title,
     date: parseLocalDate(params.dateISO),
     dateISO: params.dateISO,
+    endDate: params.endDateISO ? parseLocalDate(params.endDateISO) : null,
+    endDateISO: params.endDateISO ?? null,
+    openEnded: params.openEnded ?? false,
     subtitle: params.subtitle,
     amount: params.amount ?? null,
     meta: params.meta,
@@ -102,7 +113,7 @@ export async function fetchTimelineEvents(
       supabase
         .from("maintenance_logs")
         .select(
-          "id, entry_title, category, subcategory, date_performed, total_cost, is_recurring_task, next_due_hours, next_due_date, recurrence_counter_type"
+          "id, entry_title, category, subcategory, date_started, date_completed, total_cost, is_recurring_task, next_due_hours, next_due_date, recurrence_counter_type"
         )
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId),
@@ -156,18 +167,27 @@ export async function fetchTimelineEvents(
 
   const events: TimelineEvent[] = [];
 
+  const todayISO = new Date().toISOString().split("T")[0];
+
   (logs.data ?? []).forEach((row: any) => {
-    const d = dateOnly(row.date_performed);
-    if (!d) return;
+    const start = dateOnly(row.date_started);
+    if (!start) return;
+    const end = dateOnly(row.date_completed);
+    const status = getMaintenanceStatus(row.date_started, row.date_completed);
+    // Open-ended spans (no completion yet) run to today; future work starts as a point.
+    const spanEnd = end ?? (status === "In Progress" ? todayISO : null);
+    const statusLabel = status === "Completed" ? null : status;
     events.push(
       toEvent({
         source: "maintenance_log",
         recordId: row.id,
         category: "maintenance",
-        confidence: "actual",
+        confidence: status === "Scheduled" ? "scheduled" : "actual",
         title: row.entry_title,
-        dateISO: d,
-        subtitle: [row.category, row.subcategory].filter(Boolean).join(" · "),
+        dateISO: start,
+        endDateISO: spanEnd && spanEnd !== start ? spanEnd : null,
+        openEnded: !end,
+        subtitle: [statusLabel, row.category, row.subcategory].filter(Boolean).join(" · "),
         amount: row.total_cost !== null ? Number(row.total_cost) : null,
       })
     );

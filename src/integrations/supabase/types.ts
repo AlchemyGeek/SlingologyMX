@@ -1288,7 +1288,8 @@ export type Database = {
           compliance_reference: string | null
           compliance_type: Database["public"]["Enums"]["compliance_type"] | null
           created_at: string | null
-          date_performed: string
+          date_completed: string | null
+          date_started: string
           engine_total_time: number | null
           entry_title: string
           has_compliance_item: boolean | null
@@ -1328,7 +1329,8 @@ export type Database = {
             | Database["public"]["Enums"]["compliance_type"]
             | null
           created_at?: string | null
-          date_performed: string
+          date_completed?: string | null
+          date_started: string
           engine_total_time?: number | null
           entry_title: string
           has_compliance_item?: boolean | null
@@ -1368,7 +1370,8 @@ export type Database = {
             | Database["public"]["Enums"]["compliance_type"]
             | null
           created_at?: string | null
-          date_performed?: string
+          date_completed?: string | null
+          date_started?: string
           engine_total_time?: number | null
           entry_title?: string
           has_compliance_item?: boolean | null
