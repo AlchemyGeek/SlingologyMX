@@ -306,6 +306,64 @@ export function TimelineAxis({
             </g>
           )}
 
+          {/* duration spans (e.g. time in the shop) */}
+          <defs>
+            <pattern
+              id="timeline-open-span"
+              width={6}
+              height={6}
+              patternTransform="rotate(45)"
+              patternUnits="userSpaceOnUse"
+            >
+              <rect width={6} height={6} fill="currentColor" opacity={0.18} />
+              <line x1={0} y1={0} x2={0} y2={6} stroke="currentColor" strokeWidth={3} opacity={0.5} />
+            </pattern>
+          </defs>
+          {width > 0 &&
+            events
+              .filter((e) => e.endDate)
+              .map((event) => {
+                const laneIndex = LANES.findIndex((l) => l.key === event.category);
+                if (laneIndex < 0) return null;
+                const x1 = scale.x(event.date);
+                const x2 = scale.x(event.endDate as Date);
+                if (x2 < -20 || x1 > width + 20) return null;
+                const left = Math.max(Math.min(x1, x2), -20);
+                const right = Math.min(Math.max(x1, x2), width + 20);
+                const barWidth = Math.max(right - left, 2);
+                const color = LANES[laneIndex].color;
+                const cy = laneCenter(laneIndex);
+                return (
+                  <g key={`span-${event.id}`} style={{ color }}>
+                    <rect
+                      x={left}
+                      y={cy - 5}
+                      width={barWidth}
+                      height={10}
+                      rx={5}
+                      fill={event.openEnded ? "url(#timeline-open-span)" : color}
+                      opacity={event.openEnded ? 0.9 : 0.35}
+                    />
+                    <rect
+                      x={left}
+                      y={cy - 5}
+                      width={barWidth}
+                      height={10}
+                      rx={5}
+                      fill="none"
+                      stroke={color}
+                      strokeWidth={1}
+                      opacity={0.6}
+                    />
+                    <title>
+                      {`${event.title} — ${format(event.date, "d MMM yyyy")} → ${
+                        event.openEnded ? "ongoing" : format(event.endDate as Date, "d MMM yyyy")
+                      }`}
+                    </title>
+                  </g>
+                );
+              })}
+
           {/* markers */}
           {groups.map((group) => (
             <g key={group.key}>
