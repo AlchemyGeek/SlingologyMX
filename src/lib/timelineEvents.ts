@@ -120,7 +120,7 @@ export async function fetchTimelineEvents(
       supabase
         .from("notifications")
         .select(
-          "id, description, type, initial_date, notification_basis, counter_type, initial_counter_value, is_completed"
+          "id, description, type, initial_date, notification_basis, counter_type, initial_counter_value, is_completed, maintenance_log_id"
         )
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId)
