@@ -695,20 +695,20 @@ const DataManagement = () => {
         }
       }
 
-      // 5. Maintenance logs - check by entry_title and date_performed
+      // 5. Maintenance logs - check by entry_title and date_started
       const maintenanceLogsData = importPreview.tables.maintenance_logs || [];
       for (let i = 0; i < maintenanceLogsData.length; i++) {
         const record = maintenanceLogsData[i];
         updateProgress("maintenance_logs", i, maintenanceLogsData.length, 5);
         
-        // Check for duplicate based on entry_title and date_performed within same aircraft
+        // Check for duplicate based on entry_title and date_started within same aircraft
         const { data: existing } = await supabase
           .from("maintenance_logs")
           .select("id")
           .eq("user_id", user.id)
           .eq("aircraft_id", selectedAircraftId)
           .eq("entry_title", record.entry_title)
-          .eq("date_performed", record.date_performed)
+          .eq("date_started", record.date_started)
           .maybeSingle();
 
         if (existing) {

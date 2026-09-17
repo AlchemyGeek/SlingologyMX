@@ -130,7 +130,7 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{log.entry_title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {format(parseLocalDate(log.date_performed), "MMM dd, yyyy")} · {log.category}
+                      {format(parseLocalDate(log.date_completed || log.date_started), "MMM dd, yyyy")} · {log.category}
                       {log.subcategory ? ` · ${log.subcategory}` : ""}
                     </p>
                     {log.tags && log.tags.length > 0 && (
@@ -182,7 +182,7 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onViewDetail(log)}
                   >
-                    <TableCell>{format(parseLocalDate(log.date_performed), "MMM dd, yyyy")}</TableCell>
+                    <TableCell>{format(parseLocalDate(log.date_completed || log.date_started), "MMM dd, yyyy")}</TableCell>
                     <TableCell>{log.category}</TableCell>
                     {!isMobile && <TableCell>{log.subcategory}</TableCell>}
                     <TableCell className="font-medium">{log.entry_title}</TableCell>

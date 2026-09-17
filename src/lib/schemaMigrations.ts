@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.6";
+export const CURRENT_SCHEMA_VERSION = "1.7";
 
 export interface ExportData {
   version: string;
@@ -192,6 +192,26 @@ const MIGRATIONS: Migration[] = [
           software_version: r.software_version ?? null,
           database_version: r.database_version ?? null
         }))
+      }
+    })
+  },
+  {
+    fromVersion: "1.6",
+    toVersion: "1.7",
+    description: "Split maintenance date_performed into date_started and date_completed",
+    migrate: (data) => ({
+      ...data,
+      version: "1.7",
+      tables: {
+        ...data.tables,
+        maintenance_logs: data.tables.maintenance_logs.map((r: any) => {
+          const { date_performed, ...rest } = r;
+          return {
+            ...rest,
+            date_started: r.date_started ?? date_performed ?? null,
+            date_completed: r.date_completed ?? date_performed ?? null,
+          };
+        })
       }
     })
   },
