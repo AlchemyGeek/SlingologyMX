@@ -747,7 +747,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         );
         const startIsFuture =
           format(formData.date_started, "yyyy-MM-dd") > format(new Date(), "yyyy-MM-dd");
-        const needsStartReminder = startIsFuture && !formData.date_completed;
+        // A job whose start date is still in the future is upcoming work, even when a
+        // planned completion date was already entered.
+        const needsStartReminder = startIsFuture;
         const startDescription = `${SCHEDULED_START_PREFIX}${formData.entry_title}`;
 
         if (needsStartReminder) {
