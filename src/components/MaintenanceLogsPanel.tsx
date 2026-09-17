@@ -17,7 +17,8 @@ interface MaintenanceLog {
   category: string;
   subcategory: string;
   tags: string[];
-  date_performed: string;
+  date_started: string;
+  date_completed: string | null;
   hobbs_at_event: number | null;
   tach_at_event: number | null;
   airframe_total_time: number | null;
@@ -79,7 +80,7 @@ const MaintenanceLogsPanel = ({ userId, aircraftId, counters, onUpdateGlobalCoun
         .select("*")
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId)
-        .order("date_performed", { ascending: false });
+        .order("date_started", { ascending: false });
 
       if (logsError) throw logsError;
 

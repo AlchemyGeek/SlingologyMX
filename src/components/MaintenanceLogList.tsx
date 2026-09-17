@@ -26,7 +26,8 @@ interface MaintenanceLog {
   category: string;
   subcategory: string;
   tags: string[];
-  date_performed: string;
+  date_started: string;
+  date_completed: string | null;
   has_compliance_item?: boolean;
   has_linked_compliance?: boolean;
 }
@@ -53,7 +54,7 @@ const MaintenanceLogList = ({ logs, onViewDetail }: MaintenanceLogListProps) => 
     })
     .sort((a, b) => {
       if (sortBy === "date") {
-        return parseLocalDate(b.date_performed).getTime() - parseLocalDate(a.date_performed).getTime();
+        return parseLocalDate(b.date_started).getTime() - parseLocalDate(a.date_started).getTime();
       }
       return a.category.localeCompare(b.category);
     });

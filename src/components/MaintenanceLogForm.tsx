@@ -37,6 +37,8 @@ import {
 import { validateCounterUpdates } from "@/lib/counterValidation";
 import { getCurrencySymbol } from "@/lib/currency";
 import { useAircraft, TtTrackingMode } from "@/contexts/AircraftContext";
+import { Badge } from "@/components/ui/badge";
+import { getMaintenanceStatus, getShopTimeLabel } from "@/lib/maintenanceStatus";
 
 interface DirectiveComplianceLink {
   id?: string;

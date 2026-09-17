@@ -17,6 +17,7 @@ import { ArrowLeft, Pencil, Trash2, FileCheck } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
+import { getMaintenanceStatus, getShopTimeLabel } from "@/lib/maintenanceStatus";
 
 interface ComplianceEntry {
   id: string;
@@ -134,8 +135,29 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "
                 </Badge>
               ))}
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={
+                  getMaintenanceStatus(log.date_started, log.date_completed) === "Completed"
+                    ? "default"
+                    : getMaintenanceStatus(log.date_started, log.date_completed) === "In Progress"
+                      ? "secondary"
+                      : "outline"
+                }
+              >
+                {getMaintenanceStatus(log.date_started, log.date_completed)}
+              </Badge>
+              {getShopTimeLabel(log.date_started, log.date_completed) && (
+                <span className="text-sm text-muted-foreground">
+                  {getShopTimeLabel(log.date_started, log.date_completed)}
+                </span>
+              )}
+            </div>
             <p className="text-muted-foreground">
-              Performed on {format(parseLocalDate(log.date_performed), "MMMM dd, yyyy")}
+              Started {format(parseLocalDate(log.date_started), "MMMM dd, yyyy")}
+              {log.date_completed
+                ? ` · Completed ${format(parseLocalDate(log.date_completed), "MMMM dd, yyyy")}`
+                : " · Not completed yet"}
             </p>
           </CardContent>
         </Card>
