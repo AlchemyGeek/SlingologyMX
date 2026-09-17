@@ -112,7 +112,7 @@ export async function fetchTimelineEvents(
       supabase
         .from("maintenance_logs")
         .select(
-          "id, entry_title, category, subcategory, date_performed, total_cost, is_recurring_task, next_due_hours, next_due_date, recurrence_counter_type"
+          "id, entry_title, category, subcategory, date_started, date_completed, total_cost, is_recurring_task, next_due_hours, next_due_date, recurrence_counter_type"
         )
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId),
