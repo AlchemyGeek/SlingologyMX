@@ -196,6 +196,9 @@ export async function fetchTimelineEvents(
   // Only date-based notifications land on the axis; counter-based ones are projected later.
   (notifications.data ?? []).forEach((row: any) => {
     if (row.notification_basis === "Counter" || row.counter_type) return;
+    // The auto-created reminder for a scheduled maintenance job duplicates the job
+    // itself, which is already drawn from maintenance_logs.
+    if (row.maintenance_log_id && String(row.description ?? "").startsWith("Scheduled maintenance: ")) return;
     const d = dateOnly(row.initial_date);
     if (!d) return;
     events.push(
