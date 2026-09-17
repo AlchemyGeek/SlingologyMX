@@ -105,7 +105,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     category: "Airplane" as Database["public"]["Enums"]["maintenance_category"],
     subcategory: "Inspection" as Database["public"]["Enums"]["maintenance_subcategory"],
     tags: [] as string[],
-    date_performed: new Date(),
+    date_started: new Date(),
+    date_completed: new Date() as Date | null,
     hobbs_at_event: defaultCounters?.hobbs?.toString() || "",
     tach_at_event: defaultCounters?.tach?.toString() || "",
     airframe_total_time: defaultCounters?.airframe_total_time?.toString() || "",
@@ -127,6 +128,13 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     attachment_urls: [] as Array<{ url: string; description?: string }>,
     internal_notes: "",
   });
+
+  // Costs, counters and compliance are dated by the completion date when the job is done,
+  // otherwise by the start date.
+  const effectiveDate = formData.date_completed ?? formData.date_started;
+  const maintenanceStatus = getMaintenanceStatus(formData.date_started, formData.date_completed);
+  const shopTimeLabel = getShopTimeLabel(formData.date_started, formData.date_completed);
+  const countersRequired = !!formData.date_completed;
   
   const [directiveComplianceLinks, setDirectiveComplianceLinks] = useState<DirectiveComplianceLink[]>([]);
 
@@ -192,7 +200,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         category: editingLog.category || "Airframe",
         subcategory: editingLog.subcategory || "Inspection",
         tags: editingLog.tags || [],
-        date_performed: parseLocalDate(editingLog.date_performed),
+        date_started: parseLocalDate(editingLog.date_started || editingLog.date_completed),
+        date_completed: editingLog.date_completed ? parseLocalDate(editingLog.date_completed) : null,
         hobbs_at_event: editingLog.hobbs_at_event?.toString() || "",
         tach_at_event: editingLog.tach_at_event?.toString() || "",
         airframe_total_time: editingLog.airframe_total_time?.toString() || "",
@@ -242,12 +251,12 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     }
   }, [editingLog]);
 
-  // Fetch counter values from history when date_performed changes (only if not manually edited)
+  // Fetch counter values from history when the effective date changes (only if not manually edited)
   useEffect(() => {
     const fetchCountersFromHistory = async () => {
       if (!aircraftId || countersManuallyEdited || editingLog) return;
       
-      const dateStr = format(formData.date_performed, "yyyy-MM-dd");
+      const dateStr = format(effectiveDate, "yyyy-MM-dd");
       
       // Find the closest previous history entry
       const { data, error } = await supabase
@@ -277,21 +286,21 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     };
     
     fetchCountersFromHistory();
-  }, [formData.date_performed, aircraftId, countersManuallyEdited, editingLog]);
+  }, [effectiveDate, aircraftId, countersManuallyEdited, editingLog]);
 
-  // Auto-calculate next_due_date when date_performed or interval_months changes
+  // Auto-calculate next_due_date when the effective date or interval_months changes
   useEffect(() => {
     if (formData.is_recurring_task && 
         (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") && 
         formData.interval_months && 
-        formData.date_performed) {
+        effectiveDate) {
       const months = parseInt(formData.interval_months);
       if (months > 0) {
-        const calculatedDate = addMonths(formData.date_performed, months);
+        const calculatedDate = addMonths(effectiveDate, months);
         setFormData(prev => ({ ...prev, next_due_date: calculatedDate }));
       }
     }
-  }, [formData.date_performed, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
+  }, [effectiveDate, formData.interval_months, formData.is_recurring_task, formData.interval_type]);
 
   // Validate itemized costs sum equals total cost
   const getItemizedCostError = (): string | null => {
@@ -429,9 +438,14 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       return;
     }
 
-    // Validate Time & Usage fields are filled
-    if (!formData.hobbs_at_event || !formData.tach_at_event || !formData.airframe_total_time || !formData.engine_total_time || !formData.prop_total_time) {
-      toast.error("All Time & Usage fields are required");
+    if (formData.date_completed && formData.date_completed < formData.date_started) {
+      toast.error("Date Completed cannot be earlier than Date Started");
+      return;
+    }
+
+    // Counter readings are only required once the work is completed
+    if (countersRequired && (!formData.hobbs_at_event || !formData.tach_at_event || !formData.airframe_total_time || !formData.engine_total_time || !formData.prop_total_time)) {
+      toast.error("All Time & Usage fields are required when a completion date is set");
       return;
     }
 
@@ -461,7 +475,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       category: formData.category,
       subcategory: formData.subcategory,
       tags: formData.tags,
-      date_performed: format(formData.date_performed, "yyyy-MM-dd"),
+      date_started: format(formData.date_started, "yyyy-MM-dd"),
+      date_completed: formData.date_completed ? format(formData.date_completed, "yyyy-MM-dd") : null,
       hobbs_at_event: formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null,
       tach_at_event: formData.tach_at_event ? parseFloat(formData.tach_at_event) : null,
       airframe_total_time: formData.airframe_total_time ? parseFloat(formData.airframe_total_time) : null,
@@ -507,10 +522,10 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         let calculatedNextDueDate = formData.next_due_date;
         if (!calculatedNextDueDate && formData.is_recurring_task && 
             (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") &&
-            formData.interval_months && formData.date_performed) {
+            formData.interval_months && effectiveDate) {
           const months = parseInt(formData.interval_months);
           if (months > 0) {
-            calculatedNextDueDate = addMonths(formData.date_performed, months);
+            calculatedNextDueDate = addMonths(effectiveDate, months);
           }
         }
         
@@ -634,10 +649,10 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         if (formData.interval_type === "Calendar" || formData.interval_type === "Mixed") {
           // Calculate next_due_date directly if not already set (in case useEffect hasn't run yet)
           let nextDueDate = formData.next_due_date;
-          if (!nextDueDate && formData.interval_months && formData.date_performed) {
+          if (!nextDueDate && formData.interval_months && effectiveDate) {
             const months = parseInt(formData.interval_months);
             if (months > 0) {
-              nextDueDate = addMonths(formData.date_performed, months);
+              nextDueDate = addMonths(effectiveDate, months);
             }
           }
           
@@ -984,7 +999,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         const maintenanceLogData = {
           id: logId,
           entry_title: formData.entry_title,
-          date_performed: format(formData.date_performed, "yyyy-MM-dd"),
+          date_performed: format(effectiveDate, "yyyy-MM-dd"),
           parts_cost: isItemizedCost && formData.parts_cost ? parseFloat(formData.parts_cost) : null,
           labor_cost: isItemizedCost && formData.labor_cost ? parseFloat(formData.labor_cost) : null,
           other_cost: isItemizedCost && formData.other_cost ? parseFloat(formData.other_cost) : null,
@@ -1090,7 +1105,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       // Validate counter updates based on maintenance date
       const validation = await validateCounterUpdates(
         aircraftId,
-        formData.date_performed,
+        effectiveDate,
         pendingCounterUpdates
       );
       
@@ -1111,7 +1126,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       };
       
       // Pass the maintenance date and all counter values for the history entry
-      await onUpdateGlobalCounters(pendingCounterUpdates, formData.date_performed, allCounterValues);
+      await onUpdateGlobalCounters(pendingCounterUpdates, effectiveDate, allCounterValues);
       toast.success("Global counters updated");
     } catch (error) {
       console.error("Error updating global counters:", error);
@@ -1215,12 +1230,51 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Date Performed <span className="text-destructive">*</span></Label>
+            <Label>Date Started <span className="text-destructive">*</span></Label>
             <DateInput
-              value={formData.date_performed}
-              onChange={(date) => date && setFormData({ ...formData, date_performed: date })}
+              value={formData.date_started}
+              onChange={(date) => date && setFormData({ ...formData, date_started: date })}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Date Completed</Label>
+            <DateInput
+              value={formData.date_completed ?? undefined}
+              onChange={(date) => setFormData({ ...formData, date_completed: date ?? null })}
+            />
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                Leave empty while the work is scheduled or still in progress.
+              </p>
+              {formData.date_completed && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-2 py-1 text-xs"
+                  onClick={() => setFormData({ ...formData, date_completed: null })}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="md:col-span-2 flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                maintenanceStatus === "Completed"
+                  ? "default"
+                  : maintenanceStatus === "In Progress"
+                    ? "secondary"
+                    : "outline"
+              }
+            >
+              {maintenanceStatus}
+            </Badge>
+            {shopTimeLabel && (
+              <span className="text-xs text-muted-foreground">{shopTimeLabel}</span>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="hobbs_at_event">Hobbs at Event <span className="text-destructive">*</span></Label>
@@ -1314,7 +1368,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           complianceLinks={directiveComplianceLinks}
           onComplianceLinksChange={setDirectiveComplianceLinks}
           defaultCounters={defaultCounters || { hobbs: 0, tach: 0, airframe_total_time: 0, engine_total_time: 0, prop_total_time: 0 }}
-          datePerformed={formData.date_performed}
+          datePerformed={effectiveDate}
           performedByName={formData.performed_by_name}
           performedByType={formData.performed_by_type}
         />
