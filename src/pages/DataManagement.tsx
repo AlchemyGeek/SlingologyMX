@@ -1106,7 +1106,7 @@ const DataManagement = () => {
                 <CardDescription>
                   Download all your maintenance records, notifications, subscriptions, directives, 
                   and counter data as a JSON file. This file can be used to backup your data or 
-                  share it with another user.
+                  share it with another user. Export schema version: v{CURRENT_SCHEMA_VERSION}.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1215,7 +1215,10 @@ const DataManagement = () => {
                       <CardTitle className="text-base">File Preview</CardTitle>
                       <CardDescription>
                         Exported on {new Date(importPreview.exportDate).toLocaleDateString()} 
-                        (Version {importPreview.version})
+                        · File schema version: v{importPreview.version}
+                        {importPreview.version !== CURRENT_SCHEMA_VERSION && (
+                          <> (will be upgraded to v{CURRENT_SCHEMA_VERSION} on import)</>
+                        )}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
