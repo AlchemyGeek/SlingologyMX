@@ -540,10 +540,13 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         
         // Check for existing linked notifications
         const { data: existingNotifs } = await supabase.from("notifications")
-          .select("id, notification_basis, user_modified")
+          .select("id, notification_basis, user_modified, description")
           .eq("maintenance_log_id", editingLog.id);
         
-        const existingDateNotif = existingNotifs?.find(n => n.notification_basis === "Date");
+        // Scheduled-start reminders live alongside recurrence reminders; keep them apart.
+        const existingDateNotif = existingNotifs?.find(
+          n => n.notification_basis === "Date" && !n.description?.startsWith(SCHEDULED_START_PREFIX)
+        );
         const existingCounterNotif = existingNotifs?.find(n => n.notification_basis === "Counter");
         
         // Handle date-based notification
