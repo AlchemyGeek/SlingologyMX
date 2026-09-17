@@ -629,12 +629,13 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           await supabase.from("notifications").delete().eq("id", existingCounterNotif.id);
         }
         
-        // If recurring is turned off entirely, delete all non-user-modified notifications
+        // If recurring is turned off entirely, delete all non-user-modified recurrence notifications
         if (!formData.is_recurring_task || formData.interval_type === "None") {
           await supabase.from("notifications")
             .delete()
             .eq("maintenance_log_id", editingLog.id)
-            .eq("user_modified", false);
+            .eq("user_modified", false)
+            .not("description", "like", `${SCHEDULED_START_PREFIX}%`);
         }
       } else {
         const { data: newLog, error } = await supabase
