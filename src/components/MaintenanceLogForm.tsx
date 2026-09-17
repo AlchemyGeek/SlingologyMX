@@ -40,6 +40,10 @@ import { useAircraft, TtTrackingMode } from "@/contexts/AircraftContext";
 import { Badge } from "@/components/ui/badge";
 import { getMaintenanceStatus, getShopTimeLabel } from "@/lib/maintenanceStatus";
 
+/** Marks reminders that announce an upcoming shop visit (vs. recurrence reminders). */
+const SCHEDULED_START_PREFIX = "Scheduled maintenance: ";
+
+
 interface DirectiveComplianceLink {
   id?: string;
   directive_id: string;
@@ -730,6 +734,52 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           }
         }
       }
+
+      // Keep the "shop visit starts" reminder in sync with the start date.
+      if (logId) {
+        const { data: startNotifs } = await supabase
+          .from("notifications")
+          .select("id, user_modified, description")
+          .eq("maintenance_log_id", logId)
+          .eq("notification_basis", "Date");
+        const existingStartNotif = startNotifs?.find(n =>
+          n.description?.startsWith(SCHEDULED_START_PREFIX)
+        );
+        const startIsFuture =
+          format(formData.date_started, "yyyy-MM-dd") > format(new Date(), "yyyy-MM-dd");
+        const needsStartReminder = startIsFuture && !formData.date_completed;
+        const startDescription = `${SCHEDULED_START_PREFIX}${formData.entry_title}`;
+
+        if (needsStartReminder) {
+          if (existingStartNotif) {
+            if (!existingStartNotif.user_modified) {
+              await supabase
+                .from("notifications")
+                .update({
+                  description: startDescription,
+                  initial_date: format(formData.date_started, "yyyy-MM-dd"),
+                })
+                .eq("id", existingStartNotif.id);
+            }
+          } else {
+            await supabase.from("notifications").insert([{
+              user_id: userId,
+              aircraft_id: aircraftId,
+              description: startDescription,
+              type: "Maintenance" as Database["public"]["Enums"]["notification_type"],
+              initial_date: format(formData.date_started, "yyyy-MM-dd"),
+              recurrence: "None" as Database["public"]["Enums"]["recurrence_type"],
+              notification_basis: "Date" as Database["public"]["Enums"]["notification_basis"],
+              notes: `Auto-created from scheduled maintenance: ${formData.entry_title}`,
+              alert_days: 7,
+              maintenance_log_id: logId,
+            }]);
+          }
+        } else if (existingStartNotif && !existingStartNotif.user_modified) {
+          await supabase.from("notifications").delete().eq("id", existingStartNotif.id);
+        }
+      }
+
       
       // Save directive compliance links
       if (logId && directiveComplianceLinks.length > 0) {
