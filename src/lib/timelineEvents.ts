@@ -9,7 +9,7 @@ import {
   type UtilizationRate,
 } from "@/lib/timelineProjection";
 
-export type TimelineCategory = "maintenance" | "directives" | "financial" | "counters";
+export type TimelineCategory = "maintenance" | "directives" | "financial" | "counters" | "other";
 
 /** How certain the date is: recorded fact, scheduled item, or projected estimate. */
 export type TimelineConfidence = "actual" | "scheduled" | "projected";
@@ -85,6 +85,8 @@ const notificationCategory = (type: string | null): TimelineCategory => {
       return "directives";
     case "Subscription":
       return "financial";
+    case "Other":
+      return "other";
     default:
       return "maintenance";
   }
@@ -380,6 +382,7 @@ export function countByCategory(events: TimelineEvent[]): Record<TimelineCategor
     directives: 0,
     financial: 0,
     counters: 0,
+    other: 0,
   };
   events.forEach((e) => {
     counts[e.category] += 1;
