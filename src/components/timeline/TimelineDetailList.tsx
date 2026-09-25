@@ -6,6 +6,7 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   directives: "Directives",
   financial: "Financial",
   counters: "Counters",
+  other: "Other",
 };
 
 const CATEGORY_COLORS: Record<TimelineCategory, string> = {
@@ -13,6 +14,7 @@ const CATEGORY_COLORS: Record<TimelineCategory, string> = {
   directives: "hsl(var(--timeline-directives))",
   financial: "hsl(var(--timeline-financial))",
   counters: "hsl(var(--timeline-counters))",
+  other: "hsl(var(--timeline-other))",
 };
 
 const CONFIDENCE_LABELS: Record<TimelineEvent["confidence"], string> = {
