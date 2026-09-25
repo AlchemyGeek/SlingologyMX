@@ -1283,7 +1283,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Time & Usage</h3>
           <p className="text-xs text-muted-foreground">
-            Linked counters auto-update from their source
+            {countersRequired
+              ? "Required once a completion date is set · linked counters auto-update from their source"
+              : "Readings are optional until the job is completed · linked counters auto-update from their source"}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1335,7 +1337,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hobbs_at_event">Hobbs at Event <span className="text-destructive">*</span></Label>
+            <Label htmlFor="hobbs_at_event">Hobbs at Event {countersRequired && <span className="text-destructive">*</span>}</Label>
             <Input
               id="hobbs_at_event"
               type="number"
@@ -1343,11 +1345,11 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               max="9999.9"
               value={formData.hobbs_at_event}
               onChange={(e) => handleCounterChange("hobbs_at_event", e.target.value)}
-              required
+              required={countersRequired}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tach_at_event">Tach at Event <span className="text-destructive">*</span></Label>
+            <Label htmlFor="tach_at_event">Tach at Event {countersRequired && <span className="text-destructive">*</span>}</Label>
             <Input
               id="tach_at_event"
               type="number"
@@ -1355,12 +1357,12 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               max="9999.9"
               value={formData.tach_at_event}
               onChange={(e) => handleCounterChange("tach_at_event", e.target.value)}
-              required
+              required={countersRequired}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="airframe_total_time">
-              Airframe Total Time <span className="text-destructive">*</span>
+              Airframe Total Time {countersRequired && <span className="text-destructive">*</span>}
               {isCounterLinked("airframe_total_time") && (
                 <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.airframe_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
               )}
@@ -1370,7 +1372,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               type="number"
               step="0.1"
               max="19999.9"
-              required
+              required={countersRequired}
               disabled={isCounterLinked("airframe_total_time")}
               className={isCounterLinked("airframe_total_time") ? "bg-muted" : ""}
               value={formData.airframe_total_time}
@@ -1379,7 +1381,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           </div>
           <div className="space-y-2">
             <Label htmlFor="engine_total_time">
-              Engine Total Time <span className="text-destructive">*</span>
+              Engine Total Time {countersRequired && <span className="text-destructive">*</span>}
               {isCounterLinked("engine_total_time") && (
                 <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.engine_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
               )}
@@ -1393,12 +1395,12 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               className={isCounterLinked("engine_total_time") ? "bg-muted" : ""}
               value={formData.engine_total_time}
               onChange={(e) => handleCounterChange("engine_total_time", e.target.value)}
-              required
+              required={countersRequired}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="prop_total_time">
-              Prop Total Time <span className="text-destructive">*</span>
+              Prop Total Time {countersRequired && <span className="text-destructive">*</span>}
               {isCounterLinked("prop_total_time") && (
                 <span className="text-xs text-muted-foreground ml-1">(Linked to {counterModes.prop_total_time === "hobbs" ? "Hobbs" : "Tach"})</span>
               )}
@@ -1408,7 +1410,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               type="number"
               step="0.1"
               max="19999.9"
-              required
+              required={countersRequired}
               disabled={isCounterLinked("prop_total_time")}
               className={isCounterLinked("prop_total_time") ? "bg-muted" : ""}
               value={formData.prop_total_time}
