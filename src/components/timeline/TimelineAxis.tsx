@@ -16,6 +16,7 @@ const LANES: { key: TimelineCategory; label: string; color: string }[] = [
   { key: "directives", label: "Directives", color: "hsl(var(--timeline-directives))" },
   { key: "financial", label: "Financial", color: "hsl(var(--timeline-financial))" },
   { key: "counters", label: "Counters", color: "hsl(var(--timeline-counters))" },
+  { key: "other", label: "Other", color: "hsl(var(--timeline-other))" },
 ];
 
 const HEADER_H = 30;

@@ -76,6 +76,7 @@ const CATEGORY_LABELS: Record<TimelineCategory, string> = {
   directives: "Directives & bulletins",
   financial: "Financial",
   counters: "Aircraft Counters",
+  other: "Other",
 };
 
 const CATEGORY_COLORS: Record<TimelineCategory, string> = {
@@ -83,6 +84,7 @@ const CATEGORY_COLORS: Record<TimelineCategory, string> = {
   directives: "hsl(var(--timeline-directives))",
   financial: "hsl(var(--timeline-financial))",
   counters: "hsl(var(--timeline-counters))",
+  other: "hsl(var(--timeline-other))",
 };
 
 export function TimelinePanel({
@@ -174,7 +176,7 @@ export function TimelinePanel({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {(Object.keys(CATEGORY_LABELS) as TimelineCategory[]).map((key) => (
           <div key={key} className="rounded-xl border bg-card p-4 text-left">
             <div className="flex items-center gap-2">

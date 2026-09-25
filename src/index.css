@@ -74,6 +74,7 @@ All colors MUST be HSL.
     --timeline-directives: 275 68% 48%;
     --timeline-financial: 158 62% 38%;
     --timeline-counters: 200 90% 44%;
+    --timeline-other: 220 9% 46%;
 
     --sidebar: 209 40% 96%;
 
@@ -150,6 +151,7 @@ All colors MUST be HSL.
     --timeline-directives: 280 75% 68%;
     --timeline-financial: 160 65% 52%;
     --timeline-counters: 199 92% 62%;
+    --timeline-other: 220 9% 65%;
     --sidebar: 217 32% 17%;
     --radius: 0rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
