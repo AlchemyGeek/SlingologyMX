@@ -1283,7 +1283,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Time & Usage</h3>
           <p className="text-xs text-muted-foreground">
-            Linked counters auto-update from their source
+            {countersRequired
+              ? "Required once a completion date is set · linked counters auto-update from their source"
+              : "Readings are optional until the job is completed · linked counters auto-update from their source"}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
