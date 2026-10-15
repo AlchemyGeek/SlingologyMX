@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.7";
+export const CURRENT_SCHEMA_VERSION = "1.8";
 
 export interface ExportData {
   version: string;
@@ -212,6 +212,22 @@ const MIGRATIONS: Migration[] = [
             date_completed: r.date_completed ?? date_performed ?? null,
           };
         })
+      }
+    })
+  },
+  {
+    fromVersion: "1.7",
+    toVersion: "1.8",
+    description: "Add archived flag to equipment",
+    migrate: (data) => ({
+      ...data,
+      version: "1.8",
+      tables: {
+        ...data.tables,
+        equipment: data.tables.equipment.map((r: any) => ({
+          ...r,
+          archived: r.archived ?? false,
+        }))
       }
     })
   },
