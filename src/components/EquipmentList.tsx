@@ -51,7 +51,7 @@ const getContextColor = (context: string | null) => {
   }
 };
 
-const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete, onArchive }: EquipmentListProps) => {
+const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete, onArchive, onClone }: EquipmentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [contextFilter, setContextFilter] = useState<string>("all");
@@ -193,6 +193,11 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
+                  {onClone && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onClone(item)} title="Clone">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
                   {onArchive && (
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onArchive(item)} title={item.archived ? "Unarchive" : "Archive"}>
                       {item.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
@@ -279,6 +284,11 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                       <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {onClone && (
+                        <Button variant="ghost" size="icon" onClick={() => onClone(item)} title="Clone">
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
                       {onArchive && (
                         <Button variant="ghost" size="icon" onClick={() => onArchive(item)} title={item.archived ? "Unarchive" : "Archive"}>
                           {item.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
