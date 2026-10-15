@@ -296,37 +296,50 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
 
         {/* Analysis Participation */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Analysis Settings</h3>
-          
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Analysis Settings</h3>
+            <p className="text-xs text-muted-foreground mt-1">Choose which reports should count this amount. Leave all three on for ordinary operating costs; switch one off to keep this transaction out of that analysis.</p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3">
-              <Switch
-                id="include_in_cash_flow"
-                checked={formData.include_in_cash_flow}
-                onCheckedChange={(checked) => setFormData({ ...formData, include_in_cash_flow: checked })}
-              />
-              <Label htmlFor="include_in_cash_flow" className="cursor-pointer">Include in Cash Flow</Label>
+            <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="include_in_cash_flow"
+                  checked={formData.include_in_cash_flow}
+                  onCheckedChange={(checked) => setFormData({ ...formData, include_in_cash_flow: checked })}
+                />
+                <Label htmlFor="include_in_cash_flow" className="cursor-pointer text-sm">Include in Cash Flow</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">Counts this amount as money actually spent in the Cash Flow and What Happened reports.</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                id="include_in_ownership_total"
-                checked={formData.include_in_ownership_total}
-                onCheckedChange={(checked) => setFormData({ ...formData, include_in_ownership_total: checked })}
-              />
-              <Label htmlFor="include_in_ownership_total" className="cursor-pointer">Include in Ownership Total</Label>
+            <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="include_in_ownership_total"
+                  checked={formData.include_in_ownership_total}
+                  onCheckedChange={(checked) => setFormData({ ...formData, include_in_ownership_total: checked })}
+                />
+                <Label htmlFor="include_in_ownership_total" className="cursor-pointer text-sm">Include in Ownership Total</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">Adds this amount to your cumulative all-in cost of owning the aircraft.</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                id="include_in_cost_per_hour"
-                checked={formData.include_in_cost_per_hour}
-                onCheckedChange={(checked) => setFormData({ ...formData, include_in_cost_per_hour: checked })}
-              />
-              <Label htmlFor="include_in_cost_per_hour" className="cursor-pointer">Include in Cost-Per-Hour</Label>
+            <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="include_in_cost_per_hour"
+                  checked={formData.include_in_cost_per_hour}
+                  onCheckedChange={(checked) => setFormData({ ...formData, include_in_cost_per_hour: checked })}
+                />
+                <Label htmlFor="include_in_cost_per_hour" className="cursor-pointer text-sm">Include in Cost-Per-Hour</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">Divides this cost across flight hours in the cost-per-hour analysis. Turn off for costs not tied to flying.</p>
             </div>
           </div>
         </div>
+
 
         <Separator />
 
