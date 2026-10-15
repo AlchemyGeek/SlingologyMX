@@ -108,6 +108,33 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
     await deleteWithUndo(equipmentId, snapshot);
   };
 
+  const handleArchive = async (item: Equipment) => {
+    try {
+      if (item.archived) {
+        const { error } = await supabase.from("equipment").update({ archived: false }).eq("id", item.id);
+        if (error) throw error;
+        toast.success("Equipment restored");
+      } else {
+        const { error } = await supabase.from("equipment").update({ archived: true }).eq("id", item.id);
+        if (error) throw error;
+        // Auto-complete active reminders linked to this equipment
+        await supabase
+          .from("notifications")
+          .update({ is_completed: true, completed_at: new Date().toISOString() })
+          .eq("equipment_id", item.id)
+          .eq("is_completed", false);
+        toast.success("Equipment archived");
+      }
+      if (selectedEquipment?.id === item.id) {
+        setSelectedEquipment({ ...item, archived: !item.archived });
+      }
+      fetchEquipment();
+      onRecordChanged?.();
+    } catch (error: any) {
+      toast.error(item.archived ? "Failed to restore equipment" : "Failed to archive equipment");
+    }
+  };
+
   // Show detail view
   if (selectedEquipment) {
     return (
@@ -118,6 +145,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             onClose={handleCloseDetail}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onArchive={handleArchive}
           />
         </CardContent>
       </Card>
@@ -158,6 +186,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             onEdit={handleEdit}
             onSelect={handleSelect}
             onDelete={handleDelete}
+            onArchive={handleArchive}
           />
         )}
       </CardContent>

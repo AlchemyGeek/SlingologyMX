@@ -207,22 +207,31 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
       };
       const equipmentCategory = categoryMap[effectiveCategory] || effectiveCategory;
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("equipment")
         .select("id, name, category, model_or_part_number, serial_number")
         .eq("user_id", userId)
         .eq("aircraft_id", aircraftId)
         .eq("category", equipmentCategory as any);
-      
+
+      // Exclude archived equipment, but keep the currently linked one selectable
+      if (formData.equipment_id) {
+        query = query.or(`archived.eq.false,id.eq.${formData.equipment_id}`);
+      } else {
+        query = query.eq("archived", false);
+      }
+
+      const { data, error } = await query;
+
       if (!error && data) {
         setEquipmentList(data);
       } else {
         setEquipmentList([]);
       }
     };
-    
+
     fetchEquipment();
-  }, [effectiveCategory, userId, aircraftId]);
+  }, [effectiveCategory, userId, aircraftId, formData.equipment_id]);
 
   // Handle equipment selection
   const handleEquipmentSelect = (equipmentId: string) => {

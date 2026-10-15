@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2, Pencil, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -22,10 +22,12 @@ interface EquipmentDetailProps {
   onClose: () => void;
   onEdit?: (equipment: any) => void;
   onDelete?: (equipmentId: string) => void;
+  onArchive?: (equipment: any) => void;
 }
 
-const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDetailProps) => {
+const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete, onArchive }: EquipmentDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const links = equipment.links || [];
 
   const handleDelete = () => {
@@ -43,6 +45,12 @@ const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDeta
           <span className="hidden sm:inline">Back to List</span>
         </Button>
         <div className="flex gap-2">
+          {onArchive && (
+            <Button variant="outline" size="sm" onClick={() => setShowArchiveDialog(true)}>
+              {equipment.archived ? <ArchiveRestore className="h-4 w-4 sm:mr-2" /> : <Archive className="h-4 w-4 sm:mr-2" />}
+              <span className="hidden sm:inline">{equipment.archived ? "Unarchive" : "Archive"}</span>
+            </Button>
+          )}
           {onEdit && (
             <Button variant="outline" size="sm" onClick={() => onEdit(equipment)}>
               <Pencil className="h-4 w-4 sm:mr-2" />
@@ -68,6 +76,7 @@ const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDeta
                 {equipment.install_context && (
                   <Badge variant="outline">{equipment.install_context}</Badge>
                 )}
+                {equipment.archived && <Badge variant="outline">Archived</Badge>}
               </div>
             </div>
           </div>
@@ -262,6 +271,26 @@ const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDeta
           </div>
         </CardContent>
       </Card>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{equipment.archived ? "Unarchive Equipment" : "Archive Equipment"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {equipment.archived
+                ? "This equipment will become active again and appear in the equipment list and pickers."
+                : "Archived equipment is hidden from the list and pickers but kept for reference. Active reminders linked to it will be completed."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { onArchive?.(equipment); setShowArchiveDialog(false); }}>
+              {equipment.archived ? "Unarchive" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

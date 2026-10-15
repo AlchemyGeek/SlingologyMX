@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, Archive, ArchiveRestore } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -18,6 +20,7 @@ interface EquipmentListProps {
   onEdit: (equipment: Equipment) => void;
   onSelect: (equipment: Equipment) => void;
   onDelete?: (equipmentId: string) => void;
+  onArchive?: (equipment: Equipment) => void;
 }
 
 const CATEGORIES = [
@@ -47,11 +50,12 @@ const getContextColor = (context: string | null) => {
   }
 };
 
-const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete }: EquipmentListProps) => {
+const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete, onArchive }: EquipmentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [contextFilter, setContextFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "category" | "date">("name");
+  const [showArchived, setShowArchived] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (onDelete) {
@@ -86,7 +90,8 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
         (item.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
       const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
       const matchesContext = contextFilter === "all" || item.install_context === contextFilter;
-      return matchesSearch && matchesCategory && matchesContext;
+      const matchesArchived = showArchived || !item.archived;
+      return matchesSearch && matchesCategory && matchesContext && matchesArchived;
     })
     .sort((a, b) => {
       if (sortBy === "name") {
@@ -148,6 +153,10 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
             <SelectItem value="date">Sort by Date Added</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+          <Label htmlFor="show-archived" className="text-sm text-muted-foreground cursor-pointer">Show archived</Label>
+        </div>
       </div>
 
       {/* Mobile card view */}
@@ -176,12 +185,18 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                         {item.install_context}
                       </Badge>
                     )}
+                    {item.archived && <Badge variant="outline">Archived</Badge>}
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
+                  {onArchive && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onArchive(item)} title={item.archived ? "Unarchive" : "Archive"}>
+                      {item.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(item.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -223,7 +238,10 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                 >
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{item.category}</Badge>
+                    <div className="flex gap-1 flex-wrap">
+                      <Badge variant="secondary">{item.category}</Badge>
+                      {item.archived && <Badge variant="outline">Archived</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell className="hide-at-900">
                     {item.install_context ? (
@@ -260,6 +278,11 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                       <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {onArchive && (
+                        <Button variant="ghost" size="icon" onClick={() => onArchive(item)} title={item.archived ? "Unarchive" : "Archive"}>
+                          {item.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
