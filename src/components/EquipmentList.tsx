@@ -90,7 +90,8 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
         (item.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
       const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
       const matchesContext = contextFilter === "all" || item.install_context === contextFilter;
-      return matchesSearch && matchesCategory && matchesContext;
+      const matchesArchived = showArchived || !item.archived;
+      return matchesSearch && matchesCategory && matchesContext && matchesArchived;
     })
     .sort((a, b) => {
       if (sortBy === "name") {
@@ -152,6 +153,10 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
             <SelectItem value="date">Sort by Date Added</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+          <Label htmlFor="show-archived" className="text-sm text-muted-foreground cursor-pointer">Show archived</Label>
+        </div>
       </div>
 
       {/* Mobile card view */}
