@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Package, Calendar, Tag, ExternalLink, Building2, Pencil, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import { parseLocalDate } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -22,10 +22,12 @@ interface EquipmentDetailProps {
   onClose: () => void;
   onEdit?: (equipment: any) => void;
   onDelete?: (equipmentId: string) => void;
+  onArchive?: (equipment: any) => void;
 }
 
-const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete }: EquipmentDetailProps) => {
+const EquipmentDetail = ({ equipment, onClose, onEdit, onDelete, onArchive }: EquipmentDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const links = equipment.links || [];
 
   const handleDelete = () => {

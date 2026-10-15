@@ -145,6 +145,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             onClose={handleCloseDetail}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onArchive={handleArchive}
           />
         </CardContent>
       </Card>
@@ -185,6 +186,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             onEdit={handleEdit}
             onSelect={handleSelect}
             onDelete={handleDelete}
+            onArchive={handleArchive}
           />
         )}
       </CardContent>
