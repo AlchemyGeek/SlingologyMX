@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Pencil, Archive, ArchiveRestore } from "lucide-react";
+import { Trash2, Pencil, Archive, ArchiveRestore, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ interface EquipmentListProps {
   onSelect: (equipment: Equipment) => void;
   onDelete?: (equipmentId: string) => void;
   onArchive?: (equipment: Equipment) => void;
+  onClone?: (equipment: Equipment) => void;
 }
 
 const CATEGORIES = [
