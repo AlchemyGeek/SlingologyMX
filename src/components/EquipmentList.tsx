@@ -238,7 +238,10 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                 >
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{item.category}</Badge>
+                    <div className="flex gap-1 flex-wrap">
+                      <Badge variant="secondary">{item.category}</Badge>
+                      {item.archived && <Badge variant="outline">Archived</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell className="hide-at-900">
                     {item.install_context ? (
@@ -275,6 +278,11 @@ const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelet
                       <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {onArchive && (
+                        <Button variant="ghost" size="icon" onClick={() => onArchive(item)} title={item.archived ? "Unarchive" : "Archive"}>
+                          {item.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
