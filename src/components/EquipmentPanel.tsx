@@ -108,6 +108,23 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
     await deleteWithUndo(equipmentId, snapshot);
   };
 
+  const handleClone = async (item: Equipment) => {
+    try {
+      const { id, created_at, updated_at, ...rest } = item;
+      const { error } = await supabase.from("equipment").insert([{
+        ...rest,
+        serial_number: "TBD",
+        archived: false,
+      }]);
+      if (error) throw error;
+      toast.success(`Cloned "${item.name}" — serial number set to TBD`);
+      fetchEquipment();
+      onRecordChanged?.();
+    } catch (error: any) {
+      toast.error("Failed to clone equipment");
+    }
+  };
+
   const handleArchive = async (item: Equipment) => {
     try {
       if (item.archived) {
@@ -187,6 +204,7 @@ const EquipmentPanel = ({ userId, aircraftId, onRecordChanged }: EquipmentPanelP
             onSelect={handleSelect}
             onDelete={handleDelete}
             onArchive={handleArchive}
+            onClone={handleClone}
           />
         )}
       </CardContent>
