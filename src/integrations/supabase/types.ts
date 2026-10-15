@@ -1049,6 +1049,7 @@ export type Database = {
       equipment: {
         Row: {
           aircraft_id: string
+          archived: boolean
           category: Database["public"]["Enums"]["directive_category"]
           created_at: string | null
           id: string
@@ -1071,6 +1072,7 @@ export type Database = {
         }
         Insert: {
           aircraft_id: string
+          archived?: boolean
           category: Database["public"]["Enums"]["directive_category"]
           created_at?: string | null
           id?: string
@@ -1095,6 +1097,7 @@ export type Database = {
         }
         Update: {
           aircraft_id?: string
+          archived?: boolean
           category?: Database["public"]["Enums"]["directive_category"]
           created_at?: string | null
           id?: string
