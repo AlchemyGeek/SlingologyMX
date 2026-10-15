@@ -7,11 +7,16 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.8";
+export const CURRENT_SCHEMA_VERSION = "1.9";
 
 export interface ExportData {
   version: string;
   exportDate: string;
+  aircraft?: {
+    registration: string;
+    model_make: string | null;
+    serial_number: string | null;
+  } | null;
   tables: {
     aircraft_counters: any[];
     aircraft_counter_history: any[];
@@ -229,6 +234,16 @@ const MIGRATIONS: Migration[] = [
           archived: r.archived ?? false,
         }))
       }
+    })
+  },
+  {
+    fromVersion: "1.8",
+    toVersion: "1.9",
+    description: "Add aircraft identity block (registration, model, serial number) to export",
+    migrate: (data) => ({
+      ...data,
+      version: "1.9",
+      aircraft: data.aircraft ?? null,
     })
   },
 ];

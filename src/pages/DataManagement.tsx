@@ -165,9 +165,23 @@ const DataManagement = () => {
       const sanitizeRecords = (records: any[]) => 
         records.map(({ user_id, ...rest }) => rest);
 
+      // Fetch aircraft identity (registration, model, serial number)
+      const { data: aircraftRow } = await supabase
+        .from("aircraft")
+        .select("registration, model_make, serial_number")
+        .eq("id", selectedAircraftId)
+        .single();
+
       const exportData: ExportData = {
         version: CURRENT_SCHEMA_VERSION,
         exportDate: new Date().toISOString(),
+        aircraft: aircraftRow
+          ? {
+              registration: aircraftRow.registration,
+              model_make: aircraftRow.model_make,
+              serial_number: aircraftRow.serial_number,
+            }
+          : null,
         tables: {
           aircraft_counters: sanitizeRecords(countersRes.data || []),
           aircraft_counter_history: sanitizeRecords(counterHistoryRes.data || []),
