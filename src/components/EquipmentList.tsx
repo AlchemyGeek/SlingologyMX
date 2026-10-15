@@ -50,11 +50,12 @@ const getContextColor = (context: string | null) => {
   }
 };
 
-const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete }: EquipmentListProps) => {
+const EquipmentList = ({ equipment, loading, onUpdate, onEdit, onSelect, onDelete, onArchive }: EquipmentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [contextFilter, setContextFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "category" | "date">("name");
+  const [showArchived, setShowArchived] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (onDelete) {
