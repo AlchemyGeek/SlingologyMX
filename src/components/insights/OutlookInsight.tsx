@@ -261,6 +261,7 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
       .select("category, amount, reference_id, reference_type")
       .eq("aircraft_id", selectedAircraft.id)
       .eq("status", "Posted")
+      .eq("include_in_cost_per_hour", true)
       .eq("direction", "Debit")
       .in("category", VARIABLE_DB_CATEGORIES as any)
       .gte("transaction_date", ninetyDaysAgo)
