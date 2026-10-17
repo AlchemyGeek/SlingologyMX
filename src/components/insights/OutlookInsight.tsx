@@ -90,14 +90,14 @@ const COUNTER_OPTIONS: { value: CounterType; label: string }[] = [
   { value: "airframe_total_time", label: "Airframe TT" },
 ];
 
-// Variable cost categories (per-hour costs) — display labels used in the
-// forecast breakdown. Maintenance subcategories are rolled up into a single
-// "Maintenance" bucket to make cost-composition easier to interpret.
+// Variable cost categories extrapolated from recent per-hour history.
+// Maintenance is deliberately NOT extrapolated: unscheduled maintenance is
+// unpredictable, and scheduled maintenance is projected from recurring
+// maintenance tasks (hours- or calendar-based) further below.
 const VARIABLE_CATEGORIES = [
   "Fuel",
   "Oil & Consumables",
   "Travel",
-  MAINTENANCE_ROLLUP_LABEL,
 ] as const;
 
 // Underlying DB category values that feed the variable buckets above.
@@ -105,7 +105,6 @@ const VARIABLE_DB_CATEGORIES = [
   "Fuel",
   "Oil & Consumables",
   "Travel",
-  ...MAINTENANCE_SUBCATEGORIES,
 ];
 
 const BREAKDOWN_COLORS = {
@@ -629,11 +628,12 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
     
     const totalHistoricalCostPerHour = Object.values(historicalCostPerHourByCategory).reduce((sum, val) => sum + val, 0);
     if (totalHistoricalCostPerHour > 0) {
-      list.push(`Variable costs derived from recent ${formatCurrency(totalHistoricalCostPerHour, currency)}/hr average`);
+      list.push(`Fuel, oil & travel derived from recent ${formatCurrency(totalHistoricalCostPerHour, currency)}/hr average`);
     }
     
     list.push("Commitment renewals assumed to continue at current rates");
-    list.push("Recurring maintenance projected based on next due dates/hours");
+    list.push("Scheduled maintenance projected from recurring tasks (next due dates/hours)");
+    list.push("Unscheduled maintenance is not forecast");
     list.push("Reserve accruals calculated using straight-line method");
     
     return list;
