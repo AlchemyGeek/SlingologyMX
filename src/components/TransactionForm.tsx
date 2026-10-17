@@ -311,7 +311,7 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
                 />
                 <Label htmlFor="include_in_cash_flow" className="cursor-pointer text-sm">Include in Cash Flow</Label>
               </div>
-              <p className="text-xs text-muted-foreground">Counts this amount as money actually spent in the Cash Flow and What Happened reports.</p>
+              <p className="text-xs text-muted-foreground">Counts this amount as money actually spent in the Cash Flow report. The What Happened report lists every posted transaction, whether this is on or off.</p>
             </div>
 
             <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
