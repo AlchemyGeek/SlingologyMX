@@ -1,5 +1,6 @@
 import * as React from "react";
-import { format, parse, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
+import { parseDateInput } from "@/lib/parseDateInput";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,9 @@ export function DateInput({
           type="text"
           value={textValue}
           onChange={handleTextChange}
-          placeholder="MM-DD-YYYY"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="MM-DD-YY"
           disabled={disabled}
           required={required}
           className="pr-10"
