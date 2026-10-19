@@ -1,3 +1,4 @@
+import { addRecurrence, isRecurring, recurrenceLabel, type RecurrenceSpec } from "@/lib/recurrence";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,26 +143,8 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
     }
   }
 
-  const calculateNextDate = (currentDate: string, recurrence: string): string => {
-    const date = parseLocalDate(currentDate);
-    
-    switch (recurrence) {
-      case "Weekly":
-        return addDays(date, 7).toISOString().split('T')[0];
-      case "Bi-Monthly":
-        return addMonths(date, 2).toISOString().split('T')[0];
-      case "Monthly":
-        return addMonths(date, 1).toISOString().split('T')[0];
-      case "Quarterly":
-        return addMonths(date, 3).toISOString().split('T')[0];
-      case "Semi-Annual":
-        return addMonths(date, 6).toISOString().split('T')[0];
-      case "Yearly":
-        return addMonths(date, 12).toISOString().split('T')[0];
-      default:
-        return currentDate;
-    }
-  };
+  const calculateNextDate = (currentDate: string, spec: RecurrenceSpec): string =>
+    format(addRecurrence(parseLocalDate(currentDate), spec), "yyyy-MM-dd");
 
   const handleMarkCompleted = async (id: string) => {
     try {
@@ -182,7 +165,7 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
 
       // Check if this is a subscription-linked notification with recurrence=None
       // If so, fetch the subscription's recurrence to determine if we should create next instance
-      let effectiveRecurrence = notification.recurrence;
+      let effectiveRecurrence: RecurrenceSpec = notification;
       if (notification.subscription_id && notification.recurrence === "None") {
         const { data: subscription } = await supabase
           .from("subscriptions")
@@ -191,11 +174,11 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
           .single();
         
         if (subscription && subscription.recurrence !== "None") {
-          effectiveRecurrence = subscription.recurrence;
+          effectiveRecurrence = { recurrence: subscription.recurrence };
         }
       }
 
-      if (effectiveRecurrence && effectiveRecurrence !== "None") {
+      if (isRecurring(effectiveRecurrence)) {
         const nextDate = calculateNextDate(notification.initial_date, effectiveRecurrence);
         
         const { error: createError } = await supabase
@@ -206,6 +189,8 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
             description: notification.description,
             type: notification.type,
             initial_date: nextDate,
+            recurrence_interval: notification.recurrence_interval,
+            recurrence_unit: notification.recurrence_unit,
             recurrence: notification.recurrence, // Keep original recurrence (None for subscription-linked)
             notes: notification.notes,
             is_completed: false,
@@ -353,7 +338,7 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {parseLocalDate(notification.initial_date).toLocaleDateString()} · {notification.type}
-                      {(notification.derived_recurrence || notification.recurrence) ? ` · ${notification.derived_recurrence || notification.recurrence}` : ""}
+                      {(notification.derived_recurrence || recurrenceLabel(notification)) ? ` · ${notification.derived_recurrence || recurrenceLabel(notification)}` : ""}
                     </p>
                   </div>
                 </div>
@@ -415,7 +400,7 @@ const ActiveNotificationsPanel = ({ userId, aircraftId, currentCounters, onNotif
                       </TableCell>
                     )}
                     <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                    {!isMobile && <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>}
+                    {!isMobile && <TableCell>{notification.derived_recurrence || recurrenceLabel(notification)}</TableCell>}
                     <TableCell>
                       <div className="flex gap-1">
                         <Button

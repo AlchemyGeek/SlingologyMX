@@ -1,3 +1,4 @@
+import { addRecurrence, recurrenceLabel, type RecurrenceSpec } from "@/lib/recurrence";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,24 +77,8 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
     }
   };
 
-  const getNextOccurrenceDate = (initialDate: Date, recurrence: string, occurrenceCount: number): Date => {
-    switch (recurrence) {
-      case "Weekly":
-        return addWeeks(initialDate, occurrenceCount);
-      case "Bi-Monthly":
-        return addWeeks(initialDate, occurrenceCount * 2);
-      case "Monthly":
-        return addMonths(initialDate, occurrenceCount);
-      case "Quarterly":
-        return addMonths(initialDate, occurrenceCount * 3);
-      case "Semi-Annual":
-        return addMonths(initialDate, occurrenceCount * 6);
-      case "Yearly":
-        return addMonths(initialDate, occurrenceCount * 12);
-      default:
-        return initialDate;
-    }
-  };
+  const getNextOccurrenceDate = (initialDate: Date, spec: RecurrenceSpec, occurrenceCount: number): Date =>
+    addRecurrence(initialDate, spec, occurrenceCount);
 
   const getNotificationAlertStatus = (notification: any): AlertStatus => {
     if (notification.notification_basis === "Counter" || notification.counter_type) {
@@ -134,7 +119,7 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
         }
 
         for (let i = 1; i <= 10; i++) {
-          const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
+          const nextDate = getNextOccurrenceDate(initialDate, notification, i);
           if (isSameDay(nextDate, date)) {
             return true;
           }
@@ -228,7 +213,7 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
 
         // For recurring notifications, calculate status for each occurrence date
         for (let i = 1; i <= 10; i++) {
-          const nextDate = getNextOccurrenceDate(initialDate, notification.recurrence, i);
+          const nextDate = getNextOccurrenceDate(initialDate, notification, i);
           const nextStatus = getDateAlertStatus(nextDate, notification);
           const nextTargetArray = nextStatus === "due" ? due : nextStatus === "alert" ? alert : normal;
           nextTargetArray.push(nextDate);
@@ -380,7 +365,7 @@ const CalendarPanel = ({ userId, aircraftId, refreshKey, currentCounters }: Cale
                           </div>
                           <div className="text-sm text-muted-foreground space-y-1">
                             <p>Component: {notification.component}</p>
-                            <p>Recurrence: {notification.recurrence}</p>
+                            <p>Recurrence: {recurrenceLabel(notification)}</p>
                           </div>
                         </div>
                       );

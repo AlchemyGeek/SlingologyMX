@@ -1,3 +1,4 @@
+import { recurrenceLabel } from "@/lib/recurrence";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,8 +87,8 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {parseLocalDate(notification.initial_date).toLocaleDateString()} · {notification.type}
-                    {notification.derived_recurrence || notification.recurrence
-                      ? ` · ${notification.derived_recurrence || notification.recurrence}`
+                    {notification.derived_recurrence || recurrenceLabel(notification)
+                      ? ` · ${notification.derived_recurrence || recurrenceLabel(notification)}`
                       : ""}
                   </p>
                 </div>
@@ -150,7 +151,7 @@ const NotificationList = ({ notifications, loading, onUpdate, onEdit }: Notifica
                   </TableCell>
                   {!isMobile && <TableCell>{notification.type}</TableCell>}
                   <TableCell>{parseLocalDate(notification.initial_date).toLocaleDateString()}</TableCell>
-                  {!isMobile && <TableCell>{notification.derived_recurrence || notification.recurrence}</TableCell>}
+                  {!isMobile && <TableCell>{notification.derived_recurrence || recurrenceLabel(notification)}</TableCell>}
                   <TableCell>
                     <Badge variant={notification.is_completed ? "secondary" : "default"}>
                       {notification.is_completed ? "Completed" : "Active"}

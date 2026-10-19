@@ -1,3 +1,4 @@
+import { RECURRENCE_UNITS } from "@/lib/recurrence";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
     type: editingNotification?.type || "Maintenance",
     initial_date: editingNotification?.initial_date ? parseLocalDate(editingNotification.initial_date) : null as Date | null,
     recurrence: editingNotification?.recurrence || "None",
+    recurrence_interval: editingNotification?.recurrence_interval?.toString() || "",
+    recurrence_unit: editingNotification?.recurrence_unit || "Months",
     notification_basis: editingNotification?.notification_basis || notificationBasis,
     counter_type: editingNotification?.counter_type || "Hobbs",
     initial_counter_value: editingNotification?.initial_counter_value?.toString() || "",
@@ -161,6 +164,8 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
             notification_basis: formData.notification_basis,
             initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
             recurrence: isCounterBased ? "None" : formData.recurrence,
+            recurrence_interval: !isCounterBased && formData.recurrence === "Custom" ? parseInt(formData.recurrence_interval) || null : null,
+            recurrence_unit: !isCounterBased && formData.recurrence === "Custom" ? formData.recurrence_unit : null,
             counter_type: isCounterBased ? formData.counter_type : null,
             initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
             counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
@@ -180,6 +185,8 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
           notification_basis: formData.notification_basis,
           initial_date: isCounterBased ? new Date().toISOString().split('T')[0] : (formData.initial_date ? format(formData.initial_date, "yyyy-MM-dd") : ""),
           recurrence: isCounterBased ? "None" : formData.recurrence,
+            recurrence_interval: !isCounterBased && formData.recurrence === "Custom" ? parseInt(formData.recurrence_interval) || null : null,
+            recurrence_unit: !isCounterBased && formData.recurrence === "Custom" ? formData.recurrence_unit : null,
           counter_type: isCounterBased ? formData.counter_type : null,
           initial_counter_value: isCounterBased ? parseFloat(formData.initial_counter_value) : null,
           counter_step: isCounterBased && formData.is_counter_recurring === "Yes" ? parseInt(formData.counter_step) : null,
@@ -296,8 +303,35 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
                     <SelectItem value="Quarterly">Quarterly</SelectItem>
                     <SelectItem value="Semi-Annual">Semi-Annual</SelectItem>
                     <SelectItem value="Yearly">Yearly</SelectItem>
+                    <SelectItem value="Custom">Every N days/weeks/months/years…</SelectItem>
                   </SelectContent>
                 </Select>
+              )}
+              {formData.recurrence === "Custom" && !(isSystemGenerated && editingNotification?.subscription_id && subscriptionRecurrence) && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Repeat every</span>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    className="w-20"
+                    value={formData.recurrence_interval}
+                    onChange={(e) => setFormData({ ...formData, recurrence_interval: e.target.value })}
+                    required
+                    disabled={isSystemGenerated}
+                    aria-label="Repeat interval"
+                  />
+                  <Select
+                    value={formData.recurrence_unit}
+                    onValueChange={(value) => setFormData({ ...formData, recurrence_unit: value })}
+                    disabled={isSystemGenerated}
+                  >
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {RECURRENCE_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </div>
 
