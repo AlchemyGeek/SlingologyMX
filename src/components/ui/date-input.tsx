@@ -1,5 +1,6 @@
 import * as React from "react";
-import { format, parse, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
+import { parseDateInput } from "@/lib/parseDateInput";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,42 +33,28 @@ export function DateInput({
 }: DateInputProps) {
   const [textValue, setTextValue] = React.useState("");
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
+  const [isFocused, setIsFocused] = React.useState(false);
 
-  // Sync text value when date prop changes
+  // Sync text value when date prop changes (not while the user is typing,
+  // so "2/1/20" isn't rewritten before they finish typing "2/1/2027")
   React.useEffect(() => {
+    if (isFocused) return;
     if (value && isValid(value)) {
       setTextValue(format(value, "MM-dd-yyyy"));
     } else {
       setTextValue("");
     }
-  }, [value]);
+  }, [value, isFocused]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setTextValue(newValue);
-
-    // Try to parse the date
     if (newValue === "") {
       onChange(null);
-    } else {
-      // Try MM-dd-yyyy format first (primary format)
-      let parsed = parse(newValue, "MM-dd-yyyy", new Date());
-      
-      // If that didn't work, try MM/dd/yyyy (US format with slashes)
-      if (!isValid(parsed) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) {
-        parsed = parse(newValue, "MM/dd/yyyy", new Date());
-      }
-      
-      // Also try yyyy-MM-dd as fallback
-      if (!isValid(parsed) || parsed.getFullYear() < 1900 || parsed.getFullYear() > 2100) {
-        parsed = parse(newValue, "yyyy-MM-dd", new Date());
-      }
-      
-      // Validate the parsed date has a reasonable year
-      if (isValid(parsed) && parsed.getFullYear() >= 1900 && parsed.getFullYear() <= 2100) {
-        onChange(parsed);
-      }
+      return;
     }
+    const parsed = parseDateInput(newValue);
+    if (parsed) onChange(parsed);
   };
 
   const handleCalendarSelect = (date: Date | undefined) => {
@@ -85,7 +72,9 @@ export function DateInput({
           type="text"
           value={textValue}
           onChange={handleTextChange}
-          placeholder="MM-DD-YYYY"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="MM-DD-YY"
           disabled={disabled}
           required={required}
           className="pr-10"

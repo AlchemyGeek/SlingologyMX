@@ -8,6 +8,13 @@
       "when": 1792075170529,
       "tag": "0000_add_equipment_archived",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792424120697,
+      "tag": "0001_notification_custom_recurrence",
+      "breakpoints": true
     }
   ]
 }

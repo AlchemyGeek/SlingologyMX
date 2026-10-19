@@ -1,3 +1,4 @@
+import { recurrenceLabel, isRecurring as isRecurringSpec } from "@/lib/recurrence";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,7 @@ interface NotificationDetailProps {
 const NotificationDetail = ({ notification, onClose, onEdit, onDelete }: NotificationDetailProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isCounterBased = notification.notification_basis === "Counter";
-  const isRecurring = notification.recurrence !== "None";
+  const isRecurring = isRecurringSpec(notification);
 
   const handleDelete = () => {
     if (onDelete) {
@@ -112,7 +113,7 @@ const NotificationDetail = ({ notification, onClose, onEdit, onDelete }: Notific
                 <RefreshCw className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Recurrence</p>
-                  <p className="font-medium">{notification.recurrence}</p>
+                  <p className="font-medium">{recurrenceLabel(notification)}</p>
                 </div>
               </div>
             </div>

@@ -1448,6 +1448,8 @@ export type Database = {
           notes: string | null
           notification_basis: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
+          recurrence_interval: number | null
+          recurrence_unit: string | null
           subscription_id: string | null
           type: Database["public"]["Enums"]["notification_type"]
           updated_at: string | null
@@ -1473,6 +1475,8 @@ export type Database = {
           notes?: string | null
           notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence: Database["public"]["Enums"]["recurrence_type"]
+          recurrence_interval?: number | null
+          recurrence_unit?: string | null
           subscription_id?: string | null
           type: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
@@ -1498,6 +1502,8 @@ export type Database = {
           notes?: string | null
           notification_basis?: Database["public"]["Enums"]["notification_basis"]
           recurrence?: Database["public"]["Enums"]["recurrence_type"]
+          recurrence_interval?: number | null
+          recurrence_unit?: string | null
           subscription_id?: string | null
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string | null
@@ -2103,6 +2109,7 @@ export type Database = {
         | "Semi-Annual"
         | "Yearly"
         | "None"
+        | "Custom"
       reference_type:
         | "Commitment"
         | "Maintenance"
@@ -2437,6 +2444,7 @@ export const Constants = {
         "Semi-Annual",
         "Yearly",
         "None",
+        "Custom",
       ],
       reference_type: [
         "Commitment",
