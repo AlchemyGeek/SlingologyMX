@@ -11,7 +11,7 @@ import { CheckCircle, Plus, Pencil, Trash2, AlertCircle, Link } from "lucide-rea
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
-import { addDays, addMonths } from "date-fns";
+import { addDays, addMonths, format } from "date-fns";
 import { cn, parseLocalDate } from "@/lib/utils";
 import NotificationForm from "./NotificationForm";
 import { useIsMobile } from "@/hooks/use-mobile";
