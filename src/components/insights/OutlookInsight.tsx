@@ -352,16 +352,19 @@ export function OutlookInsight({ onBack, userId }: OutlookInsightProps) {
         if (!sub.cost || sub.cost <= 0) return;
 
         const recurrenceMonths = getRecurrenceMonths(sub.recurrence);
-        const subEnd = sub.final_date ? new Date(sub.final_date) : null;
-        
+        const subStart = sub.initial_date ? new Date(sub.initial_date) : null;
+
         // Determine the effective date range for this commitment
         // Start: later of commitment initial_date or forecast start
-        // End: earlier of commitment final_date or forecast end
-        const effectiveStart = dateRange.start;
-        const effectiveEnd = subEnd && subEnd < dateRange.end ? subEnd : dateRange.end;
-        
-        // Skip if commitment ends before forecast starts
-        if (effectiveEnd < effectiveStart) return;
+        // End: forecast end. A commitment still active at forecast start is
+        // assumed to renew at its current rate, so a final_date that falls
+        // inside the window does not cut the forecast short. (Commitments that
+        // already ended before the window are excluded by the query above.)
+        const effectiveStart = subStart && subStart > dateRange.start ? subStart : dateRange.start;
+        const effectiveEnd = dateRange.end;
+
+        // Skip if commitment starts after the forecast ends
+        if (effectiveEnd <= effectiveStart) return;
         
         // Calculate the prorated cost for the forecast period
         // Cost per month = (cost / recurrenceMonths)
