@@ -116,7 +116,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
   // Check if initial counter values changed
   const initialValuesChanged = (a: Aircraft | null): boolean => {
     if (!a) return false;
-    return formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs ||
+    return (!formData.link_hobbs_to_tach && formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs) ||
            formatInitialValue(a.initial_tach) !== formData.initial_tach ||
            formatInitialValue(a.initial_airframe_total_time) !== formData.initial_airframe_total_time ||
            formatInitialValue(a.initial_engine_total_time) !== formData.initial_engine_total_time ||
@@ -202,6 +202,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
           model_make: formData.model_make.trim() || null,
           serial_number: formData.serial_number.trim() || null,
           is_primary: isPrimary,
+          link_hobbs_to_tach: formData.link_hobbs_to_tach,
         });
 
         if (error) throw error;
@@ -491,7 +492,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
                   Counter values when you acquired this aircraft. Used to calculate owner-specific usage for financial analysis.
                 </p>
                 <CollapsibleContent className="space-y-3 mt-3">
-                  {INITIAL_COUNTER_KEYS.map(({ key, label }) => (
+                  {INITIAL_COUNTER_KEYS.filter(({ key }) => !(formData.link_hobbs_to_tach && key === "initial_hobbs")).map(({ key, label }) => (
                     <div key={key} className="grid grid-cols-2 items-center gap-4">
                       <Label className="text-sm">{label}</Label>
                       <Input
