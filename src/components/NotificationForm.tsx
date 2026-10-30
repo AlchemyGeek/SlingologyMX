@@ -51,7 +51,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
     recurrence_interval: editingNotification?.recurrence_interval?.toString() || "",
     recurrence_unit: editingNotification?.recurrence_unit || "Months",
     notification_basis: editingNotification?.notification_basis || notificationBasis,
-    counter_type: editingNotification?.counter_type || "Hobbs",
+    counter_type: editingNotification?.counter_type || (hobbsLinked ? "Tach" : "Hobbs"),
     initial_counter_value: editingNotification?.initial_counter_value?.toString() || "",
     counter_step: editingNotification?.counter_step?.toString() || "",
     is_counter_recurring: editingNotification?.counter_step ? "Yes" : "No",

@@ -121,7 +121,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     requires_log_entry: true,
     source_links: [] as Array<{ description: string; url: string }>,
     // New fields for counter-based compliance
-    counter_type: "Hobbs" as string,
+    counter_type: (hobbsLinked ? "Tach" : "Hobbs") as string,
     counter_value_mode: "absolute" as "absolute" | "incremental",
     counter_absolute_value: "",
     counter_increment_value: "",
