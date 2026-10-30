@@ -187,7 +187,7 @@ const DataManagement = () => {
               prop_overhaul_tach: aircraftRow.prop_overhaul_tach,
               prop_overhaul_hours: aircraftRow.prop_overhaul_hours,
               prop_overhaul_date: aircraftRow.prop_overhaul_date,
-)            }
+}
           : null,
         tables: {
           aircraft_counters: sanitizeRecords(countersRes.data || []),
