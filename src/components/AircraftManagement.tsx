@@ -23,25 +23,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Plane, Plus, Pencil, Trash2, Star, StarOff, ChevronDown, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import type { TtTrackingMode } from "@/contexts/AircraftContext";
+import { componentTimeFromTach } from "@/lib/aircraftCounters";
 
 interface AircraftFormData {
   registration: string;
   model_make: string;
   serial_number: string;
-  airframe_tt_mode: TtTrackingMode;
-  engine_tt_mode: TtTrackingMode;
-  prop_tt_mode: TtTrackingMode;
+  link_hobbs_to_tach: boolean;
   initial_hobbs: string;
   initial_tach: string;
   initial_airframe_total_time: string;
@@ -73,10 +65,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
-  const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
-  const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
   const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
   const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
   const [initialCountersOpen, setInitialCountersOpen] = useState(false);
@@ -84,14 +74,16 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [resetCounterType, setResetCounterType] = useState<"engine_total_time" | "prop_total_time" | null>(null);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [overhaulDate, setOverhaulDate] = useState("");
+  const [overhaulTach, setOverhaulTach] = useState("");
+  const [overhaulHours, setOverhaulHours] = useState("0");
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
-  const MODE_CHANGE_PHRASE = "I UNDERSTAND";
   const RESET_PHRASE = "RESET";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+    setFormData({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
     setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
@@ -102,9 +94,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
       registration: a.registration,
       model_make: a.model_make || "",
       serial_number: a.serial_number || "",
-      airframe_tt_mode: a.airframe_tt_mode,
-      engine_tt_mode: a.engine_tt_mode,
-      prop_tt_mode: a.prop_tt_mode,
+      link_hobbs_to_tach: a.link_hobbs_to_tach,
       initial_hobbs: formatInitialValue(a.initial_hobbs),
       initial_tach: formatInitialValue(a.initial_tach),
       initial_airframe_total_time: formatInitialValue(a.initial_airframe_total_time),
