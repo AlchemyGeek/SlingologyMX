@@ -84,27 +84,35 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
             <TooltipContent>Counter history</TooltipContent>
           </Tooltip>
         </div>
-        <div className="flex items-start gap-3 border-l-2 border-primary bg-primary/5 py-4 pl-4 pr-3 sm:pl-5">
-          <dl className={`grid min-w-0 flex-1 ${hideHobbs ? "grid-cols-1" : "grid-cols-2"} gap-3 sm:gap-6`}>
-            {primaryConfig.map((config) => (
-              <div key={config.key} className="min-w-0">
-                <dt className="text-sm font-medium text-primary">{config.label}</dt>
-                <dd className="mt-1 flex flex-wrap items-baseline gap-x-2">
-                  <span className="text-3xl sm:text-4xl font-semibold tabular-nums break-all">{reading(config.key)}</span>
-                  <span className="text-xs text-muted-foreground">hrs</span>
-                </dd>
-                {ownerHours(config.key) !== null && <dd className="mt-1 text-xs text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
-              </div>
-            ))}
-          </dl>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0 h-11 w-11" aria-label="Edit counters" disabled={loading} onClick={() => setIsBatchEditOpen(true)}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Edit counters</TooltipContent>
-          </Tooltip>
+        <div className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-xl bg-gradient-to-b from-primary/80 via-primary/40 to-primary/5" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-primary/5 blur-2xl" aria-hidden="true" />
+          <div className="flex items-start gap-3 py-4 pl-4 pr-3 sm:py-5 sm:pl-7">
+            <dl className={`grid min-w-0 flex-1 ${hideHobbs ? "grid-cols-1" : "grid-cols-2 divide-x divide-border/60"} gap-y-3 sm:gap-y-4`}>
+              {primaryConfig.map((config, index) => (
+                <div key={config.key} className={`min-w-0 ${!hideHobbs ? (index === 0 ? "pr-3 sm:pr-5" : "pl-3 sm:pl-5") : ""}`}>
+                  <dt className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {config.key === "tach" && <Gauge className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                    {config.label}
+                    {config.key === "tach" && <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-primary">Master</span>}
+                  </dt>
+                  <dd className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-4xl sm:text-5xl font-semibold tabular-nums tracking-tight break-all">{reading(config.key)}</span>
+                    <span className="text-xs text-muted-foreground">hrs</span>
+                  </dd>
+                  {ownerHours(config.key) !== null && <dd className="mt-1 text-xs text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
+                </div>
+              ))}
+            </dl>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="shrink-0 h-11 w-11" aria-label="Edit counters" disabled={loading} onClick={() => setIsBatchEditOpen(true)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit counters</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <CornerDownRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
