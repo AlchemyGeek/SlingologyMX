@@ -24,6 +24,7 @@ import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 import ConfirmShareDialog from "./community/ConfirmShareDialog";
+import { useHobbsLinked } from "@/contexts/AircraftContext";
 
 interface Equipment {
   id: string;
@@ -88,6 +89,7 @@ const getCounterKey = (counterType: string): string => {
 };
 
 const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCancel, onShareSuccess }: DirectiveFormProps) => {
+  const hobbsLinked = useHobbsLinked();
   const { counters } = useAircraftCounters(userId, aircraftId);
   
   const [formData, setFormData] = useState({

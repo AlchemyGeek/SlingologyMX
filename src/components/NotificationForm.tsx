@@ -12,6 +12,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { useHobbsLinked } from "@/contexts/AircraftContext";
 
 interface NotificationFormProps {
   userId: string;
@@ -38,6 +39,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 };
 
 const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNotification, currentCounters, notificationBasis = "Date" }: NotificationFormProps) => {
+  const hobbsLinked = useHobbsLinked();
   const [loading, setLoading] = useState(false);
   const [subscriptionRecurrence, setSubscriptionRecurrence] = useState<string | null>(null);
   const [formData, setFormData] = useState({
