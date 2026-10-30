@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, History, CornerDownRight } from "lucide-react";
+import { Pencil, History, CornerDownRight, Gauge } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import { getOwnerHours } from "@/lib/counterInterpolation";
@@ -118,15 +118,15 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
           <CornerDownRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>Component hours · follows Tach</span>
         </div>
-        <dl className="mt-2 grid grid-cols-3 divide-x divide-border border-b border-border pb-3">
+        <dl className="mt-2 grid grid-cols-3 divide-x divide-border/60 border-b border-border pb-3">
           {derivedConfig.map((config, index) => (
             <div key={config.key} className={`min-w-0 ${index === 0 ? "pr-2" : "px-2 sm:px-4"}`}>
-              <dt className="text-xs text-muted-foreground">{config.label}</dt>
-              <dd className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
-                <span className="text-lg sm:text-xl font-medium tabular-nums break-all">{reading(config.key)}</span>
-                <span className="text-xs text-muted-foreground">hrs</span>
+              <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{config.label}</dt>
+              <dd className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
+                <span className="text-sm sm:text-base font-medium tabular-nums break-all">{reading(config.key)}</span>
+                <span className="text-[10px] text-muted-foreground">hrs</span>
               </dd>
-              {ownerHours(config.key) !== null && <dd className="mt-1 text-[11px] text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
+              {ownerHours(config.key) !== null && <dd className="mt-0.5 text-[10px] text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
             </div>
           ))}
         </dl>
