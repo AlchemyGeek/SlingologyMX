@@ -94,7 +94,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
                   <dt className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     {config.key === "tach" && <Gauge className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
                     {config.label}
-                    {config.key === "tach" && <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-primary">Master</span>}
+                    {config.key === "tach" && <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-primary">Primary</span>}
                   </dt>
                   <dd className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
                     <span className="text-4xl sm:text-5xl font-semibold tabular-nums tracking-tight break-all">{reading(config.key)}</span>
