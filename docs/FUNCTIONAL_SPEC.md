@@ -81,18 +81,18 @@ Aircraft deletion requires typing `DELETE MY AIRCRAFT` to confirm.
 | **Engine Total Time** | Total engine hours |
 | **Prop Total Time** | Total propeller hours |
 
-### 4.2 Tracking Modes
-Each total-time counter can be configured as:
-- **Linked to Hobbs** — derived automatically from the Hobbs delta
-- **Linked to Tach** — derived automatically from the Tach delta
-- **Manual** — entered directly
+### 4.2 Tach-Driven Model
+- **Tach** is the master meter. **Hobbs** is optional: with **Track Tach only (hide Hobbs)** enabled, Hobbs is hidden everywhere and mirrors Tach.
+- **Airframe TT**, **Engine TT** and **Prop TT** always advance 1:1 with Tach and are read-only in forms and dialogs.
+- **Airframe TT** never resets. **Engine/Prop TT** restart after a recorded overhaul or replacement (date, Tach at install, starting hours — 0.0 or existing hours for a used unit).
 
 Acquisition counters record the component times at purchase, so ownership-period usage can be separated from lifetime totals.
 
 ### 4.3 Counter Management
-- All counter changes are made through the **Edit All Counters** batch dialog to keep values consistent.
+- Counter updates are made by entering Tach (and Hobbs when tracked) in the **Edit Counters** dialog or a maintenance record; the other counters are derived.
 - Counters must be monotonically increasing and chronologically consistent; decreasing values are rejected.
-- Engine/Prop total time can be reset to 0 (overhaul/replacement) from the Profile aircraft settings.
+- Engine/Prop overhaul or replacement is recorded from Profile → My Aircraft and logged in counter history.
+- Existing maintenance records and history entries keep their saved values as historical snapshots.
 - Counters are displayed responsively at the top of the dashboard.
 
 ### 4.4 Counter History
