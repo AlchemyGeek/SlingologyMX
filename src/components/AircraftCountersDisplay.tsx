@@ -50,6 +50,8 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
   const { selectedAircraft } = useAircraft();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
+  const hideHobbs = !!selectedAircraft?.link_hobbs_to_tach;
+  const visibleConfig = counterConfig.filter((c) => !(hideHobbs && c.key === "hobbs"));
 
   if (loading) {
     return (
@@ -81,15 +83,9 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
             <span className="hidden sm:inline">History</span>
           </Button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3">
-          {counterConfig.map((config) => {
-            const modeKey = {
-              airframe_total_time: selectedAircraft?.airframe_tt_mode,
-              engine_total_time: selectedAircraft?.engine_tt_mode,
-              prop_total_time: selectedAircraft?.prop_tt_mode,
-            }[config.key as string];
-            const linked = modeKey === "hobbs" || modeKey === "tach";
-            const linkedLabel = modeKey === "hobbs" ? "Hobbs" : modeKey === "tach" ? "Tach" : null;
+        <div className={`grid grid-cols-2 ${hideHobbs ? "md:grid-cols-4" : "md:grid-cols-5"} gap-2 sm:gap-3`}>
+          {visibleConfig.map((config) => {
+            const linked = config.key !== "hobbs" && config.key !== "tach";
 
             // Get initial value for this counter
             const initialValueMap: Record<string, number | null> = {
@@ -105,15 +101,15 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
             return (
               <Card
                 key={config.key}
-                className={`${config.color} border ${!linked ? "cursor-pointer hover:opacity-80" : ""} transition-opacity`}
-                onClick={() => !linked && setIsBatchEditOpen(true)}
+                className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
+                onClick={() => setIsBatchEditOpen(true)}
               >
                 <CardContent className="p-3 sm:p-4 text-center relative">
                   {!linked && <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />}
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
                   <p className="text-xl sm:text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
                   {linked && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Linked to {linkedLabel}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Follows Tach</p>
                   )}
                   {ownerHrs !== null && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">Owner: {ownerHrs} hrs</p>
@@ -150,6 +146,7 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
           prop_total_time: selectedAircraft?.initial_prop_total_time ?? null,
         }}
         onSave={onUpdateAllCounters}
+        linkHobbsToTach={!!selectedAircraft?.link_hobbs_to_tach}
       />
     </>
   );
