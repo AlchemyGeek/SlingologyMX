@@ -75,6 +75,9 @@ export type Database = {
         Row: {
           airframe_tt_mode: string
           created_at: string | null
+          engine_overhaul_date: string | null
+          engine_overhaul_hours: number
+          engine_overhaul_tach: number | null
           engine_tt_mode: string
           id: string
           initial_airframe_total_time: number | null
@@ -83,7 +86,11 @@ export type Database = {
           initial_prop_total_time: number | null
           initial_tach: number | null
           is_primary: boolean
+          link_hobbs_to_tach: boolean
           model_make: string | null
+          prop_overhaul_date: string | null
+          prop_overhaul_hours: number
+          prop_overhaul_tach: number | null
           prop_tt_mode: string
           registration: string
           serial_number: string | null
@@ -94,6 +101,9 @@ export type Database = {
         Insert: {
           airframe_tt_mode?: string
           created_at?: string | null
+          engine_overhaul_date?: string | null
+          engine_overhaul_hours?: number
+          engine_overhaul_tach?: number | null
           engine_tt_mode?: string
           id?: string
           initial_airframe_total_time?: number | null
@@ -102,7 +112,11 @@ export type Database = {
           initial_prop_total_time?: number | null
           initial_tach?: number | null
           is_primary?: boolean
+          link_hobbs_to_tach?: boolean
           model_make?: string | null
+          prop_overhaul_date?: string | null
+          prop_overhaul_hours?: number
+          prop_overhaul_tach?: number | null
           prop_tt_mode?: string
           registration: string
           serial_number?: string | null
@@ -113,6 +127,9 @@ export type Database = {
         Update: {
           airframe_tt_mode?: string
           created_at?: string | null
+          engine_overhaul_date?: string | null
+          engine_overhaul_hours?: number
+          engine_overhaul_tach?: number | null
           engine_tt_mode?: string
           id?: string
           initial_airframe_total_time?: number | null
@@ -121,7 +138,11 @@ export type Database = {
           initial_prop_total_time?: number | null
           initial_tach?: number | null
           is_primary?: boolean
+          link_hobbs_to_tach?: boolean
           model_make?: string | null
+          prop_overhaul_date?: string | null
+          prop_overhaul_hours?: number
+          prop_overhaul_tach?: number | null
           prop_tt_mode?: string
           registration?: string
           serial_number?: string | null
