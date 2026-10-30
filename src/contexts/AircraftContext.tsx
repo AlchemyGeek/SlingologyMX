@@ -145,3 +145,9 @@ export function useAircraft() {
   }
   return context;
 }
+
+/** True when the selected aircraft tracks Tach only (Hobbs hidden and mirrors Tach). */
+export function useHobbsLinked(): boolean {
+  const context = useContext(AircraftContext);
+  return !!context?.selectedAircraft?.link_hobbs_to_tach;
+}

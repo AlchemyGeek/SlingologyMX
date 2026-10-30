@@ -1512,7 +1512,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
                         <SelectValue placeholder="Select counter" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Hobbs">Hobbs</SelectItem>
+                        {!hobbsLinked && <SelectItem value="Hobbs">Hobbs</SelectItem>}
                         <SelectItem value="Tach">Tach</SelectItem>
                         <SelectItem value="Airframe TT">Airframe TT</SelectItem>
                         <SelectItem value="Engine TT">Engine TT</SelectItem>

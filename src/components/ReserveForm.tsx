@@ -290,7 +290,7 @@ const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {COUNTER_TYPES.map((type) => (
+                    {COUNTER_TYPES.filter((t) => !(hobbsLinked && t === "Hobbs")).map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>

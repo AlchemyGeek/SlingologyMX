@@ -364,7 +364,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Hobbs">Hobbs</SelectItem>
+                    {!hobbsLinked && <SelectItem value="Hobbs">Hobbs</SelectItem>}
                     <SelectItem value="Tach">Tach</SelectItem>
                     <SelectItem value="Airframe TT">Airframe TT</SelectItem>
                     <SelectItem value="Engine TT">Engine TT</SelectItem>

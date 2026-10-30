@@ -1236,7 +1236,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {COUNTER_TYPES.map((ct) => (
+                        {COUNTER_TYPES.filter((ct) => !(hobbsLinked && ct.value === "Hobbs")).map((ct) => (
                           <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
                         ))}
                       </SelectContent>
