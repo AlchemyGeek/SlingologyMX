@@ -168,7 +168,7 @@ const DataManagement = () => {
       // Fetch aircraft identity (registration, model, serial number)
       const { data: aircraftRow } = await supabase
         .from("aircraft")
-        .select("registration, model_make, serial_number")
+        .select("registration, model_make, serial_number, link_hobbs_to_tach, engine_overhaul_tach, engine_overhaul_hours, engine_overhaul_date, prop_overhaul_tach, prop_overhaul_hours, prop_overhaul_date")
         .eq("id", selectedAircraftId)
         .single();
 
@@ -180,7 +180,14 @@ const DataManagement = () => {
               registration: aircraftRow.registration,
               model_make: aircraftRow.model_make,
               serial_number: aircraftRow.serial_number,
-            }
+              link_hobbs_to_tach: aircraftRow.link_hobbs_to_tach,
+              engine_overhaul_tach: aircraftRow.engine_overhaul_tach,
+              engine_overhaul_hours: aircraftRow.engine_overhaul_hours,
+              engine_overhaul_date: aircraftRow.engine_overhaul_date,
+              prop_overhaul_tach: aircraftRow.prop_overhaul_tach,
+              prop_overhaul_hours: aircraftRow.prop_overhaul_hours,
+              prop_overhaul_date: aircraftRow.prop_overhaul_date,
+}
           : null,
         tables: {
           aircraft_counters: sanitizeRecords(countersRes.data || []),
@@ -603,6 +610,23 @@ const DataManagement = () => {
             skipped.aircraft_counters++;
           }
         }
+      }
+
+      // Restore counter settings (Hobbs link, overhaul baselines) onto the selected aircraft
+      if (importPreview.aircraft && importPreview.aircraft.link_hobbs_to_tach !== undefined) {
+        const a = importPreview.aircraft;
+        await supabase
+          .from("aircraft")
+          .update({
+            link_hobbs_to_tach: !!a.link_hobbs_to_tach,
+            engine_overhaul_tach: a.engine_overhaul_tach ?? null,
+            engine_overhaul_hours: a.engine_overhaul_hours ?? 0,
+            engine_overhaul_date: a.engine_overhaul_date ?? null,
+            prop_overhaul_tach: a.prop_overhaul_tach ?? null,
+            prop_overhaul_hours: a.prop_overhaul_hours ?? 0,
+            prop_overhaul_date: a.prop_overhaul_date ?? null,
+          })
+          .eq("id", selectedAircraftId);
       }
 
       // 2. Counter history - check by change_date and source

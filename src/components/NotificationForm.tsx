@@ -12,6 +12,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { useHobbsLinked } from "@/contexts/AircraftContext";
 
 interface NotificationFormProps {
   userId: string;
@@ -38,6 +39,7 @@ const counterTypeToFieldMap: Record<string, string> = {
 };
 
 const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNotification, currentCounters, notificationBasis = "Date" }: NotificationFormProps) => {
+  const hobbsLinked = useHobbsLinked();
   const [loading, setLoading] = useState(false);
   const [subscriptionRecurrence, setSubscriptionRecurrence] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -49,7 +51,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
     recurrence_interval: editingNotification?.recurrence_interval?.toString() || "",
     recurrence_unit: editingNotification?.recurrence_unit || "Months",
     notification_basis: editingNotification?.notification_basis || notificationBasis,
-    counter_type: editingNotification?.counter_type || "Hobbs",
+    counter_type: editingNotification?.counter_type || (hobbsLinked ? "Tach" : "Hobbs"),
     initial_counter_value: editingNotification?.initial_counter_value?.toString() || "",
     counter_step: editingNotification?.counter_step?.toString() || "",
     is_counter_recurring: editingNotification?.counter_step ? "Yes" : "No",
@@ -364,7 +366,7 @@ const NotificationForm = ({ userId, aircraftId, onSuccess, onCancel, editingNoti
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Hobbs">Hobbs</SelectItem>
+                    {!hobbsLinked && <SelectItem value="Hobbs">Hobbs</SelectItem>}
                     <SelectItem value="Tach">Tach</SelectItem>
                     <SelectItem value="Airframe TT">Airframe TT</SelectItem>
                     <SelectItem value="Engine TT">Engine TT</SelectItem>

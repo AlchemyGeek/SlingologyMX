@@ -72,7 +72,7 @@ serve(async (req) => {
 
     const { data: aircraft, error: aircraftError } = await supabase
       .from("aircraft")
-      .select("id, user_id, airframe_tt_mode, engine_tt_mode, prop_tt_mode")
+      .select("id, user_id, link_hobbs_to_tach")
       .eq("id", keyRow.aircraft_id)
       .single();
 
@@ -151,10 +151,10 @@ serve(async (req) => {
       if (payload[key] !== undefined) updates[key] = payload[key] as number;
     }
 
+    // Tach-driven model: Airframe/Engine/Prop TT always follow Tach; Hobbs mirrors Tach when linked.
+    if (aircraft.link_hobbs_to_tach && updates.tach !== undefined) updates.hobbs = updates.tach;
     for (const ttKey of ["airframe_total_time", "engine_total_time", "prop_total_time"] as CounterKey[]) {
-      const mode = (aircraft as Record<string, unknown>)[TT_MODE_MAP[ttKey]] as string;
-      if (mode !== "hobbs" && mode !== "tach") continue;
-      const sourceKey = mode as CounterKey;
+      const sourceKey: CounterKey = "tach";
       const sourceNew = updates[sourceKey];
       if (sourceNew === undefined) continue;
       const sourcePrev = existing[sourceKey] ?? 0;

@@ -87,6 +87,8 @@ interface MaintenanceLogFormProps {
 
 const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, onSuccess, onCancel, onUpdateGlobalCounters, userCurrency = "USD" }: MaintenanceLogFormProps) => {
   const { selectedAircraft } = useAircraft();
+  const hobbsLinked = !!selectedAircraft?.link_hobbs_to_tach;
+  
   
   // Get tracking modes from aircraft context
   const counterModes = {
@@ -172,6 +174,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     
     setFormData(prev => {
       const updates: Partial<typeof prev> = { [field]: newValue };
+      if (hobbsLinked && field === "tach_at_event") updates.hobbs_at_event = newValue;
       
       // When hobbs or tach changes, auto-update any TT counters linked to it
       const sourceFormField = field; // e.g. "hobbs_at_event" or "tach_at_event"
@@ -450,7 +453,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
     }
 
     // Counter readings are only required once the work is completed
-    if (countersRequired && (!formData.hobbs_at_event || !formData.tach_at_event || !formData.airframe_total_time || !formData.engine_total_time || !formData.prop_total_time)) {
+    if (countersRequired && ((!hobbsLinked && !formData.hobbs_at_event) || !formData.tach_at_event || !formData.airframe_total_time || !formData.engine_total_time || !formData.prop_total_time)) {
       toast.error("All Time & Usage fields are required when a completion date is set");
       return;
     }
@@ -483,7 +486,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       tags: formData.tags,
       date_started: format(formData.date_started, "yyyy-MM-dd"),
       date_completed: formData.date_completed ? format(formData.date_completed, "yyyy-MM-dd") : null,
-      hobbs_at_event: formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null,
+      hobbs_at_event: hobbsLinked
+        ? (formData.tach_at_event ? parseFloat(formData.tach_at_event) : null)
+        : (formData.hobbs_at_event ? parseFloat(formData.hobbs_at_event) : null),
       tach_at_event: formData.tach_at_event ? parseFloat(formData.tach_at_event) : null,
       airframe_total_time: formData.airframe_total_time ? parseFloat(formData.airframe_total_time) : null,
       engine_total_time: formData.engine_total_time ? parseFloat(formData.engine_total_time) : null,
@@ -1284,8 +1289,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           <h3 className="text-lg font-medium">Time & Usage</h3>
           <p className="text-xs text-muted-foreground">
             {countersRequired
-              ? "Required once a completion date is set · linked counters auto-update from their source"
-              : "Readings are optional until the job is completed · linked counters auto-update from their source"}
+              ? `Enter Tach${hobbsLinked ? "" : " and Hobbs"} once a completion date is set · Airframe, Engine and Prop TT follow Tach`
+              : `Readings are optional until the job is completed · Airframe, Engine and Prop TT follow Tach`}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1336,6 +1341,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               <span className="text-xs text-muted-foreground">{shopTimeLabel}</span>
             )}
           </div>
+          {!hobbsLinked && (
           <div className="space-y-2">
             <Label htmlFor="hobbs_at_event">Hobbs at Event {countersRequired && <span className="text-destructive">*</span>}</Label>
             <Input
@@ -1348,6 +1354,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
               required={countersRequired}
             />
           </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="tach_at_event">Tach at Event {countersRequired && <span className="text-destructive">*</span>}</Label>
             <Input
@@ -1505,7 +1512,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
                         <SelectValue placeholder="Select counter" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Hobbs">Hobbs</SelectItem>
+                        {!hobbsLinked && <SelectItem value="Hobbs">Hobbs</SelectItem>}
                         <SelectItem value="Tach">Tach</SelectItem>
                         <SelectItem value="Airframe TT">Airframe TT</SelectItem>
                         <SelectItem value="Engine TT">Engine TT</SelectItem>

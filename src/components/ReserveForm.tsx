@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { Reserve } from "./ReservesPanel";
 import type { Json } from "@/integrations/supabase/types";
+import { useHobbsLinked } from "@/contexts/AircraftContext";
 
 const RESERVE_TYPES = ["Engine", "Propeller", "Gearbox", "Parachute", "Battery", "Avionics", "Other"] as const;
 const BASIS_TYPES = ["Calendar", "Hours", "Cycles"] as const;
@@ -34,6 +35,7 @@ interface ReserveFormProps {
 }
 
 const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, userCurrency = "USD" }: ReserveFormProps) => {
+  const hobbsLinked = useHobbsLinked();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: editingReserve?.title || "",
@@ -290,7 +292,7 @@ const ReserveForm = ({ userId, aircraftId, onSuccess, onCancel, editingReserve, 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {COUNTER_TYPES.map((type) => (
+                    {COUNTER_TYPES.filter((t) => !(hobbsLinked && t === "Hobbs")).map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>

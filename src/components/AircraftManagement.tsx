@@ -23,25 +23,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Plane, Plus, Pencil, Trash2, Star, StarOff, ChevronDown, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import type { TtTrackingMode } from "@/contexts/AircraftContext";
+import { componentTimeFromTach } from "@/lib/aircraftCounters";
 
 interface AircraftFormData {
   registration: string;
   model_make: string;
   serial_number: string;
-  airframe_tt_mode: TtTrackingMode;
-  engine_tt_mode: TtTrackingMode;
-  prop_tt_mode: TtTrackingMode;
+  link_hobbs_to_tach: boolean;
   initial_hobbs: string;
   initial_tach: string;
   initial_airframe_total_time: string;
@@ -73,10 +65,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
-  const [showModeChangeWarning, setShowModeChangeWarning] = useState(false);
-  const [modeChangeConfirmText, setModeChangeConfirmText] = useState("");
   const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
   const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
   const [initialCountersOpen, setInitialCountersOpen] = useState(false);
@@ -84,14 +74,16 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [resetCounterType, setResetCounterType] = useState<"engine_total_time" | "prop_total_time" | null>(null);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [overhaulDate, setOverhaulDate] = useState("");
+  const [overhaulTach, setOverhaulTach] = useState("");
+  const [overhaulHours, setOverhaulHours] = useState("0");
 
   const CONFIRMATION_PHRASE = "DELETE MY AIRCRAFT";
-  const MODE_CHANGE_PHRASE = "I UNDERSTAND";
   const RESET_PHRASE = "RESET";
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", serial_number: "", airframe_tt_mode: "tach", engine_tt_mode: "tach", prop_tt_mode: "tach", ...emptyInitialCounters });
+    setFormData({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
     setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
@@ -102,9 +94,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
       registration: a.registration,
       model_make: a.model_make || "",
       serial_number: a.serial_number || "",
-      airframe_tt_mode: a.airframe_tt_mode,
-      engine_tt_mode: a.engine_tt_mode,
-      prop_tt_mode: a.prop_tt_mode,
+      link_hobbs_to_tach: a.link_hobbs_to_tach,
       initial_hobbs: formatInitialValue(a.initial_hobbs),
       initial_tach: formatInitialValue(a.initial_tach),
       initial_airframe_total_time: formatInitialValue(a.initial_airframe_total_time),
@@ -126,31 +116,17 @@ export function AircraftManagement({ userId }: { userId: string }) {
   // Check if initial counter values changed
   const initialValuesChanged = (a: Aircraft | null): boolean => {
     if (!a) return false;
-    return formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs ||
+    return (!formData.link_hobbs_to_tach && formatInitialValue(a.initial_hobbs) !== formData.initial_hobbs) ||
            formatInitialValue(a.initial_tach) !== formData.initial_tach ||
            formatInitialValue(a.initial_airframe_total_time) !== formData.initial_airframe_total_time ||
            formatInitialValue(a.initial_engine_total_time) !== formData.initial_engine_total_time ||
            formatInitialValue(a.initial_prop_total_time) !== formData.initial_prop_total_time;
   };
 
-  const handleSave = async (skipModeWarning = false, skipInitialWarning = false) => {
+  const handleSave = async (_unused = false, skipInitialWarning = false) => {
     if (!formData.registration.trim()) {
       toast.error("Registration number is required");
       return;
-    }
-
-    // Check if tracking modes changed on an existing aircraft
-    if (editingAircraft && !skipModeWarning) {
-      const modesChanged =
-        formData.airframe_tt_mode !== editingAircraft.airframe_tt_mode ||
-        formData.engine_tt_mode !== editingAircraft.engine_tt_mode ||
-        formData.prop_tt_mode !== editingAircraft.prop_tt_mode;
-
-      if (modesChanged) {
-        setShowModeChangeWarning(true);
-        setModeChangeConfirmText("");
-        return;
-      }
     }
 
     // Check if initial counter values changed on existing aircraft that already had them
@@ -171,7 +147,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
     try {
       if (editingAircraft) {
         const initialUpdates = {
-          initial_hobbs: parseInitial(formData.initial_hobbs),
+          initial_hobbs: formData.link_hobbs_to_tach ? parseInitial(formData.initial_tach) : parseInitial(formData.initial_hobbs),
           initial_tach: parseInitial(formData.initial_tach),
           initial_airframe_total_time: parseInitial(formData.initial_airframe_total_time),
           initial_engine_total_time: parseInitial(formData.initial_engine_total_time),
@@ -185,9 +161,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
             registration: formData.registration.trim().toUpperCase(),
             model_make: formData.model_make.trim() || null,
             serial_number: formData.serial_number.trim() || null,
-            airframe_tt_mode: formData.airframe_tt_mode,
-            engine_tt_mode: formData.engine_tt_mode,
-            prop_tt_mode: formData.prop_tt_mode,
+            link_hobbs_to_tach: formData.link_hobbs_to_tach,
             ...initialUpdates,
           })
           .eq("id", editingAircraft.id);
@@ -228,6 +202,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
           model_make: formData.model_make.trim() || null,
           serial_number: formData.serial_number.trim() || null,
           is_primary: isPrimary,
+          link_hobbs_to_tach: formData.link_hobbs_to_tach,
         });
 
         if (error) throw error;
@@ -287,49 +262,81 @@ export function AircraftManagement({ userId }: { userId: string }) {
     }
   };
 
+  const openOverhaul = async (type: "engine_total_time" | "prop_total_time") => {
+    if (!editingAircraft) return;
+    const { data } = await supabase
+      .from("aircraft_counters")
+      .select("tach")
+      .eq("aircraft_id", editingAircraft.id)
+      .maybeSingle();
+    setResetCounterType(type);
+    setOverhaulDate(new Date().toISOString().split("T")[0]);
+    setOverhaulTach(data?.tach != null ? String(data.tach) : "");
+    setOverhaulHours("0");
+    setResetConfirmText("");
+    setShowResetCounterWarning(true);
+  };
+
   const handleResetCounter = async () => {
     if (!editingAircraft || !resetCounterType) return;
+    const installTach = parseFloat(overhaulTach);
+    const startHours = parseFloat(overhaulHours);
+    if (isNaN(installTach) || installTach < 0 || isNaN(startHours) || startHours < 0 || !overhaulDate) {
+      toast.error("Enter a valid date, Tach and starting hours");
+      return;
+    }
     setResetting(true);
     try {
-      // First get current counter values to preserve them in history
       const { data: currentCounters } = await supabase
         .from("aircraft_counters")
         .select("hobbs, tach, airframe_total_time, engine_total_time, prop_total_time")
         .eq("aircraft_id", editingAircraft.id)
         .maybeSingle();
 
-      // Set counter to 0
+      const currentTach = Number(currentCounters?.tach ?? 0);
+      if (installTach > currentTach) {
+        toast.error(`Tach at install cannot be above the current Tach (${currentTach.toFixed(1)})`);
+        setResetting(false);
+        return;
+      }
+      const newValue = componentTimeFromTach(currentTach, installTach, startHours);
+
       const { error: updateError } = await supabase
         .from("aircraft_counters")
-        .update({ [resetCounterType]: 0 })
+        .update({ [resetCounterType]: newValue })
         .eq("aircraft_id", editingAircraft.id);
-
       if (updateError) throw updateError;
 
-      // Log a history entry with 0 for the reset counter
-      const today = new Date().toISOString().split("T")[0];
+      const isEngine = resetCounterType === "engine_total_time";
+      const { error: acError } = await supabase
+        .from("aircraft")
+        .update(isEngine
+          ? { engine_overhaul_tach: installTach, engine_overhaul_hours: startHours, engine_overhaul_date: overhaulDate }
+          : { prop_overhaul_tach: installTach, prop_overhaul_hours: startHours, prop_overhaul_date: overhaulDate })
+        .eq("id", editingAircraft.id);
+      if (acError) throw acError;
+
       const { error: historyError } = await supabase.from("aircraft_counter_history").insert({
         user_id: userId,
         aircraft_id: editingAircraft.id,
         hobbs: currentCounters?.hobbs ?? null,
         tach: currentCounters?.tach ?? null,
         airframe_total_time: currentCounters?.airframe_total_time ?? null,
-        engine_total_time: resetCounterType === "engine_total_time" ? 0 : (currentCounters?.engine_total_time ?? null),
-        prop_total_time: resetCounterType === "prop_total_time" ? 0 : (currentCounters?.prop_total_time ?? null),
-        source: "Profile",
-        change_date: today,
+        engine_total_time: isEngine ? newValue : (currentCounters?.engine_total_time ?? null),
+        prop_total_time: !isEngine ? newValue : (currentCounters?.prop_total_time ?? null),
+        source: isEngine ? "Engine Overhaul" : "Prop Overhaul",
+        change_date: new Date().toISOString(),
       });
-
       if (historyError) throw historyError;
 
-      const label = resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT";
-      toast.success(`${label} reset to 0. A history entry has been recorded.`);
+      toast.success(`${isEngine ? "Engine" : "Prop"} TT is now ${newValue.toFixed(1)} hrs. A history entry has been recorded.`);
+      await refetchAircraft();
       setShowResetCounterWarning(false);
       setResetCounterType(null);
       setResetConfirmText("");
     } catch (error: any) {
-      console.error("Error resetting counter:", error);
-      toast.error("Failed to reset counter");
+      console.error("Error recording overhaul:", error);
+      toast.error("Failed to record overhaul");
     } finally {
       setResetting(false);
     }
@@ -485,7 +492,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
                   Counter values when you acquired this aircraft. Used to calculate owner-specific usage for financial analysis.
                 </p>
                 <CollapsibleContent className="space-y-3 mt-3">
-                  {INITIAL_COUNTER_KEYS.map(({ key, label }) => (
+                  {INITIAL_COUNTER_KEYS.filter(({ key }) => !(formData.link_hobbs_to_tach && key === "initial_hobbs")).map(({ key, label }) => (
                     <div key={key} className="grid grid-cols-2 items-center gap-4">
                       <Label className="text-sm">{label}</Label>
                       <Input
@@ -501,67 +508,46 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 </CollapsibleContent>
               </div>
             </Collapsible>
-            {/* Counter Tracking Modes */}
-            <div className="space-y-3 pt-2 border-t">
-              <Label className="text-sm font-medium">Counter Tracking Modes</Label>
+            {/* Counter Tracking */}
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="link_hobbs_to_tach" className="text-sm font-medium">
+                  Track Tach only (hide Hobbs)
+                </Label>
+                <Switch
+                  id="link_hobbs_to_tach"
+                  checked={formData.link_hobbs_to_tach}
+                  onCheckedChange={(checked) => setFormData({ ...formData, link_hobbs_to_tach: checked })}
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                Choose how each Total Time counter is updated when you log counter changes.
+                Airframe, Engine and Prop TT always advance with Tach. Turn this on if you don't track a separate Hobbs meter — Hobbs is hidden and follows Tach.
               </p>
-              {([
-                { key: "airframe_tt_mode" as const, label: "Airframe TT" },
-                { key: "engine_tt_mode" as const, label: "Engine TT" },
-                { key: "prop_tt_mode" as const, label: "Prop TT" },
-              ]).map(({ key, label }) => (
-                <div key={key} className="grid grid-cols-2 items-center gap-4">
-                  <Label className="text-sm">{label}</Label>
-                  <Select
-                    value={formData[key]}
-                    onValueChange={(val) => setFormData({ ...formData, [key]: val as TtTrackingMode })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tach">Linked to Tach</SelectItem>
-                      <SelectItem value="hobbs">Linked to Hobbs</SelectItem>
-                      <SelectItem value="manual">Manual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
             </div>
 
-            {/* Counter Reset (Overhaul) - only show when editing */}
+            {/* Engine / Prop overhaul - only show when editing */}
             {editingAircraft && (
               <div className="space-y-3 pt-2 border-t">
-                <Label className="text-sm font-medium">Counter Reset (Overhaul)</Label>
+                <Label className="text-sm font-medium">Engine / Propeller Overhaul or Replacement</Label>
                 <p className="text-xs text-muted-foreground">
-                  Reset a counter to 0 after an engine or propeller overhaul/replacement. The reset will be recorded in counter history.
+                  Restart the Engine or Prop TT count after an overhaul or replacement. Airframe TT never resets.
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setResetCounterType("engine_total_time");
-                      setShowResetCounterWarning(true);
-                      setResetConfirmText("");
-                    }}
-                  >
-                    Reset Engine TT to 0
+                {(editingAircraft.engine_overhaul_date || editingAircraft.prop_overhaul_date) && (
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    {editingAircraft.engine_overhaul_date && (
+                      <p>Engine: {editingAircraft.engine_overhaul_date} at Tach {editingAircraft.engine_overhaul_tach ?? "—"} ({editingAircraft.engine_overhaul_hours.toFixed(1)} hrs)</p>
+                    )}
+                    {editingAircraft.prop_overhaul_date && (
+                      <p>Prop: {editingAircraft.prop_overhaul_date} at Tach {editingAircraft.prop_overhaul_tach ?? "—"} ({editingAircraft.prop_overhaul_hours.toFixed(1)} hrs)</p>
+                    )}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => openOverhaul("engine_total_time")}>
+                    Record Engine Overhaul
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setResetCounterType("prop_total_time");
-                      setShowResetCounterWarning(true);
-                      setResetConfirmText("");
-                    }}
-                  >
-                    Reset Prop TT to 0
+                  <Button type="button" variant="outline" size="sm" onClick={() => openOverhaul("prop_total_time")}>
+                    Record Prop Overhaul
                   </Button>
                 </div>
               </div>
@@ -625,56 +611,6 @@ export function AircraftManagement({ userId }: { userId: string }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Counter Mode Change Warning */}
-      <AlertDialog
-        open={showModeChangeWarning}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowModeChangeWarning(false);
-            setModeChangeConfirmText("");
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Change Counter Tracking Mode?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-4">
-                <p>
-                  The FAA requires consistency in the methodology used to maintain time-in-service counters in aircraft maintenance records. Changing how Total Time counters are tracked may affect the continuity of your maintenance documentation.
-                </p>
-                <p className="font-medium text-foreground">
-                  Make sure you understand the implications before proceeding.
-                </p>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">
-                    To confirm, type "<span className="font-semibold">{MODE_CHANGE_PHRASE}</span>" below:
-                  </p>
-                  <Input
-                    value={modeChangeConfirmText}
-                    onChange={(e) => setModeChangeConfirmText(e.target.value.toUpperCase())}
-                    placeholder={MODE_CHANGE_PHRASE}
-                  />
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setModeChangeConfirmText("")}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setShowModeChangeWarning(false);
-                setModeChangeConfirmText("");
-                handleSave(true);
-              }}
-              disabled={modeChangeConfirmText !== MODE_CHANGE_PHRASE}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Confirm Change
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Initial Counter Change Warning */}
       <AlertDialog
@@ -741,15 +677,50 @@ export function AircraftManagement({ userId }: { userId: string }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Reset {resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT"} to 0?
+              Record {resetCounterType === "engine_total_time" ? "Engine" : "Propeller"} Overhaul / Replacement
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <p>
-                  This will set the {resetCounterType === "engine_total_time" ? "Engine Total Time" : "Prop Total Time"} counter to <strong>0</strong> and record a history entry. Use this after an engine or propeller overhaul/replacement.
+                  From this point on, {resetCounterType === "engine_total_time" ? "Engine TT" : "Prop TT"} counts up with Tach starting from the hours you enter below. A history entry is recorded.
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  You can revert this change later from the counter history panel on the Dashboard.
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="overhaul_date" className="text-foreground">Date</Label>
+                    <Input
+                      id="overhaul_date"
+                      type="date"
+                      value={overhaulDate}
+                      onChange={(e) => setOverhaulDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="overhaul_tach" className="text-foreground">Tach at install</Label>
+                    <Input
+                      id="overhaul_tach"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      value={overhaulTach}
+                      onChange={(e) => setOverhaulTach(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="overhaul_hours" className="text-foreground">Starting hours</Label>
+                    <Input
+                      id="overhaul_hours"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      value={overhaulHours}
+                      onChange={(e) => setOverhaulHours(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use 0.0 for a zero-time overhaul or new unit; enter existing hours for a used or mid-time unit.
                 </p>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">
@@ -767,11 +738,11 @@ export function AircraftManagement({ userId }: { userId: string }) {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setResetConfirmText("")}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleResetCounter}
+              onClick={(e) => { e.preventDefault(); handleResetCounter(); }}
               disabled={resetConfirmText !== RESET_PHRASE || resetting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {resetting ? "Resetting..." : "Reset Counter"}
+              {resetting ? "Saving..." : "Record"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -19,6 +19,14 @@ export interface Aircraft {
   initial_airframe_total_time: number | null;
   initial_engine_total_time: number | null;
   initial_prop_total_time: number | null;
+  /** When true, Hobbs is hidden and mirrors Tach. */
+  link_hobbs_to_tach: boolean;
+  engine_overhaul_tach: number | null;
+  engine_overhaul_hours: number;
+  engine_overhaul_date: string | null;
+  prop_overhaul_tach: number | null;
+  prop_overhaul_hours: number;
+  prop_overhaul_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -67,9 +75,17 @@ export function AircraftProvider({ children, user }: { children: ReactNode; user
     } else {
       setAircraft((data || []).map(d => ({
         ...d,
-        airframe_tt_mode: d.airframe_tt_mode as TtTrackingMode,
-        engine_tt_mode: d.engine_tt_mode as TtTrackingMode,
-        prop_tt_mode: d.prop_tt_mode as TtTrackingMode,
+        // Airframe, Engine and Prop TT are always derived from Tach.
+        airframe_tt_mode: "tach" as TtTrackingMode,
+        engine_tt_mode: "tach" as TtTrackingMode,
+        prop_tt_mode: "tach" as TtTrackingMode,
+        link_hobbs_to_tach: !!d.link_hobbs_to_tach,
+        engine_overhaul_tach: d.engine_overhaul_tach ?? null,
+        engine_overhaul_hours: Number(d.engine_overhaul_hours ?? 0),
+        engine_overhaul_date: d.engine_overhaul_date ?? null,
+        prop_overhaul_tach: d.prop_overhaul_tach ?? null,
+        prop_overhaul_hours: Number(d.prop_overhaul_hours ?? 0),
+        prop_overhaul_date: d.prop_overhaul_date ?? null,
         initial_hobbs: d.initial_hobbs ?? null,
         initial_tach: d.initial_tach ?? null,
         initial_airframe_total_time: d.initial_airframe_total_time ?? null,
@@ -128,4 +144,10 @@ export function useAircraft() {
     throw new Error("useAircraft must be used within an AircraftProvider");
   }
   return context;
+}
+
+/** True when the selected aircraft tracks Tach only (Hobbs hidden and mirrors Tach). */
+export function useHobbsLinked(): boolean {
+  const context = useContext(AircraftContext);
+  return !!context?.selectedAircraft?.link_hobbs_to_tach;
 }

@@ -15,6 +15,13 @@
       "when": 1792424120697,
       "tag": "0001_notification_custom_recurrence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793371990622,
+      "tag": "0002_tach_driven_counters",
+      "breakpoints": true
     }
   ]
 }

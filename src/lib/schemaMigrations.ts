@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "1.9";
+export const CURRENT_SCHEMA_VERSION = "2.0";
 
 export interface ExportData {
   version: string;
@@ -16,6 +16,13 @@ export interface ExportData {
     registration: string;
     model_make: string | null;
     serial_number: string | null;
+    link_hobbs_to_tach?: boolean;
+    engine_overhaul_tach?: number | null;
+    engine_overhaul_hours?: number;
+    engine_overhaul_date?: string | null;
+    prop_overhaul_tach?: number | null;
+    prop_overhaul_hours?: number;
+    prop_overhaul_date?: string | null;
   } | null;
   tables: {
     aircraft_counters: any[];
@@ -245,6 +252,31 @@ const MIGRATIONS: Migration[] = [
       version: "1.9",
       aircraft: data.aircraft ?? null,
     })
+  },
+  {
+    fromVersion: "1.9",
+    toVersion: "2.0",
+    description: "Tach-driven counters: Hobbs link setting and engine/prop overhaul baselines on the aircraft block",
+    migrate: (data) => {
+      const counters = data.tables.aircraft_counters?.[0];
+      const sameMeters = counters && counters.hobbs != null && counters.hobbs === counters.tach;
+      return {
+        ...data,
+        version: "2.0",
+        aircraft: data.aircraft
+          ? {
+              ...data.aircraft,
+              link_hobbs_to_tach: data.aircraft.link_hobbs_to_tach ?? !!sameMeters,
+              engine_overhaul_tach: data.aircraft.engine_overhaul_tach ?? null,
+              engine_overhaul_hours: data.aircraft.engine_overhaul_hours ?? 0,
+              engine_overhaul_date: data.aircraft.engine_overhaul_date ?? null,
+              prop_overhaul_tach: data.aircraft.prop_overhaul_tach ?? null,
+              prop_overhaul_hours: data.aircraft.prop_overhaul_hours ?? 0,
+              prop_overhaul_date: data.aircraft.prop_overhaul_date ?? null,
+            }
+          : null,
+      };
+    },
   },
 ];
 

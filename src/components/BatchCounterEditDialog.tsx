@@ -34,6 +34,8 @@ interface BatchCounterEditDialogProps {
     prop_total_time: number | null;
   };
   onSave: (updates: Partial<Pick<AircraftCounters, NumericCounterKey>>) => Promise<void>;
+  /** When true, Hobbs is hidden and mirrors Tach. */
+  linkHobbsToTach?: boolean;
 }
 
 const counterConfig = [
@@ -70,6 +72,7 @@ export function BatchCounterEditDialog({
   counterModes,
   initialValues,
   onSave,
+  linkHobbsToTach = false,
 }: BatchCounterEditDialogProps) {
   const [values, setValues] = useState<Record<NumericCounterKey, string>>({
     hobbs: "",
@@ -121,12 +124,13 @@ export function BatchCounterEditDialog({
     }
   }, [open, counters]);
 
-  // Recompute linked TT values whenever hobbs or tach change
+  // Recompute Tach-derived values (and Hobbs when linked) whenever Tach/Hobbs change
   useEffect(() => {
     if (!open) return;
     
     setValues(prev => {
       const updated = { ...prev };
+      if (linkHobbsToTach) updated.hobbs = prev.tach;
       const ttKeys: NumericCounterKey[] = ["airframe_total_time", "engine_total_time", "prop_total_time"];
       
       for (const ttKey of ttKeys) {
@@ -137,13 +141,13 @@ export function BatchCounterEditDialog({
           const sourceOriginal = originalValues.current[sourceKey];
           const delta = sourceNew - sourceOriginal;
           const ttOriginal = originalValues.current[ttKey];
-          updated[ttKey] = (ttOriginal + delta).toFixed(1);
+          updated[ttKey] = Math.max(0, ttOriginal + delta).toFixed(1);
         }
       }
       
       return updated;
     });
-  }, [values.hobbs, values.tach, open, counterModes]);
+  }, [values.hobbs, values.tach, open, counterModes, linkHobbsToTach]);
 
   const handleValueChange = (key: NumericCounterKey, value: string) => {
     // Linked counters are read-only — shouldn't reach here but guard anyway
@@ -162,6 +166,12 @@ export function BatchCounterEditDialog({
 
       if (isNaN(newValue) || newValue < 0) {
         errors.push(`${config.label}: Please enter a valid positive number`);
+        continue;
+      }
+
+      // Linked Hobbs mirrors Tach; skip its own lower-bound checks
+      if (linkHobbsToTach && config.key === "hobbs") {
+        if (newValue !== currentValue) updates.hobbs = newValue;
         continue;
       }
 
@@ -212,11 +222,11 @@ export function BatchCounterEditDialog({
         <DialogHeader>
           <DialogTitle>Edit Counters</DialogTitle>
           <DialogDescription>
-            Update counter values. Linked counters auto-update based on their source.
+            Enter the new Tach{linkHobbsToTach ? "" : " and Hobbs"} reading. Airframe, Engine and Prop TT advance with Tach automatically.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {counterConfig.map((config) => {
+          {counterConfig.filter((c) => !(linkHobbsToTach && c.key === "hobbs")).map((config) => {
             const linked = isLinked(config.key);
             const mode = getMode(config.key);
             return (

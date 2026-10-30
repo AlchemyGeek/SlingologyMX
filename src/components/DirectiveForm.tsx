@@ -24,6 +24,7 @@ import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
 import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 import ConfirmShareDialog from "./community/ConfirmShareDialog";
+import { useHobbsLinked } from "@/contexts/AircraftContext";
 
 interface Equipment {
   id: string;
@@ -88,6 +89,7 @@ const getCounterKey = (counterType: string): string => {
 };
 
 const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCancel, onShareSuccess }: DirectiveFormProps) => {
+  const hobbsLinked = useHobbsLinked();
   const { counters } = useAircraftCounters(userId, aircraftId);
   
   const [formData, setFormData] = useState({
@@ -119,7 +121,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
     requires_log_entry: true,
     source_links: [] as Array<{ description: string; url: string }>,
     // New fields for counter-based compliance
-    counter_type: "Hobbs" as string,
+    counter_type: (hobbsLinked ? "Tach" : "Hobbs") as string,
     counter_value_mode: "absolute" as "absolute" | "incremental",
     counter_absolute_value: "",
     counter_increment_value: "",
@@ -1236,7 +1238,7 @@ const DirectiveForm = ({ userId, aircraftId, editingDirective, onSuccess, onCanc
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {COUNTER_TYPES.map((ct) => (
+                        {COUNTER_TYPES.filter((ct) => !(hobbsLinked && ct.value === "Hobbs")).map((ct) => (
                           <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
                         ))}
                       </SelectContent>
