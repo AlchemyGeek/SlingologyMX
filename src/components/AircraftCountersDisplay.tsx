@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, History } from "lucide-react";
+import { Pencil, History, CornerDownRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AircraftCounters, NumericCounterKey } from "@/hooks/useAircraftCounters";
 import { getOwnerHours } from "@/lib/counterInterpolation";
 import CounterHistoryDialog from "./CounterHistoryDialog";
@@ -19,11 +19,11 @@ interface AircraftCountersDisplayProps {
 }
 
 const counterConfig = [
-  { key: "hobbs" as const, label: "Hobbs", color: "bg-blue-500/10 border-blue-500/20" },
-  { key: "tach" as const, label: "Tach", color: "bg-green-500/10 border-green-500/20" },
-  { key: "airframe_total_time" as const, label: "Airframe TT", color: "bg-purple-500/10 border-purple-500/20" },
-  { key: "engine_total_time" as const, label: "Engine TT", color: "bg-orange-500/10 border-orange-500/20" },
-  { key: "prop_total_time" as const, label: "Prop TT", color: "bg-teal-500/10 border-teal-500/20" },
+  { key: "tach" as const, label: "Tach" },
+  { key: "hobbs" as const, label: "Hobbs" },
+  { key: "airframe_total_time" as const, label: "Airframe TT" },
+  { key: "engine_total_time" as const, label: "Engine TT" },
+  { key: "prop_total_time" as const, label: "Prop TT" },
 ];
 
 // Helper to format counter display
@@ -51,75 +51,78 @@ const AircraftCountersDisplay = ({ counters, loading, userId, aircraftId, onUpda
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBatchEditOpen, setIsBatchEditOpen] = useState(false);
   const hideHobbs = !!selectedAircraft?.link_hobbs_to_tach;
-  const visibleConfig = counterConfig.filter((c) => !(hideHobbs && c.key === "hobbs"));
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        {counterConfig.map((config) => (
-          <Card key={config.key} className={`${config.color} border`}>
-            <CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-              <p className="text-2xl font-bold mt-1">...</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  const primaryConfig = counterConfig.filter((c) => c.key === "tach" || (c.key === "hobbs" && !hideHobbs));
+  const derivedConfig = counterConfig.filter((c) => c.key !== "tach" && c.key !== "hobbs");
+  const initialValues = {
+    hobbs: selectedAircraft?.initial_hobbs ?? null,
+    tach: selectedAircraft?.initial_tach ?? null,
+    airframe_total_time: selectedAircraft?.initial_airframe_total_time ?? null,
+    engine_total_time: selectedAircraft?.initial_engine_total_time ?? null,
+    prop_total_time: selectedAircraft?.initial_prop_total_time ?? null,
+  };
+  const ownerHours = (key: NumericCounterKey) => loading ? null : getOwnerHoursDisplay(counters, key, initialValues[key]);
+  const reading = (key: NumericCounterKey) => loading ? "…" : formatCounterDisplay(counters, key);
 
   return (
     <>
-      <div className="mb-6">
+      <section aria-label="Aircraft counters" className="mb-6">
         <div className="flex items-center justify-between gap-2 mb-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Aircraft Counters</h2>
-          <Button
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
             variant="outline"
             size="sm"
+            aria-label="Counter history"
             onClick={() => setIsHistoryOpen(true)}
             className="shrink-0"
           >
             <History className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">History</span>
           </Button>
+            </TooltipTrigger>
+            <TooltipContent>Counter history</TooltipContent>
+          </Tooltip>
         </div>
-        <div className={`grid grid-cols-2 ${hideHobbs ? "md:grid-cols-4" : "md:grid-cols-5"} gap-2 sm:gap-3`}>
-          {visibleConfig.map((config) => {
-            const linked = config.key !== "hobbs" && config.key !== "tach";
-
-            // Get initial value for this counter
-            const initialValueMap: Record<string, number | null> = {
-              hobbs: selectedAircraft?.initial_hobbs ?? null,
-              tach: selectedAircraft?.initial_tach ?? null,
-              airframe_total_time: selectedAircraft?.initial_airframe_total_time ?? null,
-              engine_total_time: selectedAircraft?.initial_engine_total_time ?? null,
-              prop_total_time: selectedAircraft?.initial_prop_total_time ?? null,
-            };
-            const initialVal = initialValueMap[config.key] ?? null;
-            const ownerHrs = getOwnerHoursDisplay(counters, config.key, initialVal);
-
-            return (
-              <Card
-                key={config.key}
-                className={`${config.color} border cursor-pointer hover:opacity-80 transition-opacity`}
-                onClick={() => setIsBatchEditOpen(true)}
-              >
-                <CardContent className="p-3 sm:p-4 text-center relative">
-                  {!linked && <Pencil className="h-3 w-3 absolute top-2 right-2 text-muted-foreground" />}
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{config.label}</p>
-                  <p className="text-xl sm:text-2xl font-bold mt-1">{formatCounterDisplay(counters, config.key)}</p>
-                  {linked && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Follows Tach</p>
-                  )}
-                  {ownerHrs !== null && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Owner: {ownerHrs} hrs</p>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="flex items-start gap-3 border-l-2 border-primary bg-primary/5 py-4 pl-4 pr-3 sm:pl-5">
+          <dl className={`grid min-w-0 flex-1 ${hideHobbs ? "grid-cols-1" : "grid-cols-2"} gap-3 sm:gap-6`}>
+            {primaryConfig.map((config) => (
+              <div key={config.key} className="min-w-0">
+                <dt className="text-sm font-medium text-primary">{config.label}</dt>
+                <dd className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-3xl sm:text-4xl font-semibold tabular-nums break-all">{reading(config.key)}</span>
+                  <span className="text-xs text-muted-foreground">hrs</span>
+                </dd>
+                {ownerHours(config.key) !== null && <dd className="mt-1 text-xs text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
+              </div>
+            ))}
+          </dl>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="shrink-0 h-11 w-11" aria-label="Edit counters" disabled={loading} onClick={() => setIsBatchEditOpen(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit counters</TooltipContent>
+          </Tooltip>
         </div>
-      </div>
+        <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <CornerDownRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>Component hours · follows Tach</span>
+        </div>
+        <dl className="mt-2 grid grid-cols-3 divide-x divide-border border-b border-border pb-3">
+          {derivedConfig.map((config, index) => (
+            <div key={config.key} className={`min-w-0 ${index === 0 ? "pr-2" : "px-2 sm:px-4"}`}>
+              <dt className="text-xs text-muted-foreground">{config.label}</dt>
+              <dd className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
+                <span className="text-lg sm:text-xl font-medium tabular-nums break-all">{reading(config.key)}</span>
+                <span className="text-xs text-muted-foreground">hrs</span>
+              </dd>
+              {ownerHours(config.key) !== null && <dd className="mt-1 text-[11px] text-muted-foreground">Owner: {ownerHours(config.key)} hrs</dd>}
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <CounterHistoryDialog
         open={isHistoryOpen}
