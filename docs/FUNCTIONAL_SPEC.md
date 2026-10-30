@@ -1,6 +1,6 @@
 # SlingologyMX Functional Specification
 
-**Application version:** v26.10.04
+**Application version:** v26.10.05
 **Spec version:** 2.0
 **Last Updated:** August 17, 2026
 **Source:** https://github.com/AlchemyGeek/SlingologyMX
