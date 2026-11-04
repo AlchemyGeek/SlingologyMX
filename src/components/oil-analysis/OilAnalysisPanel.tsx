@@ -54,6 +54,7 @@ export default function OilAnalysisPanel({userId,aircraftId}: {userId:string;air
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-y py-4">
       <div><p className="text-xs text-muted-foreground">Samples</p><p className="text-xl font-mono">{samples.length}</p></div>
       <div><p className="text-xs text-muted-foreground">Latest Sample</p><p className="text-sm mt-1">{latest?.sample_date || "—"}</p></div>
+      <div><p className="text-xs text-muted-foreground">Tach at Latest Sample</p><p className="text-xl font-mono">{latest?.hours_on_engine ?? "—"}<span className="text-xs ml-1">hr</span></p></div>
       <div><p className="text-xs text-muted-foreground">Latest Oil Interval</p><p className="text-xl font-mono">{latest?.hours_on_oil ?? "—"}<span className="text-xs ml-1">hr</span></p></div>
       <div><p className="text-xs text-muted-foreground mb-1">Assessment</p>{latest ? badge(latest) : "—"}</div>
     </div>
