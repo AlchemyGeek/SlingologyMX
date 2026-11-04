@@ -1076,10 +1076,15 @@ const DataManagement = () => {
       for (let i = 0; i < oilSamplesData.length; i++) {
         const record = oilSamplesData[i];
         updateProgress("oil_analysis_samples", i, oilSamplesData.length, 12);
-        const { data: existing, error: lookupError } = await supabase.from("oil_analysis_samples").select("id")
+        let lookup = supabase.from("oil_analysis_samples").select("id")
           .eq("user_id", user.id).eq("aircraft_id", selectedAircraftId)
-          .eq("sample_date", record.sample_date).eq("lab_name", record.lab_name || "").eq("lab_number", record.lab_number || "").maybeSingle();
+          .eq("sample_date", record.sample_date).ilike("lab_name", record.lab_name || "");
+        lookup = record.lab_number
+          ? lookup.ilike("lab_number", record.lab_number)
+          : (record.hours_on_oil == null ? lookup.is("hours_on_oil", null) : lookup.eq("hours_on_oil", record.hours_on_oil)).eq("lab_number", "");
+        const { data: matches, error: lookupError } = await lookup.limit(1);
         if (lookupError) throw lookupError;
+        const existing = matches?.[0];
         if (existing) { idMap[record.id] = existing.id; skipped.oil_analysis_samples++; continue; }
         const { id, user_id, aircraft_id, maintenance_log_id, ...rest } = record;
         const newId = generateId();
