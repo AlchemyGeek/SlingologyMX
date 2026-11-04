@@ -13,7 +13,7 @@ export default function OilAnalysisTrends({samples}: {samples:OilSample[]}) {
   const [engine,setEngine] = useState("all");
   const engines = Array.from(new Set(samples.map(s=>`${s.engine_model} / ${s.engine_serial}`)));
   const sorted = [...samples].filter(s=>engine === "all" || `${s.engine_model} / ${s.engine_serial}` === engine).sort((a,b)=>a.sample_date.localeCompare(b.sample_date));
-  const latest = sorted.at(-1);
+  const latest = sorted[sorted.length - 1];
   const config = METRICS.find(m=>m[0]===metric);
   const points = sorted.filter(s=>axis !== "engine" || s.hours_on_engine != null).map(s=>({
     x:axis === "engine" ? s.hours_on_engine : s.sample_date,
@@ -23,7 +23,7 @@ export default function OilAnalysisTrends({samples}: {samples:OilSample[]}) {
   }));
   const numbers = points.map(p=>p.value).filter((v):v is number => v != null);
   const mean = numbers.length ? numbers.reduce((a,b)=>a+b,0)/numbers.length : null;
-  const first = numbers[0], last = numbers.at(-1);
+  const first = numbers[0], last = numbers[numbers.length - 1];
   const change = first != null && last != null && first > 0 && numbers.length > 1 ? (last-first)/first*100 : null;
   const range = latest ? jsonObject(latest.lab_ranges)[metric] : null;
   return <div className="space-y-5">

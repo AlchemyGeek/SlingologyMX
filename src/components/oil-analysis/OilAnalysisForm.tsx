@@ -71,7 +71,7 @@ export default function OilAnalysisForm({ userId, aircraftId, initial, onClose, 
         }); return obj as Json;
       };
       const record: Database["public"]["Tables"]["oil_analysis_samples"]["Insert"] = {
-        ...text, ...numbers, user_id:userId, aircraft_id:aircraftId,
+        ...text, ...numbers, sample_date:values.sample_date, user_id:userId, aircraft_id:aircraftId,
         report_date:values.report_date || null, maintenance_log_id:values.maintenance_log_id || null,
         oil_changed: values.oil_changed === "unknown" ? null : values.oil_changed === "true",
         reference_profile:values.reference_profile, source:initial.source || "manual",
