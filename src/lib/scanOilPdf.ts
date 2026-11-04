@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { OilSample } from "./oilAnalysis";
+import { normalizeOilReportDate } from "../../supabase/functions/extract-oil-analysis/dates";
 
 export async function scanOilPdf(file:File, aircraftId:string, signal:AbortSignal): Promise<Partial<OilSample>> {
   if (file.size === 0 || file.size > 10*1024*1024) throw new Error("Choose a non-empty PDF smaller than 10 MB.");
@@ -27,5 +28,5 @@ export async function scanOilPdf(file:File, aircraftId:string, signal:AbortSigna
     }
   }
   if(!output)throw new Error("The report did not produce readable results.");
-  return output;
+  return {...output, sample_date:normalizeOilReportDate(output.sample_date) ?? undefined, report_date:normalizeOilReportDate(output.report_date)};
 }

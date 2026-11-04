@@ -1,6 +1,27 @@
 import { describe,it,expect } from "vitest";
 import { evaluateOil, parseLabNumber, rate } from "./oilAnalysis";
 import { migrateToCurrentVersion } from "./schemaMigrations";
+import { normalizeOilReportDate } from "../../supabase/functions/extract-oil-analysis/dates";
+describe("Scanned oil report dates",()=>{
+  it("converts the reported 7/6/2026 date to July 6 in storage",()=>{
+    expect(normalizeOilReportDate("7/6/2026")).toBe("2026-07-06");
+  });
+  it("accepts two-digit years using the app's 2000–2099 convention",()=>{
+    expect(normalizeOilReportDate("7/6/26")).toBe("2026-07-06");
+  });
+  it("accepts ISO, named months and unambiguous international dates",()=>{
+    expect(normalizeOilReportDate("2026-07-06")).toBe("2026-07-06");
+    expect(normalizeOilReportDate("July 6, 2026")).toBe("2026-07-06");
+    expect(normalizeOilReportDate("6 July 2026")).toBe("2026-07-06");
+    expect(normalizeOilReportDate("16/7/2026")).toBe("2026-07-16");
+  });
+  it("rejects impossible dates without silently rolling into another month",()=>{
+    expect(normalizeOilReportDate("2/29/2026")).toBeNull();
+    expect(normalizeOilReportDate("2/29/2024")).toBe("2024-02-29");
+    expect(normalizeOilReportDate("missing")).toBeNull();
+    expect(normalizeOilReportDate(null)).toBeNull();
+  });
+});
 describe("Oil analysis rules",()=>{
   it("retains below-detection-limit values rather than treating them as exact",()=>{
     expect(parseLabNumber("<0.5%")).toEqual({value:0.5,qualifier:"<"});
