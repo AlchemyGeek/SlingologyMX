@@ -57,6 +57,7 @@ interface RecordCounts {
   equipment: number;
   transactions: number;
   reserves: number;
+  oil_analysis_samples: number;
 }
 
 const tableDisplayNames: Record<string, string> = {
@@ -72,6 +73,7 @@ const tableDisplayNames: Record<string, string> = {
   equipment: "Equipment",
   transactions: "Transactions",
   reserves: "Reserves",
+  oil_analysis_samples: "Oil Analysis Samples",
 };
 
 const DataManagement = () => {
@@ -146,6 +148,7 @@ const DataManagement = () => {
         equipmentRes,
         transactionsRes,
         reservesRes,
+        oilSamplesRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -159,6 +162,7 @@ const DataManagement = () => {
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("reserves").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("oil_analysis_samples").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Remove user_id from exported data (will be replaced on import)
@@ -202,6 +206,7 @@ const DataManagement = () => {
           equipment: sanitizeRecords(equipmentRes.data || []),
           transactions: sanitizeRecords(transactionsRes.data || []),
           reserves: sanitizeRecords(reservesRes.data || []),
+          oil_analysis_samples: sanitizeRecords(oilSamplesRes.data || []),
         },
       };
 
@@ -219,6 +224,7 @@ const DataManagement = () => {
         equipment: exportData.tables.equipment.length,
         transactions: exportData.tables.transactions.length,
         reserves: exportData.tables.reserves.length,
+        oil_analysis_samples: exportData.tables.oil_analysis_samples.length,
       };
       setExportCounts(counts);
 
@@ -262,6 +268,7 @@ const DataManagement = () => {
         equipmentRes,
         transactionsRes,
         reservesRes,
+        oilSamplesRes,
       ] = await Promise.all([
         supabase.from("aircraft_counters").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("aircraft_counter_history").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
@@ -275,6 +282,7 @@ const DataManagement = () => {
         supabase.from("equipment").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("transactions").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
         supabase.from("reserves").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
+        supabase.from("oil_analysis_samples").select("*").eq("user_id", user.id).eq("aircraft_id", selectedAircraftId),
       ]);
 
       // Helper to create human-readable ID from UUID and created_at date
@@ -298,6 +306,7 @@ const DataManagement = () => {
         equipment: {},
         transactions: {},
         reserves: {},
+        oilSamples: {},
       };
 
       // Sort records by created_at for consistent numbering and build mappings
@@ -316,6 +325,7 @@ const DataManagement = () => {
       const equipment = (equipmentRes.data || []).sort(sortByCreated);
       const transactions = (transactionsRes.data || []).sort(sortByCreated);
       const reserves = (reservesRes.data || []).sort(sortByCreated);
+      const oilSamples = (oilSamplesRes.data || []).sort(sortByCreated);
 
       // Build ID maps
       counters.forEach((r, i) => { idMaps.counters[r.id] = createHumanId("CTR", r.id, r.created_at, i); });
@@ -330,6 +340,8 @@ const DataManagement = () => {
       equipment.forEach((r, i) => { idMaps.equipment[r.id] = createHumanId("EQP", r.id, r.created_at, i); });
       transactions.forEach((r, i) => { idMaps.transactions[r.id] = createHumanId("TXN", r.id, r.created_at, i); });
       reserves.forEach((r, i) => { idMaps.reserves[r.id] = createHumanId("RSV", r.id, r.created_at, i); });
+
+      oilSamples.forEach((r, i) => { idMaps.oilSamples[r.id] = createHumanId("OIL", r.id, r.created_at, i); });
 
       // Transform records: replace UUIDs with human-readable IDs
       const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
@@ -380,6 +392,7 @@ const DataManagement = () => {
         "Equipment": equipment.map(r => transformRecord(r, idMaps.equipment)),
         "Transactions": transactions.map(r => transformRecord(r, idMaps.transactions)),
         "Reserves": reserves.map(r => transformRecord(r, idMaps.reserves)),
+        "Oil Analysis Samples": oilSamples.map(r => transformRecord(r, idMaps.oilSamples)),
       };
 
       // Create workbook with separate worksheets
@@ -457,6 +470,7 @@ const DataManagement = () => {
           equipment: data.tables.equipment?.length || 0,
           transactions: data.tables.transactions?.length || 0,
           reserves: data.tables.reserves?.length || 0,
+          oil_analysis_samples: data.tables.oil_analysis_samples?.length || 0,
         };
         setImportCounts(counts);
         setImportResult(null);
@@ -490,6 +504,7 @@ const DataManagement = () => {
         equipment: 0,
         transactions: 0,
         reserves: 0,
+        oil_analysis_samples: 0,
       };
 
       const skipped: RecordCounts = {
@@ -505,6 +520,7 @@ const DataManagement = () => {
         equipment: 0,
         transactions: 0,
         reserves: 0,
+        oil_analysis_samples: 0,
       };
 
       // ID mapping for cross-user imports (old ID -> new ID)
@@ -527,6 +543,7 @@ const DataManagement = () => {
         "maintenance_directive_compliance",
         "transactions",
         "reserves",
+        "oil_analysis_samples",
       ] as const;
 
       // Helper to update progress
@@ -1055,6 +1072,23 @@ const DataManagement = () => {
         }
       }
 
+      const oilSamplesData = importPreview.tables.oil_analysis_samples || [];
+      for (let i = 0; i < oilSamplesData.length; i++) {
+        const record = oilSamplesData[i];
+        updateProgress("oil_analysis_samples", i, oilSamplesData.length, 12);
+        const { data: existing, error: lookupError } = await supabase.from("oil_analysis_samples").select("id")
+          .eq("user_id", user.id).eq("aircraft_id", selectedAircraftId)
+          .eq("sample_date", record.sample_date).eq("lab_name", record.lab_name || "").eq("lab_number", record.lab_number || "").maybeSingle();
+        if (lookupError) throw lookupError;
+        if (existing) { idMap[record.id] = existing.id; skipped.oil_analysis_samples++; continue; }
+        const { id, user_id, aircraft_id, maintenance_log_id, ...rest } = record;
+        const newId = generateId();
+        const { error } = await supabase.from("oil_analysis_samples").insert({ ...rest, id: newId,
+          user_id: user.id, aircraft_id: selectedAircraftId,
+          maintenance_log_id: maintenance_log_id ? idMap[maintenance_log_id] || null : null });
+        if (error) throw error;
+        idMap[id] = newId; inserted.oil_analysis_samples++;
+      }
       setImportProgress(null);
       setImportResult({ inserted, skipped });
       toast.success("Data imported successfully!");
@@ -1153,7 +1187,7 @@ const DataManagement = () => {
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Aircraft counters and counter history</li>
                     <li>• Subscriptions and notifications</li>
-                    <li>• Maintenance logs and compliance records</li>
+                    <li>• Maintenance logs, oil analysis samples and compliance records</li>
                     <li>• Directives, directive status, and history</li>
                   </ul>
                   <p className="text-sm text-muted-foreground mt-3">

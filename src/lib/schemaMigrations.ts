@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "2.0";
+export const CURRENT_SCHEMA_VERSION = "2.1";
 
 export interface ExportData {
   version: string;
@@ -37,6 +37,7 @@ export interface ExportData {
     equipment: any[];
     transactions: any[];
     reserves: any[];
+    oil_analysis_samples: any[];
   };
 }
 
@@ -278,6 +279,12 @@ const MIGRATIONS: Migration[] = [
       };
     },
   },
+  {
+    fromVersion: "2.0",
+    toVersion: "2.1",
+    description: "Add lab-agnostic oil analysis samples and reference data",
+    migrate: data => ({ ...data, version: "2.1", tables: { ...data.tables, oil_analysis_samples: data.tables.oil_analysis_samples ?? [] } }),
+  },
 ];
 
 /**
@@ -346,7 +353,8 @@ function validateStructure(data: any): { valid: boolean; error?: string } {
     'maintenance_directive_compliance',
     'equipment',
     'transactions',
-    'reserves'
+    'reserves',
+    'oil_analysis_samples'
   ];
   
   // Ensure all table entries are arrays
@@ -378,6 +386,7 @@ function normalizeData(data: ExportData): ExportData {
       equipment: data.tables.equipment || [],
       transactions: data.tables.transactions || [],
       reserves: data.tables.reserves || [],
+      oil_analysis_samples: data.tables.oil_analysis_samples || [],
     }
   };
 }

@@ -27,6 +27,7 @@ import { useAircraftCounters } from "@/hooks/useAircraftCounters";
 import { AircraftSwitcher } from "@/components/AircraftSwitcher";
 import { useAircraft } from "@/contexts/AircraftContext";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
+import OilAnalysisPanel from "@/components/oil-analysis/OilAnalysisPanel";
 
 const counterTypeToFieldMap: Record<string, string> = {
   Hobbs: "hobbs",
@@ -203,7 +204,10 @@ const Dashboard = () => {
     : undefined;
 
   const renderContent = () => {
+    if (!user) return null;
     switch (activeView) {
+      case "oil-analysis":
+        return <OilAnalysisPanel key={selectedAircraft?.id || "none"} userId={user.id} aircraftId={selectedAircraft?.id || ""} />;
       case "calendar":
         return (
           <CalendarPanel
