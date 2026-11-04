@@ -18,6 +18,7 @@ import {
   PiggyBank,
   Sparkles,
   GanttChartSquare,
+  FlaskConical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -43,6 +44,7 @@ type DashboardView =
   | "insights"
   | "equipment"
   | "maintenance"
+  | "oil-analysis"
   | "directives";
 
 interface AdminNotifications {
@@ -70,6 +72,7 @@ const eventsItems = [
 const recordsItems = [
   { id: "equipment" as const, title: "Equipment", icon: Package },
   { id: "maintenance" as const, title: "Maintenance", icon: Wrench },
+  { id: "oil-analysis" as const, title: "Oil Analysis", icon: FlaskConical },
   { id: "directives" as const, title: "Directives & Bulletins", icon: FileText },
 ];
 
