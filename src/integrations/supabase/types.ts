@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
   public: {
     Tables: {
       access_codes: {
@@ -1583,6 +1578,219 @@ export type Database = {
           },
         ]
       }
+      oil_analysis_ai_state: {
+        Row: {
+          blocked_at: string
+          id: boolean
+          message: string
+          status: number
+        }
+        Insert: {
+          blocked_at?: string
+          id?: boolean
+          message: string
+          status: number
+        }
+        Update: {
+          blocked_at?: string
+          id?: boolean
+          message?: string
+          status?: number
+        }
+        Relationships: []
+      }
+      oil_analysis_samples: {
+        Row: {
+          aircraft_id: string
+          aluminum: number | null
+          antifreeze_percent: number | null
+          barium: number | null
+          boron: number | null
+          calcium: number | null
+          chromium: number | null
+          copper: number | null
+          created_at: string
+          cst_viscosity_100c: number | null
+          engine_model: string
+          engine_serial: string
+          extra_results: Json
+          extraction_warnings: Json
+          flashpoint_f: number | null
+          fuel_percent: number | null
+          fuel_type: string
+          hours_on_engine: number | null
+          hours_on_oil: number | null
+          id: string
+          insolubles_percent: number | null
+          iron: number | null
+          lab_comments: string
+          lab_name: string
+          lab_number: string
+          lab_ranges: Json
+          lead: number | null
+          magnesium: number | null
+          maintenance_log_id: string | null
+          makeup_oil: number | null
+          manganese: number | null
+          molybdenum: number | null
+          nickel: number | null
+          notes: string
+          oil_brand_grade: string
+          oil_changed: boolean | null
+          phosphorus: number | null
+          potassium: number | null
+          qualifiers: Json
+          reference_profile: string
+          report_date: string | null
+          sample_date: string
+          silicon: number | null
+          silver: number | null
+          sodium: number | null
+          source: string
+          sus_viscosity_210f: number | null
+          tan: number | null
+          tbn: number | null
+          tin: number | null
+          titanium: number | null
+          universal_averages: Json
+          updated_at: string
+          user_id: string
+          water_percent: number | null
+          zinc: number | null
+        }
+        Insert: {
+          aircraft_id: string
+          aluminum?: number | null
+          antifreeze_percent?: number | null
+          barium?: number | null
+          boron?: number | null
+          calcium?: number | null
+          chromium?: number | null
+          copper?: number | null
+          created_at?: string
+          cst_viscosity_100c?: number | null
+          engine_model?: string
+          engine_serial?: string
+          extra_results?: Json
+          extraction_warnings?: Json
+          flashpoint_f?: number | null
+          fuel_percent?: number | null
+          fuel_type?: string
+          hours_on_engine?: number | null
+          hours_on_oil?: number | null
+          id?: string
+          insolubles_percent?: number | null
+          iron?: number | null
+          lab_comments?: string
+          lab_name?: string
+          lab_number?: string
+          lab_ranges?: Json
+          lead?: number | null
+          magnesium?: number | null
+          maintenance_log_id?: string | null
+          makeup_oil?: number | null
+          manganese?: number | null
+          molybdenum?: number | null
+          nickel?: number | null
+          notes?: string
+          oil_brand_grade?: string
+          oil_changed?: boolean | null
+          phosphorus?: number | null
+          potassium?: number | null
+          qualifiers?: Json
+          reference_profile?: string
+          report_date?: string | null
+          sample_date: string
+          silicon?: number | null
+          silver?: number | null
+          sodium?: number | null
+          source?: string
+          sus_viscosity_210f?: number | null
+          tan?: number | null
+          tbn?: number | null
+          tin?: number | null
+          titanium?: number | null
+          universal_averages?: Json
+          updated_at?: string
+          user_id: string
+          water_percent?: number | null
+          zinc?: number | null
+        }
+        Update: {
+          aircraft_id?: string
+          aluminum?: number | null
+          antifreeze_percent?: number | null
+          barium?: number | null
+          boron?: number | null
+          calcium?: number | null
+          chromium?: number | null
+          copper?: number | null
+          created_at?: string
+          cst_viscosity_100c?: number | null
+          engine_model?: string
+          engine_serial?: string
+          extra_results?: Json
+          extraction_warnings?: Json
+          flashpoint_f?: number | null
+          fuel_percent?: number | null
+          fuel_type?: string
+          hours_on_engine?: number | null
+          hours_on_oil?: number | null
+          id?: string
+          insolubles_percent?: number | null
+          iron?: number | null
+          lab_comments?: string
+          lab_name?: string
+          lab_number?: string
+          lab_ranges?: Json
+          lead?: number | null
+          magnesium?: number | null
+          maintenance_log_id?: string | null
+          makeup_oil?: number | null
+          manganese?: number | null
+          molybdenum?: number | null
+          nickel?: number | null
+          notes?: string
+          oil_brand_grade?: string
+          oil_changed?: boolean | null
+          phosphorus?: number | null
+          potassium?: number | null
+          qualifiers?: Json
+          reference_profile?: string
+          report_date?: string | null
+          sample_date?: string
+          silicon?: number | null
+          silver?: number | null
+          sodium?: number | null
+          source?: string
+          sus_viscosity_210f?: number | null
+          tan?: number | null
+          tbn?: number | null
+          tin?: number | null
+          titanium?: number | null
+          universal_averages?: Json
+          updated_at?: string
+          user_id?: string
+          water_percent?: number | null
+          zinc?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oil_analysis_samples_aircraft_id_fkey"
+            columns: ["aircraft_id"]
+            isOneToOne: false
+            referencedRelation: "aircraft"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oil_analysis_samples_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           access_code: string | null
@@ -2533,3 +2741,4 @@ export const Constants = {
     },
   },
 } as const
+
