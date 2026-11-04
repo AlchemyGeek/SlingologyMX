@@ -47,11 +47,26 @@ Deno.serve(async(req:Request)=>{
   try {bytes=Uint8Array.from(atob(parsed.data.base64),c=>c.charCodeAt(0));} catch {return json("Invalid PDF encoding.",400);}
   if(bytes.length>10*1024*1024 || new TextDecoder().decode(bytes.slice(0,5)) !== "%PDF-")return json("Choose a valid PDF smaller than 10 MB.",400);
   let upstreamStatus=200,upstreamMessage="",providerDenied=false,workspacePaused=false;
+  let resolveHeaders:()=>void=()=>{};
+  const headersReady=new Promise<void>(resolve=>{resolveHeaders=resolve;});
   const run=createLovableAiGatewayRunIdFetch();
   const provider=createOpenAI({baseURL:"https://ai.gateway.lovable.dev/v1",apiKey:aiKey,
     headers:{"Lovable-API-Key":aiKey,"X-Lovable-AIG-SDK":"vercel-ai-sdk"},
     fetch:async(input,init)=>{
-      const response=await run.fetch(input,init);
+      let response:Response;
+      try {
+        response=await run.fetch(input,init);
+        for(let attempt=0;attempt<2 && (response.status===429 || response.status>=500);attempt++) {
+          const errorBody=await response.clone().json().catch(()=>({}));
+          if(errorBody.props?.retryable===false || /account|configuration|not registered/i.test(errorBody.message || errorBody.error?.message || ""))break;
+          const retryAfter=response.headers.get("Retry-After");
+          const retrySeconds=retryAfter ? Number(retryAfter) : NaN;
+          const waitMs=Number.isFinite(retrySeconds) ? retrySeconds*1000 : retryAfter ? Math.max(0,Date.parse(retryAfter)-Date.now()) : (2**attempt)*1500+Math.random()*500;
+          if(!Number.isFinite(waitMs) || waitMs>30000)break;
+          await new Promise<void>((resolve,reject)=>{const timer=setTimeout(resolve,Math.max(1000,waitMs));req.signal.addEventListener("abort",()=>{clearTimeout(timer);reject(new DOMException("Stopped","AbortError"));},{once:true});});
+          response=await run.fetch(input,init);
+        }
+      } catch(error) {resolveHeaders();throw error;}
       upstreamStatus=response.status;
       if(!response.ok){
         const e=await response.clone().json().catch(()=>({}));
@@ -61,6 +76,7 @@ Deno.serve(async(req:Request)=>{
         providerDenied=response.status===403 && !workspacePaused && !["model_vendor_not_enabled","model_requires_retention_consent","provider_not_available_in_region"].includes(type);
         if(providerDenied || workspacePaused)await db.from("oil_analysis_ai_state").upsert({id:true,status:response.status,message:upstreamMessage});
       }
+      resolveHeaders();
       return response;
     },
   });
@@ -78,6 +94,7 @@ Deno.serve(async(req:Request)=>{
         if(part.type === "error")throw part.error;
         if(part.type === "reasoning-delta" || part.type === "text-delta")send({type:"progress"});
       }
+      if(await result.finishReason === "content-filter")throw new Error("The provider declined this report. This scan has stopped.");
       const output=await result.output;
       if(!output || !output.measurements.length)throw new Error("No oil analysis results could be read from this PDF.");
       const sample:Record<string,unknown>={...output,source:"pdf",reference_profile:"lab",notes:"",extraction_warnings:output.warnings};
@@ -94,13 +111,13 @@ Deno.serve(async(req:Request)=>{
       sample.qualifiers=qualifiers;sample.universal_averages=averages;sample.lab_ranges=ranges;
       send({type:"result",sample});
     } catch(error) {
-      if(req.signal.aborted){controller.close();return;}
+      if(req.signal.aborted)return;
       send({type:"error",status:upstreamStatus>=400 ? upstreamStatus : 422,message:upstreamMessage || (error instanceof Error ? error.message : "Unable to read this report. Enter the sample manually.")});
     } finally {controller.close();}
   }});
   // Wait for upstream headers (not the completed output) to preserve access-denial status.
-  await run.waitForRunId();
-  if(upstreamStatus>=400){ await stream.cancel().catch(()=>{});return json(upstreamMessage,upstreamStatus); }
+  await headersReady;
+  if(upstreamStatus>=400)return json(upstreamMessage,upstreamStatus);
   const headers=new Headers({...corsHeaders,"Content-Type":"application/x-ndjson","Cache-Control":"no-store"});
   const runId=run.getRunId();if(runId){headers.set("X-Lovable-AIG-Run-ID",runId);headers.set("Access-Control-Expose-Headers","X-Lovable-AIG-Run-ID");}
   return new Response(stream,{headers});
