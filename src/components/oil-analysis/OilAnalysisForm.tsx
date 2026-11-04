@@ -12,6 +12,7 @@ import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { ELEMENTS, PROPERTIES, jsonObject, numericFields, parseLabNumber, sampleInputSchema, type OilSample } from "@/lib/oilAnalysis";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { matchOilEngine, usableEngineSerial, type OilEngineEquipment } from "@/lib/oilEngineEquipment";
 
 type Props = { userId: string; aircraftId: string; initial: Partial<OilSample>; onClose: () => void; onSaved: () => void };
 const textFields = ["lab_name", "lab_number", "engine_model", "engine_serial", "oil_brand_grade", "fuel_type", "lab_comments", "notes"];
@@ -27,6 +28,9 @@ export default function OilAnalysisForm({ userId, aircraftId, initial, onClose, 
     return v;
   });
   const [logs, setLogs] = useState<{id: string; entry_title: string}[]>([]);
+  const [engines, setEngines] = useState<OilEngineEquipment[]>([]);
+  const [engineChoice, setEngineChoice] = useState("none");
+  const [engineNotice, setEngineNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [averages, setAverages] = useState(JSON.stringify(initial.universal_averages || {}, null, 2));
@@ -36,6 +40,35 @@ export default function OilAnalysisForm({ userId, aircraftId, initial, onClose, 
       if (error) setError(error.message); else setLogs(data || []);
     });
   }, [userId, aircraftId]);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("equipment").select("id,name,model_or_part_number,serial_number,archived,install_context,installed_date")
+      .eq("user_id", userId).eq("aircraft_id", aircraftId).eq("category", "Engine")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { setError(error.message); return; }
+        const equipment = data || [];
+        setEngines(equipment);
+        setValues(current => {
+          const match = matchOilEngine(current, equipment);
+          if (!match) return current;
+          setEngineChoice(match.id);
+          const fillsSerial = !usableEngineSerial(current.engine_serial);
+          setEngineNotice(fillsSerial ? `Engine serial supplied from equipment: ${match.name}. Review before saving.` : `Report serial matches equipment: ${match.name}.`);
+          return { ...current, engine_serial: fillsSerial ? match.serial_number || "" : current.engine_serial,
+            engine_model: current.engine_model || match.model_or_part_number || "" };
+        });
+      });
+    return () => { cancelled = true; };
+  }, [userId, aircraftId]);
+  const chooseEngine = (id: string) => {
+    setEngineChoice(id);
+    const engine = engines.find(e => e.id === id);
+    if (!engine) { setEngineNotice(""); return; }
+    setValues(current => ({ ...current, engine_model: current.engine_model || engine.model_or_part_number || "",
+      engine_serial: usableEngineSerial(current.engine_serial) ? current.engine_serial : usableEngineSerial(engine.serial_number) ? engine.serial_number || "" : current.engine_serial }));
+    setEngineNotice(`Selected equipment: ${engine.name} · S/N ${engine.serial_number || "—"}. Existing report values are retained.`);
+  };
   const set = (key: string, value: string) => setValues(v => ({...v, [key]:value}));
   const input = (key: string, label: string, numeric = false, unit?: string) => (
     <div key={key} className="space-y-1.5 min-w-0">
@@ -95,6 +128,7 @@ export default function OilAnalysisForm({ userId, aircraftId, initial, onClose, 
         {date("sample_date","Sample Date *",true)}{date("report_date","Report Date")}
         <div className="space-y-1.5"><Label htmlFor="oil-lab_name">Laboratory</Label><Input id="oil-lab_name" list="oil-labs" value={values.lab_name} onChange={e=>set("lab_name",e.target.value)} maxLength={200}/><datalist id="oil-labs">{["Blackstone Laboratories","Aviation Laboratories","ALS Tribology","WearCheck","Bureau Veritas"].map(l=><option key={l} value={l}/>)}</datalist></div>
         {input("lab_number","Lab / Report Number")}{input("engine_model","Engine Model")}{input("engine_serial","Engine Serial / Identifier")}
+        <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="oil-engine-equipment">Engine Equipment</Label><Select value={engineChoice} onValueChange={chooseEngine}><SelectTrigger id="oil-engine-equipment"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="none">No equipment selected</SelectItem>{engines.map(engine => <SelectItem key={engine.id} value={engine.id}>{engine.name} · S/N {engine.serial_number || "—"}{engine.archived ? " (Archived)" : ""}</SelectItem>)}</SelectContent></Select>{engineNotice && <p className="text-xs text-muted-foreground">{engineNotice}</p>}</div>
         {input("hours_on_engine","Engine Hours",true,"hr")}{input("hours_on_oil","Hours on Oil",true,"hr")}{input("makeup_oil","Make-up Oil",true,"qt")}
         {input("oil_brand_grade","Oil Brand & Grade")}{input("fuel_type","Fuel Type / Mix")}
         <div className="space-y-1.5"><Label>Oil Changed</Label><Select value={values.oil_changed} onValueChange={v=>set("oil_changed",v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="unknown">Not specified</SelectItem><SelectItem value="true">Yes</SelectItem><SelectItem value="false">No</SelectItem></SelectContent></Select></div>
