@@ -4,6 +4,7 @@ import { createOpenAI } from "npm:@ai-sdk/openai@3";
 import { streamText, Output } from "npm:ai@6";
 import { z } from "npm:zod@3";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.ts";
+import { normalizeOilReportDate } from "./dates.ts";
 
 const METRICS = ["aluminum","chromium","iron","copper","lead","tin","molybdenum","nickel","manganese","silver","titanium","potassium","boron","silicon","sodium","calcium","magnesium","phosphorus","zinc","barium","sus_viscosity_210f","cst_viscosity_100c","flashpoint_f","fuel_percent","antifreeze_percent","water_percent","insolubles_percent","tbn","tan"] as const;
 const bodySchema = z.object({aircraft_id:z.string().uuid(),filename:z.string().min(1).max(255),base64:z.string().min(1).max(13981016).regex(/^[A-Za-z0-9+/]+={0,2}$/)}).strict();
@@ -99,6 +100,12 @@ Deno.serve(async(req:Request)=>{
       if(!output || !output.measurements.length)throw new Error("No oil analysis results could be read from this PDF.");
       const sample:Record<string,unknown>={...output,source:"pdf",reference_profile:"lab",notes:"",extraction_warnings:output.warnings};
       delete sample.measurements;delete sample.warnings;
+      for (const key of ["sample_date", "report_date"] as const) {
+        const raw = output[key];
+        sample[key] = normalizeOilReportDate(raw);
+        if (raw && !sample[key]) output.warnings.push(`Could not interpret ${key === "sample_date" ? "sample" : "report"} date "${raw}". Enter it during review.`);
+        else if (raw && /^\d{1,2}[/.-]\d{1,2}[/.-]/.test(raw)) output.warnings.push(`Review ${key === "sample_date" ? "sample" : "report"} date: "${raw}" was interpreted as ${sample[key]} using month/day/year unless the first number exceeds 12.`);
+      }
       const qualifiers:Record<string,string>={},averages:Record<string,number>={},ranges:Record<string,{min:number|null;max:number|null}>={};
       for(const m of output.measurements){
         if(m.value != null && (!Number.isFinite(m.value) || (m.value<0 && m.key !== "flashpoint_f") || (m.key.endsWith("percent") && m.value>100)))throw new Error(`Invalid extracted ${m.key}; please enter this sample manually.`);
