@@ -36,7 +36,7 @@ describe("Oil analysis rules",()=>{
   it("detects a greater than 50 percent iron rate increase",()=>{
     expect(evaluateOil({reference_profile:"rotax916",iron:31,hours_on_oil:50},{iron:20,hours_on_oil:50}).issues.some(i=>i.message.includes("50%"))).toBe(true);
   });
-  it("marks workbook sample 2 watch for viscosity and normalized lead, not absolute lead",()=>{
+  it("marks example sample 2 watch for viscosity and normalized lead, not absolute lead",()=>{
     const a={reference_profile:"rotax916",iron:20,copper:16,aluminum:3,lead:2763,hours_on_oil:50,fuel_type:"100LL",cst_viscosity_100c:12.91};
     const b={...a,iron:21,copper:12,aluminum:4,lead:3827,hours_on_oil:45,cst_viscosity_100c:12.22};
     expect(evaluateOil(a).status).toBe("Normal");
