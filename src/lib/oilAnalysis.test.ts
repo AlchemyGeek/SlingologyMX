@@ -28,6 +28,18 @@ describe("Oil analysis rules",()=>{
     expect(evaluateOil({reference_profile:"lab",iron:43}).status).toBe("Not assessed");
     expect(evaluateOil({reference_profile:"lab",iron:43,lab_ranges:{iron:{max:40}}}).status).toBe("Watch");
   });
+  it("requires three samples for a continuing iron/copper co-trend",()=>{
+    const current={reference_profile:"rotax916",iron:30,copper:20};
+    expect(evaluateOil(current,{iron:25,copper:18}).status).toBe("Normal");
+    expect(evaluateOil(current,{iron:25,copper:18},{iron:20,copper:16}).status).toBe("Action Required");
+  });
+  it("applies copper, aluminum, viscosity and contamination boundaries",()=>{
+    expect(evaluateOil({reference_profile:"rotax916",copper:35}).status).toBe("Action Required");
+    expect(evaluateOil({reference_profile:"rotax916",aluminum:16}).status).toBe("Action Required");
+    expect(evaluateOil({reference_profile:"rotax916",cst_viscosity_100c:11.8}).status).toBe("Action Required");
+    expect(evaluateOil({reference_profile:"rotax916",fuel_percent:1}).status).toBe("Action Required");
+    expect(evaluateOil({reference_profile:"rotax916",insolubles_percent:0.4}).status).toBe("Watch");
+  });
   it("upgrades old backups to 2.1 without modifying history",()=>{
     const original={version:"2.0",tables:{maintenance_logs:[{id:"history",tach_at_event:123}],oil_analysis_samples:[]}};
     const result=migrateToCurrentVersion(original);
