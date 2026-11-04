@@ -6,6 +6,8 @@ Aircraft maintenance tracking and compliance management system for experimental 
 **Public preview:** https://slingologymx.lovable.app  
 **Self-host source:** https://github.com/AlchemyGeek/SlingologyMX
 
+See [release notes](docs/RELEASE_NOTES.md) for improvements since v26.08.01.
+
 ---
 
 ## What SlingologyMX Is
