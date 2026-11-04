@@ -2,7 +2,7 @@
 
 Aircraft maintenance tracking and compliance management system for experimental aircraft owners.
 
-**Current version:** v26.10.05  
+**Current version:** v26.11.01  
 **Public preview:** https://slingologymx.lovable.app  
 **Self-host source:** https://github.com/AlchemyGeek/SlingologyMX
 
