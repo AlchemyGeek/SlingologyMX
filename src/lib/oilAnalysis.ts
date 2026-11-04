@@ -72,7 +72,7 @@ export function evaluateOil(sample: Partial<OilSample>, previous?: Partial<OilSa
   }
   const previousExact = (key: Metric) => previous && !jsonObject(previous.qualifiers)[key] ? previous[key] ?? null : null;
   const rising = (key: Metric) => exact(key) != null && previousExact(key) != null && Number(exact(key)) > Number(previousExact(key));
-  // Workbook rules are guidance for the selected Rotax 916 iS profile only.
+  // Built-in advisory guidelines for the selected Rotax 916 iS profile only.
   if (sample.reference_profile === "rotax916") {
     const continuingIronRise = rising("iron") && beforePrevious?.iron != null && previous?.iron != null && previous.iron > beforePrevious.iron;
     if (over("iron", 42) || (continuingIronRise && (rising("copper") || rising("aluminum")))) add("Action Required", "Iron exceeds 42 ppm or continues rising with copper/aluminum across three samples.");
