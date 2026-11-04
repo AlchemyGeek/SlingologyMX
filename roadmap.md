@@ -1,4 +1,5 @@
 # Oil Analysis
+- [ ] Improve engine serial extraction and aircraft equipment correlation; verify without changing existing samples.
 - [x] Aircraft-scoped records, optional maintenance link, manual entry and review.
 - [x] Transient, lab-agnostic PDF extraction with safe error handling.
 - [x] Trends, normalized statistics, and reference-based health checks.
