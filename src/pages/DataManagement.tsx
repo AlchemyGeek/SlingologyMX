@@ -349,6 +349,10 @@ const DataManagement = () => {
       const transformRecord = (record: any, ownIdMap: Record<string, string>) => {
         const { user_id, ...rest } = record;
         const transformed: any = { ...rest };
+        // Spreadsheet-friendly compression readings, e.g. "72/80, 74/80"
+        if (Array.isArray(transformed.cylinder_compressions)) {
+          transformed.cylinder_compressions = transformed.cylinder_compressions.map((n: number) => `${String(n).padStart(2, "0")}/80`).join(", ");
+        }
 
         // Replace own ID
         if (transformed.id && ownIdMap[transformed.id]) {
