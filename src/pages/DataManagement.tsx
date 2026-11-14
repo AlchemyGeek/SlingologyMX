@@ -172,7 +172,7 @@ const DataManagement = () => {
       // Fetch aircraft identity (registration, model, serial number)
       const { data: aircraftRow } = await supabase
         .from("aircraft")
-        .select("registration, model_make, serial_number, link_hobbs_to_tach, engine_overhaul_tach, engine_overhaul_hours, engine_overhaul_date, prop_overhaul_tach, prop_overhaul_hours, prop_overhaul_date")
+        .select("registration, model_make, serial_number, link_hobbs_to_tach, engine_overhaul_tach, engine_overhaul_hours, engine_overhaul_date, prop_overhaul_tach, prop_overhaul_hours, prop_overhaul_date, cylinder_count, compression_warning_threshold")
         .eq("id", selectedAircraftId)
         .single();
 
@@ -191,6 +191,8 @@ const DataManagement = () => {
               prop_overhaul_tach: aircraftRow.prop_overhaul_tach,
               prop_overhaul_hours: aircraftRow.prop_overhaul_hours,
               prop_overhaul_date: aircraftRow.prop_overhaul_date,
+              cylinder_count: aircraftRow.cylinder_count,
+              compression_warning_threshold: aircraftRow.compression_warning_threshold,
 }
           : null,
         tables: {
@@ -642,6 +644,8 @@ const DataManagement = () => {
             prop_overhaul_tach: a.prop_overhaul_tach ?? null,
             prop_overhaul_hours: a.prop_overhaul_hours ?? 0,
             prop_overhaul_date: a.prop_overhaul_date ?? null,
+            cylinder_count: a.cylinder_count ?? 4,
+            compression_warning_threshold: a.compression_warning_threshold ?? 60,
           })
           .eq("id", selectedAircraftId);
       }

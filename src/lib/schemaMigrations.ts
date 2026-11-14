@@ -7,7 +7,7 @@
  * 3. Register it in MIGRATIONS array
  */
 
-export const CURRENT_SCHEMA_VERSION = "2.1";
+export const CURRENT_SCHEMA_VERSION = "2.2";
 
 export interface ExportData {
   version: string;
@@ -284,6 +284,17 @@ const MIGRATIONS: Migration[] = [
     toVersion: "2.1",
     description: "Add lab-agnostic oil analysis samples and reference data",
     migrate: data => ({ ...data, version: "2.1", tables: { ...data.tables, oil_analysis_samples: data.tables.oil_analysis_samples ?? [] } }),
+  },
+  {
+    fromVersion: "2.1",
+    toVersion: "2.2",
+    description: "Add cylinder count, compression warning and maintenance compression readings",
+    migrate: (data: any) => ({
+      ...data,
+      version: "2.2",
+      aircraft: data.aircraft ? { cylinder_count: 4, compression_warning_threshold: 60, ...data.aircraft } : data.aircraft,
+      tables: { ...data.tables, maintenance_logs: (data.tables.maintenance_logs ?? []).map((l: any) => ({ cylinder_compressions: null, ...l })) },
+    }),
   },
 ];
 

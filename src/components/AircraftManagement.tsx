@@ -1,3 +1,5 @@
+import { CompressionHistory } from "./CompressionHistory";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useAircraft, Aircraft } from "@/contexts/AircraftContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +36,8 @@ interface AircraftFormData {
   model_make: string;
   serial_number: string;
   link_hobbs_to_tach: boolean;
+  cylinder_count: string;
+  compression_warning_threshold: string;
   initial_hobbs: string;
   initial_tach: string;
   initial_airframe_total_time: string;
@@ -65,7 +69,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
   const [deletingAircraft, setDeletingAircraft] = useState<Aircraft | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
+  const [formData, setFormData] = useState<AircraftFormData>({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, cylinder_count: "4", compression_warning_threshold: "60", ...emptyInitialCounters });
   const [saving, setSaving] = useState(false);
   const [showInitialChangeWarning, setShowInitialChangeWarning] = useState(false);
   const [initialChangeConfirmText, setInitialChangeConfirmText] = useState("");
@@ -83,7 +87,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
 
   const openAddDialog = () => {
     setEditingAircraft(null);
-    setFormData({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, ...emptyInitialCounters });
+    setFormData({ registration: "", model_make: "", serial_number: "", link_hobbs_to_tach: false, cylinder_count: "4", compression_warning_threshold: "60", ...emptyInitialCounters });
     setInitialCountersOpen(false);
     setIsDialogOpen(true);
   };
@@ -95,6 +99,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
       model_make: a.model_make || "",
       serial_number: a.serial_number || "",
       link_hobbs_to_tach: a.link_hobbs_to_tach,
+      cylinder_count: String(a.cylinder_count),
+      compression_warning_threshold: String(a.compression_warning_threshold),
       initial_hobbs: formatInitialValue(a.initial_hobbs),
       initial_tach: formatInitialValue(a.initial_tach),
       initial_airframe_total_time: formatInitialValue(a.initial_airframe_total_time),
@@ -136,6 +142,12 @@ export function AircraftManagement({ userId }: { userId: string }) {
       return;
     }
 
+    const thr = parseInt(formData.compression_warning_threshold, 10);
+    if (isNaN(thr) || thr < 0 || thr > 80) {
+      toast.error("Low compression warning must be a whole number from 0 to 80");
+      return;
+    }
+
     setSaving(true);
 
     const parseInitial = (v: string): number | null => {
@@ -162,6 +174,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
             model_make: formData.model_make.trim() || null,
             serial_number: formData.serial_number.trim() || null,
             link_hobbs_to_tach: formData.link_hobbs_to_tach,
+            cylinder_count: parseInt(formData.cylinder_count, 10),
+            compression_warning_threshold: parseInt(formData.compression_warning_threshold, 10),
             ...initialUpdates,
           })
           .eq("id", editingAircraft.id);
@@ -203,6 +217,8 @@ export function AircraftManagement({ userId }: { userId: string }) {
           serial_number: formData.serial_number.trim() || null,
           is_primary: isPrimary,
           link_hobbs_to_tach: formData.link_hobbs_to_tach,
+            cylinder_count: parseInt(formData.cylinder_count, 10),
+            compression_warning_threshold: parseInt(formData.compression_warning_threshold, 10),
         });
 
         if (error) throw error;
@@ -343,6 +359,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -508,6 +525,26 @@ export function AircraftManagement({ userId }: { userId: string }) {
                 </CollapsibleContent>
               </div>
             </Collapsible>
+            {/* Engine cylinders */}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+              <div className="space-y-1">
+                <Label htmlFor="cylinder_count">Number of cylinders</Label>
+                <Select value={formData.cylinder_count} onValueChange={(v) => setFormData({ ...formData, cylinder_count: v })}>
+                  <SelectTrigger id="cylinder_count"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["2", "4", "6"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="compression_warning_threshold">Low compression warning below</Label>
+                <div className="flex items-center gap-1">
+                  <Input id="compression_warning_threshold" inputMode="numeric" maxLength={2} value={formData.compression_warning_threshold}
+                    onChange={(e) => setFormData({ ...formData, compression_warning_threshold: e.target.value.replace(/\D/g, "").slice(0, 2) })} />
+                  <span className="text-sm text-muted-foreground">/80</span>
+                </div>
+              </div>
+            </div>
             {/* Counter Tracking */}
             <div className="space-y-2 pt-2 border-t">
               <div className="flex items-center justify-between gap-4">
@@ -748,5 +785,7 @@ export function AircraftManagement({ userId }: { userId: string }) {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+    {aircraft.map((a) => <CompressionHistory key={a.id} aircraft={a} />)}
+    </>
   );
 }
