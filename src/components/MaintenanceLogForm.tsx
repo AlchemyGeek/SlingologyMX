@@ -31,6 +31,9 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import MaintenanceDirectiveCompliance from "./MaintenanceDirectiveCompliance";
 import { CylinderCompressionInput } from "./CylinderCompressionInput";
+import { ReceiptScanButton } from "./ReceiptScanButton";
+import { receiptNotes, type ScannedReceipt } from "@/lib/scanReceipt";
+import { Constants } from "@/integrations/supabase/types";
 import { parseCompression, readCompressions } from "@/lib/compression";
 import { 
   createMaintenanceTransactions, 
@@ -446,6 +449,36 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       console.error("Error handling directive notification completion/recurrence:", error);
       // Don't fail the whole operation if notification handling fails
     }
+  };
+
+  const applyReceipt = (r: ScannedReceipt) => {
+    const E = Constants.public.Enums;
+    const pick = <T extends string>(v: string | null, list: readonly T[], fallback: T): T => (v && (list as readonly string[]).includes(v) ? (v as T) : fallback);
+    const toDate = (v: string | null) => (v ? parseLocalDate(v) : null);
+    const split = r.parts_cost != null || r.labor_cost != null || r.other_cost != null;
+    if (split) setIsItemizedCost(true);
+    setFormData((prev) => {
+      const notes = receiptNotes(r);
+      const completed = toDate(r.date);
+      return {
+        ...prev,
+        entry_title: r.title?.slice(0, 120) || prev.entry_title,
+        category: pick(r.maintenance_category, E.maintenance_category, prev.category),
+        subcategory: pick(r.maintenance_subcategory, E.maintenance_subcategory, prev.subcategory),
+        date_started: toDate(r.date_started) ?? completed ?? prev.date_started,
+        date_completed: completed ?? prev.date_completed,
+        tach_at_event: r.tach != null ? String(r.tach) : prev.tach_at_event,
+        hobbs_at_event: r.hobbs != null ? String(r.hobbs) : prev.hobbs_at_event,
+        performed_by_type: pick(r.performed_by_type, E.performed_by_type, prev.performed_by_type),
+        performed_by_name: r.performed_by_name || r.vendor || prev.performed_by_name,
+        organization: r.vendor || prev.organization,
+        parts_cost: r.parts_cost != null ? r.parts_cost.toFixed(2) : prev.parts_cost,
+        labor_cost: r.labor_cost != null ? r.labor_cost.toFixed(2) : prev.labor_cost,
+        other_cost: r.other_cost != null ? r.other_cost.toFixed(2) : prev.other_cost,
+        total_cost: r.total != null ? r.total.toFixed(2) : prev.total_cost,
+        internal_notes: notes ? (prev.internal_notes ? `${prev.internal_notes}\n\n${notes}` : notes).slice(0, 2000) : prev.internal_notes,
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1238,6 +1271,8 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           Cancel
         </Button>
       </div>
+
+      <ReceiptScanButton aircraftId={aircraftId} kind="maintenance" onResult={applyReceipt} />
 
       {/* Identity & Classification */}
       <div className="space-y-4 border-b pb-4">

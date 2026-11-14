@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { Constants } from "@/integrations/supabase/types";
+import { ReceiptScanButton } from "@/components/ReceiptScanButton";
+import { receiptNotes, type ScannedReceipt } from "@/lib/scanReceipt";
 
 interface TransactionFormProps {
   userId: string;
@@ -68,6 +70,22 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
     allocation_start_date: editingTransaction?.allocation_start_date ? parseLocalDate(editingTransaction.allocation_start_date) : null,
     allocation_end_date: editingTransaction?.allocation_end_date ? parseLocalDate(editingTransaction.allocation_end_date) : null,
   });
+
+  const applyReceipt = (r: ScannedReceipt) => {
+    setFormData((prev) => {
+      const notes = receiptNotes(r);
+      return {
+        ...prev,
+        title: r.title?.slice(0, 200) || prev.title,
+        transaction_date: r.date ? parseLocalDate(r.date) : prev.transaction_date,
+        amount: r.total != null ? r.total.toFixed(2) : prev.amount,
+        currency: r.currency && /^[A-Z]{3}$/.test(r.currency) ? r.currency : prev.currency,
+        category: r.transaction_category && (CATEGORIES as readonly string[]).includes(r.transaction_category) ? r.transaction_category : prev.category,
+        intent: r.transaction_intent && (INTENTS as readonly string[]).includes(r.transaction_intent) ? r.transaction_intent : prev.intent,
+        notes: notes ? (prev.notes ? `${prev.notes}\n\n${notes}` : notes) : prev.notes,
+      };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +186,7 @@ const TransactionForm = ({ userId, aircraftId, onSuccess, onCancel, editingTrans
         {/* Core Identification */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Core Details</h3>
+          <ReceiptScanButton aircraftId={aircraftId} kind="transaction" onResult={applyReceipt} />
           
           <div className="space-y-2">
             <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
