@@ -622,3 +622,7 @@ SlingologyMX is provided for planning and situational awareness only. It is not 
 - Maintenance records have an optional "Record compression" section under Directive Compliance: one whole-number reading 0–80 per cylinder, shown as `XX/80`; all cylinders required once enabled; readings below the warning value are flagged.
 - Saved readings are snapshots and are never resized when the cylinder count changes later.
 - The aircraft profile shows a Compression History per aircraft. Export/import schema 2.2 carries these fields.
+
+## Receipt Scanning
+- Transaction and Maintenance forms have a "Scan receipt" button (PDF or photo). The file is read once and never stored.
+- Readable details pre-fill the form (title, date, amount/costs split into parts/labor/other, currency, category, vendor, mechanic, Tach/Hobbs when labeled); vendor, invoice #, fuel gallons, tax and line items go into notes. Unreadable fields stay as they were; the user reviews before saving.
