@@ -1,3 +1,6 @@
+import { useAircraft } from "@/contexts/AircraftContext";
+import { CompressionReadings } from "./CylinderCompressionInput";
+import { readCompressions } from "@/lib/compression";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +45,7 @@ interface MaintenanceLogDetailProps {
 }
 
 const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "USD" }: MaintenanceLogDetailProps) => {
+  const { selectedAircraft } = useAircraft();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [complianceEntries, setComplianceEntries] = useState<ComplianceEntry[]>([]);
 
@@ -199,6 +203,17 @@ const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "
                   <p className="font-medium">{log.prop_total_time}</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {readCompressions((log as any).cylinder_compressions) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Cylinder Compression</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CompressionReadings readings={readCompressions((log as any).cylinder_compressions)!} threshold={selectedAircraft?.compression_warning_threshold ?? 60} />
             </CardContent>
           </Card>
         )}

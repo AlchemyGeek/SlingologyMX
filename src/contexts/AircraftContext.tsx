@@ -27,6 +27,8 @@ export interface Aircraft {
   prop_overhaul_tach: number | null;
   prop_overhaul_hours: number;
   prop_overhaul_date: string | null;
+  cylinder_count: number;
+  compression_warning_threshold: number;
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +88,8 @@ export function AircraftProvider({ children, user }: { children: ReactNode; user
         prop_overhaul_tach: d.prop_overhaul_tach ?? null,
         prop_overhaul_hours: Number(d.prop_overhaul_hours ?? 0),
         prop_overhaul_date: d.prop_overhaul_date ?? null,
+        cylinder_count: Number(d.cylinder_count ?? 4),
+        compression_warning_threshold: Number(d.compression_warning_threshold ?? 60),
         initial_hobbs: d.initial_hobbs ?? null,
         initial_tach: d.initial_tach ?? null,
         initial_airframe_total_time: d.initial_airframe_total_time ?? null,

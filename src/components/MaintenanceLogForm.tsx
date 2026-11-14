@@ -30,6 +30,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import MaintenanceDirectiveCompliance from "./MaintenanceDirectiveCompliance";
+import { CylinderCompressionInput } from "./CylinderCompressionInput";
+import { parseCompression, readCompressions } from "@/lib/compression";
 import { 
   createMaintenanceTransactions, 
   updateMaintenanceTransactions 
@@ -145,6 +147,10 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
   const countersRequired = !!formData.date_completed;
   
   const [directiveComplianceLinks, setDirectiveComplianceLinks] = useState<DirectiveComplianceLink[]>([]);
+  const cylinderCount = selectedAircraft?.cylinder_count ?? 4;
+  const compressionThreshold = selectedAircraft?.compression_warning_threshold ?? 60;
+  const [recordCompression, setRecordCompression] = useState(false);
+  const [compressionValues, setCompressionValues] = useState<string[]>([]);
 
   const [urlInput, setUrlInput] = useState("");
   const [urlDescInput, setUrlDescInput] = useState("");
@@ -232,6 +238,9 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
         attachment_urls: editingLog.attachment_urls || [],
         internal_notes: editingLog.internal_notes || "",
       });
+      const existingCompressions = readCompressions((editingLog as any).cylinder_compressions);
+      setRecordCompression(!!existingCompressions);
+      setCompressionValues(existingCompressions ? existingCompressions.map(String) : []);
       
       // Fetch existing directive compliance links
       const fetchComplianceLinks = async () => {
@@ -458,6 +467,18 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       return;
     }
 
+    let cylinderCompressions: number[] | null = null;
+    if (recordCompression) {
+      // Keep the number of readings saved on an edited record (snapshot), else use the aircraft's cylinder count
+      const count = Math.max(cylinderCount, compressionValues.length);
+      const parsed = Array.from({ length: count }, (_, i) => parseCompression(compressionValues[i] ?? ""));
+      if (parsed.some((n) => n === null)) {
+        toast.error("Enter a compression reading from 0 to 80 for every cylinder");
+        return;
+      }
+      cylinderCompressions = parsed as number[];
+    }
+
     if (formData.internal_notes.length > 2000) {
       toast.error("Internal notes must be 2000 characters or less");
       return;
@@ -508,6 +529,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       total_cost: formData.total_cost ? parseFloat(formData.total_cost) : null,
       attachment_urls: formData.attachment_urls,
       internal_notes: formData.internal_notes || null,
+      cylinder_compressions: cylinderCompressions,
     };
 
     try {
@@ -1438,6 +1460,18 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
           datePerformed={effectiveDate}
           performedByName={formData.performed_by_name}
           performedByType={formData.performed_by_type}
+        />
+      </div>
+
+      {/* Cylinder Compression */}
+      <div className="space-y-4 border-b pb-4">
+        <CylinderCompressionInput
+          enabled={recordCompression}
+          onEnabledChange={setRecordCompression}
+          values={compressionValues}
+          onValuesChange={setCompressionValues}
+          cylinderCount={Math.max(cylinderCount, compressionValues.length)}
+          threshold={compressionThreshold}
         />
       </div>
 

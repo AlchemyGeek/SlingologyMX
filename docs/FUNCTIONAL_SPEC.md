@@ -616,3 +616,9 @@ Authentication, Dashboard, Notifications, Maintenance Logs, Directives, AD / Ser
 ## Appendix C: Disclaimer
 
 SlingologyMX is provided for planning and situational awareness only. It is not an approved maintenance record system and does not replace required logbooks, signatures, or a mechanic's judgment. The owner remains responsible for airworthiness and regulatory compliance.
+
+## Cylinder Compression Readings
+- Aircraft profile sets the number of cylinders (2, 4 or 6; default 4) and a low-compression warning value (default 60/80).
+- Maintenance records have an optional "Record compression" section under Directive Compliance: one whole-number reading 0–80 per cylinder, shown as `XX/80`; all cylinders required once enabled; readings below the warning value are flagged.
+- Saved readings are snapshots and are never resized when the cylinder count changes later.
+- The aircraft profile shows a Compression History per aircraft. Export/import schema 2.2 carries these fields.
