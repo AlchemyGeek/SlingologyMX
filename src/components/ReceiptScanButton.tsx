@@ -39,7 +39,7 @@ export function ReceiptScanButton({ aircraftId, kind, onResult }: Props) {
         <p className="text-sm text-muted-foreground">
           Scan a receipt or invoice to fill in what can be read. The file is read once and not saved.
         </p>
-        <input ref={inputRef} type="file" accept="application/pdf,image/*" capture="environment" className="hidden"
+        <input ref={inputRef} type="file" accept="application/pdf,image/*" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
         {scanning ? (
           <Button type="button" variant="outline" size="sm" onClick={() => abortRef.current?.abort()}>
