@@ -4,7 +4,7 @@ export interface ScannedReceipt {
   vendor: string | null; title: string | null; date: string | null; date_started: string | null;
   currency: string | null; total: number | null; tax: number | null;
   parts_cost: number | null; labor_cost: number | null; other_cost: number | null;
-  fuel_gallons: number | null; invoice_number: string | null; tach: number | null; hobbs: number | null;
+  fuel_gallons: number | null; invoice_number: string | null; document_notes: string | null; tach: number | null; hobbs: number | null;
   transaction_category: string | null; transaction_intent: string | null;
   maintenance_category: string | null; maintenance_subcategory: string | null;
   performed_by_type: string | null; performed_by_name: string | null;
@@ -72,6 +72,7 @@ export function receiptNotes(r: ScannedReceipt): string {
   if (r.invoice_number) lines.push(`Invoice #: ${r.invoice_number}`);
   if (r.fuel_gallons != null) lines.push(`Fuel: ${r.fuel_gallons} gal`);
   if (r.tax != null) lines.push(`Tax: ${r.tax.toFixed(2)}`);
+  if (r.document_notes) lines.push("", r.document_notes, "");
   for (const li of r.line_items) lines.push(`- ${li.description}${li.amount != null ? `: ${li.amount.toFixed(2)}` : ""}`);
   return lines.join("\n");
 }
