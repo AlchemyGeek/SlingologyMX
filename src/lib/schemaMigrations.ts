@@ -23,6 +23,8 @@ export interface ExportData {
     prop_overhaul_tach?: number | null;
     prop_overhaul_hours?: number;
     prop_overhaul_date?: string | null;
+    cylinder_count?: number;
+    compression_warning_threshold?: number;
   } | null;
   tables: {
     aircraft_counters: any[];

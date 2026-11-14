@@ -1,3 +1,4 @@
+import { useAircraft } from "@/contexts/AircraftContext";
 import { CompressionReadings } from "./CylinderCompressionInput";
 import { readCompressions } from "@/lib/compression";
 import { useState, useEffect } from "react";
@@ -44,6 +45,7 @@ interface MaintenanceLogDetailProps {
 }
 
 const MaintenanceLogDetail = ({ log, onClose, onEdit, onDelete, userCurrency = "USD" }: MaintenanceLogDetailProps) => {
+  const { selectedAircraft } = useAircraft();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [complianceEntries, setComplianceEntries] = useState<ComplianceEntry[]>([]);
 
