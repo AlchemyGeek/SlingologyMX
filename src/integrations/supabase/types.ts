@@ -74,7 +74,9 @@ export type Database = {
       aircraft: {
         Row: {
           airframe_tt_mode: string
+          compression_warning_threshold: number
           created_at: string | null
+          cylinder_count: number
           engine_overhaul_date: string | null
           engine_overhaul_hours: number
           engine_overhaul_tach: number | null
@@ -100,7 +102,9 @@ export type Database = {
         }
         Insert: {
           airframe_tt_mode?: string
+          compression_warning_threshold?: number
           created_at?: string | null
+          cylinder_count?: number
           engine_overhaul_date?: string | null
           engine_overhaul_hours?: number
           engine_overhaul_tach?: number | null
@@ -126,7 +130,9 @@ export type Database = {
         }
         Update: {
           airframe_tt_mode?: string
+          compression_warning_threshold?: number
           created_at?: string | null
+          cylinder_count?: number
           engine_overhaul_date?: string | null
           engine_overhaul_hours?: number
           engine_overhaul_tach?: number | null
@@ -1312,6 +1318,7 @@ export type Database = {
           compliance_reference: string | null
           compliance_type: Database["public"]["Enums"]["compliance_type"] | null
           created_at: string | null
+          cylinder_compressions: Json | null
           date_completed: string | null
           date_started: string
           engine_total_time: number | null
@@ -1353,6 +1360,7 @@ export type Database = {
             | Database["public"]["Enums"]["compliance_type"]
             | null
           created_at?: string | null
+          cylinder_compressions?: Json | null
           date_completed?: string | null
           date_started: string
           engine_total_time?: number | null
@@ -1394,6 +1402,7 @@ export type Database = {
             | Database["public"]["Enums"]["compliance_type"]
             | null
           created_at?: string | null
+          cylinder_compressions?: Json | null
           date_completed?: string | null
           date_started?: string
           engine_total_time?: number | null
