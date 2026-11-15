@@ -1,4 +1,5 @@
 # Architecture rules
+- Both compliance forms use the shared compliance-change predicate for history and reminder processing; unchanged saves and notes-only edits must not create additional compliance occurrences.
 - Oil Analysis is an aircraft-owned log with nullable metrics and explicit detection-limit qualifiers; missing values never imply zero.
 - Oil PDF extraction runs in the dedicated edge function using streamed Responses and strict structured output; report bytes are never written to storage.
 - Oil report dates use the extraction function's shared calendar-validating normalizer on both server and browser, avoiding locale-dependent parsing and invalid Date values.
