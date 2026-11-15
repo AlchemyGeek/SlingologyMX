@@ -44,6 +44,7 @@ import { getCurrencySymbol } from "@/lib/currency";
 import { useAircraft, TtTrackingMode } from "@/contexts/AircraftContext";
 import { Badge } from "@/components/ui/badge";
 import { getMaintenanceStatus, getShopTimeLabel } from "@/lib/maintenanceStatus";
+import { shouldLogCompliance } from "@/lib/complianceHistory";
 
 /** Marks reminders that announce an upcoming shop visit (vs. recurrence reminders). */
 const SCHEDULED_START_PREFIX = "Scheduled maintenance: ";
@@ -845,6 +846,15 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
       
       // Save directive compliance links
       if (logId && directiveComplianceLinks.length > 0) {
+        // Compare against persisted values, not the edited form or summary record.
+        const { data: savedComplianceLinks, error: savedLinksError } = await supabase
+          .from("maintenance_directive_compliance")
+          .select("*")
+          .eq("maintenance_log_id", logId)
+          .eq("user_id", userId)
+          .eq("aircraft_id", aircraftId);
+        if (savedLinksError) throw savedLinksError;
+
         // For editing, delete existing links that are no longer present
         if (editingLog) {
           // First, get the links that will be deleted to clean up their directive status
@@ -956,18 +966,24 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             owner_notes: link.owner_notes || null,
             compliance_links: link.compliance_links.length > 0 ? link.compliance_links : null,
           };
+          const previousCompliance = savedComplianceLinks?.find(saved => saved.id === link.id);
+          const logCompliance = shouldLogCompliance(previousCompliance, complianceData);
           
           if (link.id) {
             // Update existing
-            await supabase
+            const { error } = await supabase
               .from("maintenance_directive_compliance")
               .update(complianceData)
-              .eq("id", link.id);
+              .eq("id", link.id)
+              .eq("user_id", userId)
+              .eq("aircraft_id", aircraftId);
+            if (error) throw error;
           } else {
             // Insert new
-            await supabase
+            const { error } = await supabase
               .from("maintenance_directive_compliance")
               .insert([complianceData]);
+            if (error) throw error;
           }
           
           // Also create/update the aircraft_directive_status for this directive
@@ -1005,7 +1021,7 @@ const MaintenanceLogForm = ({ userId, aircraftId, editingLog, defaultCounters, o
             }
             
             // Log compliance history
-            if (directive) {
+            if (directive && logCompliance) {
               await supabase.from("directive_history").insert({
                 user_id: userId,
                 aircraft_id: aircraftId,

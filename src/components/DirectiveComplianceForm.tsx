@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Directive } from "./DirectivesPanel";
 import type { Database } from "@/integrations/supabase/types";
+import { shouldLogCompliance } from "@/lib/complianceHistory";
 
 import { useAircraftCounters, AircraftCounters } from "@/hooks/useAircraftCounters";
 
@@ -289,11 +290,7 @@ const DirectiveComplianceForm = ({
     try {
       // Check if this is an update or insert
       const isNewCompliance = !existingStatus;
-      const dateChanged = existingStatus && 
-        (existingStatus.compliance_date !== complianceDate);
-      
-      // Only log compliance if status is "Complied"
-      const isComplianceLoggableStatus = formData.compliance_status === "Complied";
+      const logCompliance = shouldLogCompliance(existingStatus, complianceEventData);
       
       if (existingStatus) {
         // Update existing compliance event in maintenance_directive_compliance
@@ -303,8 +300,8 @@ const DirectiveComplianceForm = ({
           .eq("id", existingStatus.id);
         if (error) throw error;
         
-        // Log Compliance action if date changed AND status is compliant
-        if (dateChanged && isComplianceLoggableStatus) {
+        // Log only a new or materially changed compliance occurrence.
+        if (logCompliance) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             aircraft_id: aircraftId,
@@ -326,7 +323,7 @@ const DirectiveComplianceForm = ({
         if (error) throw error;
         
         // Log Compliance action if status is compliant
-        if (isComplianceLoggableStatus) {
+        if (logCompliance) {
           await supabase.from("directive_history").insert({
             user_id: userId,
             aircraft_id: aircraftId,
@@ -348,7 +345,7 @@ const DirectiveComplianceForm = ({
       }
 
       // Handle notification completion and recurrence when status is "Complied"
-      if (formData.compliance_status === "Complied") {
+      if (logCompliance) {
         await handleNotificationCompletionAndRecurrence();
       }
 
