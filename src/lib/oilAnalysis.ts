@@ -107,3 +107,23 @@ export function comparisonHistory(samples: OilSample[], sample: OilSample) {
   // Do not compare wear rates across engine changes or unknown engine identities.
   return samples.filter(s => s.sample_date < sample.sample_date && s.engine_serial === sample.engine_serial && s.engine_model === sample.engine_model).sort((a,b) => b.sample_date.localeCompare(a.sample_date));
 }
+export interface MetricSeriesPoint { x: string | number | null; value: number | null; average: number | null; lab: string | null }
+export interface MetricSeries { points: MetricSeriesPoint[]; numbers: number[]; mean: number | null; last: number | null; change: number | null; range: { min?: number | null; max?: number | null } | null; outOfRange: boolean }
+/** Builds a trend series for one metric. Expects samples sorted by date. Qualified readings and missing values are null, never zero. */
+export function buildMetricSeries(sorted: Partial<OilSample>[], metric: Metric, basis: "raw" | "rate", axis: "date" | "engine"): MetricSeries {
+  const points = sorted.filter(s => axis !== "engine" || s.hours_on_engine != null).map(s => ({
+    x: (axis === "engine" ? s.hours_on_engine : s.sample_date) ?? null,
+    value: basis === "rate" ? rate(s, metric) : jsonObject(s.qualifiers)[metric] ? null : (s[metric] as number | null | undefined) ?? null,
+    average: basis === "raw" ? jsonObject(s.universal_averages)[metric] ?? null : null,
+    lab: s.lab_name ?? null,
+  }));
+  const numbers = points.map(p => p.value).filter((v): v is number => v != null);
+  const mean = numbers.length ? numbers.reduce((a, b) => a + b, 0) / numbers.length : null;
+  const first = numbers[0], last = numbers.length ? numbers[numbers.length - 1] : null;
+  const change = first != null && last != null && first > 0 && numbers.length > 1 ? (last - first) / first * 100 : null;
+  const latest = sorted[sorted.length - 1];
+  const range = latest ? jsonObject(latest.lab_ranges)[metric] ?? null : null;
+  const latestValue = latest ? (jsonObject(latest.qualifiers)[metric] ? null : (latest[metric] as number | null | undefined) ?? null) : null;
+  const outOfRange = latestValue != null && range != null && ((range.max != null && latestValue > range.max) || (range.min != null && latestValue < range.min));
+  return { points, numbers, mean, last, change, range, outOfRange };
+}
